@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Builder
 public class TreeTrainer<Y> {
 
-    private final ResponseCombiner<Y> responseCombiner;
+    private final ResponseCombiner<Y, ?> responseCombiner;
     private final GroupDifferentiator<Y> groupDifferentiator;
 
     /**
@@ -43,10 +43,10 @@ public class TreeTrainer<Y> {
 
         }
         else{
-            return new TerminalNode<>(responseCombiner.combine(
+            return new TerminalNode<>(
                     data.stream()
-                            .map(row -> row.getResponse())
-                            .collect(Collectors.toList()))
+                        .map(row -> row.getResponse())
+                        .collect(responseCombiner)
 
             );
         }
