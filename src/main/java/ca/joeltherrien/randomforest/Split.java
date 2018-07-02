@@ -1,5 +1,7 @@
 package ca.joeltherrien.randomforest;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -8,13 +10,10 @@ import java.util.List;
  * @author joel
  *
  */
+@Data
 public class Split<Y> {
 
 	public final List<Row<Y>> leftHand;
 	public final List<Row<Y>> rightHand;
-	
-	public Split(List<Row<Y>> leftHand, List<Row<Y>> rightHand){
-		this.leftHand = leftHand;
-		this.rightHand = rightHand;
-	}
+
 }
