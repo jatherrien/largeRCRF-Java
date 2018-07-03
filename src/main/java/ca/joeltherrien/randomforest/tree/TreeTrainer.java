@@ -59,9 +59,6 @@ public class TreeTrainer<Y> {
         Double bestSplitScore = 0.0; // may be null
         boolean first = true;
 
-        // temporary
-        final List<SplitRule> previousRules = new ArrayList<>();
-
         for(final String covariate : covariatesToTry){
 
             final List<Row<Y>> shuffledData;
@@ -89,8 +86,6 @@ public class TreeTrainer<Y> {
             while(tries < shuffledData.size()){
                 final SplitRule possibleRule = shuffledData.get(tries).getCovariate(covariate).generateSplitRule(covariate);
                 final Split<Y> possibleSplit = possibleRule.applyRule(data);
-
-                previousRules.add(possibleRule);
 
                 final Double score = groupDifferentiator.differentiate(
                         possibleSplit.leftHand.stream().map(row -> row.getResponse()).collect(Collectors.toList()),
