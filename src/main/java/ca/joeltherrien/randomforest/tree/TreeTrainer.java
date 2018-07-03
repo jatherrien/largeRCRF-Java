@@ -1,9 +1,8 @@
 package ca.joeltherrien.randomforest.tree;
 
-import ca.joeltherrien.randomforest.ResponseCombiner;
-import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Split;
-import ca.joeltherrien.randomforest.SplitRule;
+import ca.joeltherrien.randomforest.*;
+import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
+import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
 import lombok.Builder;
 
 import java.util.*;
@@ -57,8 +56,11 @@ public class TreeTrainer<Y> {
 
     private SplitRule findBestSplitRule(List<Row<Y>> data, List<String> covariatesToTry){
         SplitRule bestSplitRule = null;
-        double bestSplitScore = 0;
+        Double bestSplitScore = 0.0; // may be null
         boolean first = true;
+
+        // temporary
+        final List<SplitRule> previousRules = new ArrayList<>();
 
         for(final String covariate : covariatesToTry){
 
@@ -83,24 +85,19 @@ public class TreeTrainer<Y> {
 
 
             int tries = 0;
+
             while(tries < shuffledData.size()){
                 final SplitRule possibleRule = shuffledData.get(tries).getCovariate(covariate).generateSplitRule(covariate);
                 final Split<Y> possibleSplit = possibleRule.applyRule(data);
+
+                previousRules.add(possibleRule);
 
                 final Double score = groupDifferentiator.differentiate(
                         possibleSplit.leftHand.stream().map(row -> row.getResponse()).collect(Collectors.toList()),
                         possibleSplit.rightHand.stream().map(row -> row.getResponse()).collect(Collectors.toList())
                 );
 
-                /*
-                if( (groupDifferentiator.shouldMaximize() && score > bestSplitScore) || (!groupDifferentiator.shouldMaximize() && score < bestSplitScore) || first){
-                    bestSplitRule = possibleRule;
-                    bestSplitScore = score;
-                    first = false;
-                }
-                */
-
-                if( score != null && (score > bestSplitScore || first)){
+                if( first || (score != null && (bestSplitScore == null || score > bestSplitScore))){
                     bestSplitRule = possibleRule;
                     bestSplitScore = score;
                     first = false;

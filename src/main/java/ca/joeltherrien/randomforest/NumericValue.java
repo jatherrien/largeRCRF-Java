@@ -16,4 +16,9 @@ public class NumericValue implements Value<Double> {
     public SplitRule generateSplitRule(final String covariateName) {
         return new NumericSplitRule(covariateName, value);
     }
+
+    @Override
+    public String toString(){
+        return "" + value;
+    }
 }
