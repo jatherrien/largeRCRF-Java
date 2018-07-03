@@ -1,6 +1,10 @@
-package ca.joeltherrien.randomforest;
+package ca.joeltherrien.randomforest.workshop;
 
 
+import ca.joeltherrien.randomforest.CovariateRow;
+import ca.joeltherrien.randomforest.NumericValue;
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.Value;
 import ca.joeltherrien.randomforest.regression.MeanGroupDifferentiator;
 import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
@@ -11,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
-public class Main {
+public class TrainSingleTree {
 
 	public static void main(String[] args) {
 		System.out.println("Hello world!");

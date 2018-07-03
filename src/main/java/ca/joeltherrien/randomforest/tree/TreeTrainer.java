@@ -6,8 +6,7 @@ import ca.joeltherrien.randomforest.Split;
 import ca.joeltherrien.randomforest.SplitRule;
 import lombok.Builder;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Builder
@@ -23,6 +22,8 @@ public class TreeTrainer<Y> {
     private final int numberOfSplits;
     private final int nodeSize;
     private final int maxNodeDepth;
+
+    private final Random random = new Random();
 
 
     public Node<Y> growTree(List<Row<Y>> data, List<String> covariatesToTry){
@@ -60,11 +61,30 @@ public class TreeTrainer<Y> {
         boolean first = true;
 
         for(final String covariate : covariatesToTry){
-            Collections.shuffle(data);
+
+            final List<Row<Y>> shuffledData;
+            if(numberOfSplits == 0 || numberOfSplits > data.size()){
+                shuffledData = new ArrayList<>(data);
+                Collections.shuffle(shuffledData);
+            }
+            else{ // only need the top numberOfSplits entries
+                shuffledData = new ArrayList<>(numberOfSplits);
+                final Set<Integer> indexesToUse = new HashSet<>();
+
+                while(indexesToUse.size() < numberOfSplits){
+                    final int index = random.nextInt(data.size());
+
+                    if(indexesToUse.add(index)){
+                        shuffledData.add(data.get(index));
+                    }
+                }
+
+            }
+
 
             int tries = 0;
-            while(tries <= numberOfSplits || (numberOfSplits == 0 && tries < data.size())){
-                final SplitRule possibleRule = data.get(tries).getCovariate(covariate).generateSplitRule(covariate);
+            while(tries < shuffledData.size()){
+                final SplitRule possibleRule = shuffledData.get(tries).getCovariate(covariate).generateSplitRule(covariate);
                 final Split<Y> possibleSplit = possibleRule.applyRule(data);
 
                 final Double score = groupDifferentiator.differentiate(
