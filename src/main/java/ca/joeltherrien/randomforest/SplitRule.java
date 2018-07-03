@@ -1,9 +1,10 @@
 package ca.joeltherrien.randomforest;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
-public abstract class SplitRule {
+public abstract class SplitRule implements Serializable {
 
     /**
      * Applies the SplitRule to a list of rows and returns a Split object, which contains two lists for both sides.

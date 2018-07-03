@@ -4,13 +4,16 @@ import ca.joeltherrien.randomforest.Bootstrapper;
 import ca.joeltherrien.randomforest.ResponseCombiner;
 import ca.joeltherrien.randomforest.Row;
 import lombok.Builder;
-import lombok.RequiredArgsConstructor;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,6 +32,7 @@ public class ForestTrainer<Y> {
     private final int ntree;
 
     private final boolean displayProgress;
+    private final String saveTreeLocation;
 
     public Forest<Y> trainSerial(){
 
@@ -57,7 +61,7 @@ public class ForestTrainer<Y> {
 
     }
 
-    public Forest<Y> trainParallel(int threads){
+    public Forest<Y> trainParallelInMemory(int threads){
 
         // create a list that is prespecified in size (I can call the .set method at any index < ntree without
         // the earlier indexes being filled.
@@ -66,7 +70,7 @@ public class ForestTrainer<Y> {
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
         for(int j=0; j<ntree; j++){
-            final Runnable worker = new Worker(data, j, trees);
+            final Runnable worker = new TreeInMemoryWorker(data, j, trees);
             executorService.execute(worker);
         }
 
@@ -103,6 +107,38 @@ public class ForestTrainer<Y> {
 
     }
 
+
+    public void trainParallelOnDisk(int threads){
+        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        final AtomicInteger treeCount = new AtomicInteger(0); // tracks how many trees are finished
+
+        for(int j=0; j<ntree; j++){
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1), treeCount);
+            executorService.execute(worker);
+        }
+
+        executorService.shutdown();
+        while(!executorService.isTerminated()){
+
+            try{
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // do nothing; who cares?
+            }
+
+            if(displayProgress) {
+
+                System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
+            }
+
+        }
+
+        if(displayProgress){
+            System.out.println("\nFinished");
+        }
+
+    }
+
     private Node<Y> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
         final List<String> treeCovariates = new ArrayList<>(covariatesToTry);
         Collections.shuffle(treeCovariates);
@@ -116,13 +152,24 @@ public class ForestTrainer<Y> {
         return treeTrainer.growTree(bootstrappedData, treeCovariates);
     }
 
-    private class Worker implements Runnable {
+    public void saveTree(final Node<Y> tree, String name) throws IOException {
+        final String filename = saveTreeLocation + "/" + name;
+
+        final ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(filename));
+
+        outputStream.writeObject(tree);
+
+        outputStream.close();
+
+    }
+
+    private class TreeInMemoryWorker implements Runnable {
 
         private final Bootstrapper<Row<Y>> bootstrapper;
         private final int treeIndex;
         private final List<Node<Y>> treeList;
 
-        public Worker(final List<Row<Y>> data, final int treeIndex, final List<Node<Y>> treeList) {
+        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Node<Y>> treeList) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.treeIndex = treeIndex;
             this.treeList = treeList;
@@ -136,10 +183,36 @@ public class ForestTrainer<Y> {
             // should be okay as the list structure isn't changing
             treeList.set(treeIndex, tree);
 
-            //if(displayProgress){
-            //   System.out.println("Finished tree " + (treeIndex+1));
-            //}
+        }
+    }
 
+    private class TreeSavedWorker implements Runnable {
+
+        private final Bootstrapper<Row<Y>> bootstrapper;
+        private final String filename;
+        private final AtomicInteger treeCount;
+
+        public TreeSavedWorker(final List<Row<Y>> data, final String filename, final AtomicInteger treeCount) {
+            this.bootstrapper = new Bootstrapper<>(data);
+            this.filename = filename;
+            this.treeCount = treeCount;
+        }
+
+        @Override
+        public void run() {
+
+            final Node<Y> tree = trainTree(bootstrapper);
+
+            try {
+                saveTree(tree, filename);
+            } catch (IOException e) {
+                System.err.println("IOException while saving " + filename);
+                e.printStackTrace();
+                System.err.println("Quitting program");
+                System.exit(1);
+            }
+
+            treeCount.incrementAndGet();
 
         }
     }

@@ -16,7 +16,7 @@ public class TrainForest {
     public static void main(String[] args){
         // test creating a regression tree on a problem and see if the results are sensible.
 
-        final int n = 1000000;
+        final int n = 10000;
         final int p = 5;
 
         final Random random = new Random();
@@ -49,7 +49,7 @@ public class TrainForest {
 
         TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
                 .numberOfSplits(5)
-                .nodeSize(3)
+                .nodeSize(5)
                 .maxNodeDepth(100000000)
                 .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
                 .responseCombiner(new MeanResponseCombiner())
@@ -63,18 +63,21 @@ public class TrainForest {
                 .ntree(100)
                 .treeResponseCombiner(new MeanResponseCombiner())
                 .displayProgress(true)
+                .saveTreeLocation("/home/joel/test")
                 .build();
 
         final long startTime = System.currentTimeMillis();
 
-        final Forest<Double> forest = forestTrainer.trainSerial();
+        //final Forest<Double> forest = forestTrainer.trainSerial();
         //final Forest<Double> forest = forestTrainer.trainParallel(8);
+        forestTrainer.trainParallelOnDisk(3);
 
         final long endTime  = System.currentTimeMillis();
 
         System.out.println("Took " + (double)(endTime - startTime)/1000.0 + " seconds.");
 
 
+        /*
         final Value zeroValue = new NumericValue(0.1);
         final Value point5Value = new NumericValue(0.5);
 
@@ -87,7 +90,7 @@ public class TrainForest {
         System.out.println(forest.evaluate(testRow2));
 
         System.out.println("MinY = " + minY);
-
+        */
     }
 
 }
