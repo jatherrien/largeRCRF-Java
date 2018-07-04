@@ -19,21 +19,28 @@ public class TrainForest {
         final int n = 10000;
         final int p = 5;
 
+
         final Random random = new Random();
 
         final List<Row<Double>> data = new ArrayList<>(n);
 
         double minY = 1000.0;
 
+        final List<Covariate> covariateList = new ArrayList<>(p);
+        for(int j =0; j < p; j++){
+            final NumericCovariate covariate = new NumericCovariate("x"+j);
+            covariateList.add(covariate);
+        }
+
         for(int i=0; i<n; i++){
             double y = 0.0;
-            final Map<String, Value> map = new HashMap<>();
+            final Map<String, Covariate.Value> map = new HashMap<>();
 
-            for(int j=0; j<p; j++){
+            for(final Covariate covariate : covariateList) {
                 final double x = random.nextDouble();
-                y+=x;
+                y += x;
 
-                map.put("x"+j, new NumericValue(x));
+                map.put(covariate.getName(), covariate.createValue(x));
             }
 
             data.add(i, new Row<>(map, i, y));
@@ -44,10 +51,8 @@ public class TrainForest {
 
         }
 
-        final List<String> covariateNames = IntStream.range(0, p).mapToObj(j -> "x"+j).collect(Collectors.toList());
 
-
-        TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
+        final TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
                 .numberOfSplits(5)
                 .nodeSize(5)
                 .maxNodeDepth(100000000)
@@ -58,7 +63,7 @@ public class TrainForest {
         final ForestTrainer<Double> forestTrainer = ForestTrainer.<Double>builder()
                 .treeTrainer(treeTrainer)
                 .data(data)
-                .covariatesToTry(covariateNames)
+                .covariatesToTry(covariateList)
                 .mtry(4)
                 .ntree(100)
                 .treeResponseCombiner(new MeanResponseCombiner())
@@ -69,7 +74,7 @@ public class TrainForest {
         final long startTime = System.currentTimeMillis();
 
         //final Forest<Double> forest = forestTrainer.trainSerial();
-        //final Forest<Double> forest = forestTrainer.trainParallel(8);
+        //final Forest<Double> forest = forestTrainer.trainParallelInMemory(3);
         forestTrainer.trainParallelOnDisk(3);
 
         final long endTime  = System.currentTimeMillis();
@@ -88,9 +93,9 @@ public class TrainForest {
 
         System.out.println(forest.evaluate(testRow1));
         System.out.println(forest.evaluate(testRow2));
-
-        System.out.println("MinY = " + minY);
         */
+        System.out.println("MinY = " + minY);
+
     }
 
 }

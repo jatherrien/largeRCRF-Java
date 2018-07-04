@@ -1,11 +1,10 @@
 package ca.joeltherrien.randomforest.workshop;
 
 
+import ca.joeltherrien.randomforest.Covariate;
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.NumericValue;
+import ca.joeltherrien.randomforest.NumericCovariate;
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Value;
-import ca.joeltherrien.randomforest.regression.MeanGroupDifferentiator;
 import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Node;
@@ -25,29 +24,29 @@ public class TrainSingleTree {
         final int n = 1000;
         final List<Row<Double>> trainingSet = new ArrayList<>(n);
 
-        final List<Value<Double>> x1List = DoubleStream
+        final Covariate<Double> x1Covariate = new NumericCovariate("x1");
+        final Covariate<Double> x2Covariate = new NumericCovariate("x2");
+
+        final List<Covariate.Value<Double>> x1List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)
                 .limit(n)
-                .mapToObj(x1 -> new NumericValue(x1))
+                .mapToObj(x1 -> x1Covariate.createValue(x1))
                 .collect(Collectors.toList());
 
-        final List<Value<Double>> x2List = DoubleStream
+        final List<Covariate.Value<Double>> x2List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)
                 .limit(n)
-                .mapToObj(x1 -> new NumericValue(x1))
+                .mapToObj(x2 -> x1Covariate.createValue(x2))
                 .collect(Collectors.toList());
 
 
 
         for(int i=0; i<n; i++){
-            double x1 = x1List.get(i).getValue();
-            double x2 = x2List.get(i).getValue();
+            final Covariate.Value<Double> x1 = x1List.get(i);
+            final Covariate.Value<Double> x2 = x2List.get(i);
 
             trainingSet.add(generateRow(x1, x2, i));
         }
-
-
-        final long startTime = System.currentTimeMillis();
 
         final TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
                 .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
@@ -57,25 +56,29 @@ public class TrainSingleTree {
                 .numberOfSplits(0)
                 .build();
 
+        final List<Covariate> covariateNames = List.of(x1Covariate, x2Covariate);
+
+        final long startTime = System.currentTimeMillis();
+        final Node<Double> baseNode = treeTrainer.growTree(trainingSet, covariateNames);
         final long endTime = System.currentTimeMillis();
 
         System.out.println(((double)(endTime - startTime))/1000.0);
 
-        final List<String> covariateNames = List.of("x1", "x2");
 
-        final Node<Double> baseNode = treeTrainer.growTree(trainingSet, covariateNames);
+
+
 
 
         final List<CovariateRow> testSet = new ArrayList<>();
-        testSet.add(generateCovariateRow(9, 2, 1)); // expect 1
-        testSet.add(generateCovariateRow(5, 2, 5));
-        testSet.add(generateCovariateRow(2, 2, 3));
-        testSet.add(generateCovariateRow(9, 5, 0));
-        testSet.add(generateCovariateRow(6, 5, 8));
-        testSet.add(generateCovariateRow(3, 5, 10));
-        testSet.add(generateCovariateRow(1, 5, 3));
-        testSet.add(generateCovariateRow(7, 9, 2));
-        testSet.add(generateCovariateRow(1, 9, 4));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(9.0), x2Covariate.createValue(2.0), 1)); // expect 1
+        testSet.add(generateCovariateRow(x1Covariate.createValue(5.0), x2Covariate.createValue(2.0), 5));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(2.0), x2Covariate.createValue(2.0), 3));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(9.0), x2Covariate.createValue(5.0), 0));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(6.0), x2Covariate.createValue(5.0), 8));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(3.0), x2Covariate.createValue(5.0), 10));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(1.0), x2Covariate.createValue(5.0), 3));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(7.0), x2Covariate.createValue(9.0), 2));
+        testSet.add(generateCovariateRow(x1Covariate.createValue(1.0), x2Covariate.createValue(9.0), 4));
 
         for(final CovariateRow testCase : testSet){
             System.out.println(testCase);
@@ -91,18 +94,18 @@ public class TrainSingleTree {
 
     }
 
-	public static Row<Double> generateRow(double x1, double x2, int id){
-	    double y = generateResponse(x1, x2);
+	public static Row<Double> generateRow(Covariate.Value<Double> x1, Covariate.Value<Double> x2, int id){
+	    double y = generateResponse(x1.getValue(), x2.getValue());
 
-	    final Map<String, Value> map = Map.of("x1", new NumericValue(x1), "x2", new NumericValue(x2));
+	    final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2);
 
         return new Row<>(map, id, y);
 
     }
 
 
-    public static CovariateRow generateCovariateRow(double x1, double x2, int id){
-        final Map<String, Value> map = Map.of("x1", new NumericValue(x1), "x2", new NumericValue(x2));
+    public static CovariateRow generateCovariateRow(Covariate.Value x1, Covariate.Value x2, int id){
+        final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2);
 
         return new CovariateRow(map, id);
 

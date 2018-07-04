@@ -8,12 +8,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CovariateRow {
 
-    private final Map<String, Value> valueMap;
+    private final Map<String, Covariate.Value> valueMap;
 
     @Getter
     private final int id;
 
-    public Value<?> getCovariate(String name){
+    public Covariate.Value<?> getCovariateValue(String name){
         return valueMap.get(name);
 
     }
