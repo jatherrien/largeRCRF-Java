@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
+import ca.joeltherrien.randomforest.Covariate;
 import ca.joeltherrien.randomforest.ResponseCombiner;
 import ca.joeltherrien.randomforest.Row;
 import lombok.Builder;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 public class ForestTrainer<Y> {
 
     private final TreeTrainer<Y> treeTrainer;
-    private final List<String> covariatesToTry;
+    private final List<Covariate> covariatesToTry;
     private final ResponseCombiner<Y, ?> treeResponseCombiner;
     private final List<Row<Y>> data;
 
@@ -140,7 +141,7 @@ public class ForestTrainer<Y> {
     }
 
     private Node<Y> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
-        final List<String> treeCovariates = new ArrayList<>(covariatesToTry);
+        final List<Covariate> treeCovariates = new ArrayList<>(covariatesToTry);
         Collections.shuffle(treeCovariates);
 
         for(int treeIndex = covariatesToTry.size()-1; treeIndex >= mtry; treeIndex--){

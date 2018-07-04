@@ -7,7 +7,7 @@ public class Row<Y> extends CovariateRow {
 
 	private final Y response;
 
-	public Row(Map<String, Value> valueMap, int id, Y response){
+	public Row(Map<String, Covariate.Value> valueMap, int id, Y response){
 	    super(valueMap, id);
 	    this.response = response;
     }

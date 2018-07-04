@@ -1,8 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
+import ca.joeltherrien.randomforest.Covariate;
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.SplitRule;
 import lombok.Builder;
 
 @Builder
@@ -10,7 +9,7 @@ public class SplitNode<Y> implements Node<Y> {
 
     private final Node<Y> leftHand;
     private final Node<Y> rightHand;
-    private final SplitRule splitRule;
+    private final Covariate.SplitRule splitRule;
 
     @Override
     public Y evaluate(CovariateRow row) {

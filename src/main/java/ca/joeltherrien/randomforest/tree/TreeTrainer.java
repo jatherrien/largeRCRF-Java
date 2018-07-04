@@ -1,8 +1,6 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.*;
-import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
 import lombok.Builder;
 
 import java.util.*;
@@ -22,17 +20,24 @@ public class TreeTrainer<Y> {
     private final int nodeSize;
     private final int maxNodeDepth;
 
-    private final Random random = new Random();
 
-
-    public Node<Y> growTree(List<Row<Y>> data, List<String> covariatesToTry){
+    public Node<Y> growTree(List<Row<Y>> data, List<Covariate> covariatesToTry){
         return growNode(data, covariatesToTry, 0);
     }
 
-    private Node<Y> growNode(List<Row<Y>> data, List<String> covariatesToTry, int depth){
+    private Node<Y> growNode(List<Row<Y>> data, List<Covariate> covariatesToTry, int depth){
         // TODO; what is minimum per tree?
-        if(data.size() >= 2*nodeSize && depth < maxNodeDepth && !nodeIsPure(data, covariatesToTry)){
-            final SplitRule bestSplitRule = findBestSplitRule(data, covariatesToTry);
+        if(data.size() >= 2*nodeSize && depth < maxNodeDepth && !nodeIsPure(data)){
+            final Covariate.SplitRule bestSplitRule = findBestSplitRule(data, covariatesToTry);
+
+            if(bestSplitRule == null){
+                return new TerminalNode<>(
+                        data.stream()
+                                .map(row -> row.getResponse())
+                                .collect(responseCombiner)
+
+                );
+            }
 
             final Split<Y> split = bestSplitRule.applyRule(data); // TODO optimize this as we're duplicating work done in findBestSplitRule
 
@@ -54,37 +59,24 @@ public class TreeTrainer<Y> {
 
     }
 
-    private SplitRule findBestSplitRule(List<Row<Y>> data, List<String> covariatesToTry){
-        SplitRule bestSplitRule = null;
-        Double bestSplitScore = 0.0; // may be null
+    private Covariate.SplitRule findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry){
+        Covariate.SplitRule bestSplitRule = null;
+        double bestSplitScore = 0.0;
         boolean first = true;
 
-        for(final String covariate : covariatesToTry){
+        for(final Covariate covariate : covariatesToTry){
 
-            final List<Row<Y>> shuffledData;
-            if(numberOfSplits == 0 || numberOfSplits > data.size()){
-                shuffledData = new ArrayList<>(data);
-                Collections.shuffle(shuffledData);
-            }
-            else{ // only need the top numberOfSplits entries
-                shuffledData = new ArrayList<>(numberOfSplits);
-                final Set<Integer> indexesToUse = new HashSet<>();
+            final int numberToTry = numberOfSplits==0 ? data.size() : numberOfSplits;
 
-                while(indexesToUse.size() < numberOfSplits){
-                    final int index = random.nextInt(data.size());
+            final Collection<Covariate.SplitRule> splitRulesToTry = covariate
+                    .generateSplitRules(
+                            data
+                                    .stream()
+                                    .map(row -> row.getCovariateValue(covariate.getName()))
+                                    .collect(Collectors.toList())
+                            , numberToTry);
 
-                    if(indexesToUse.add(index)){
-                        shuffledData.add(data.get(index));
-                    }
-                }
-
-            }
-
-
-            int tries = 0;
-
-            while(tries < shuffledData.size()){
-                final SplitRule possibleRule = shuffledData.get(tries).getCovariate(covariate).generateSplitRule(covariate);
+            for(final Covariate.SplitRule possibleRule : splitRulesToTry){
                 final Split<Y> possibleSplit = possibleRule.applyRule(data);
 
                 final Double score = groupDifferentiator.differentiate(
@@ -92,13 +84,11 @@ public class TreeTrainer<Y> {
                         possibleSplit.rightHand.stream().map(row -> row.getResponse()).collect(Collectors.toList())
                 );
 
-                if( first || (score != null && (bestSplitScore == null || score > bestSplitScore))){
+                if(score != null && (score > bestSplitScore || first)){
                     bestSplitRule = possibleRule;
                     bestSplitScore = score;
                     first = false;
                 }
-
-                tries++;
             }
 
         }
@@ -107,9 +97,7 @@ public class TreeTrainer<Y> {
 
     }
 
-    private boolean nodeIsPure(List<Row<Y>> data, List<String> covariatesToTry){
-        // TODO how is this done?
-
+    private boolean nodeIsPure(List<Row<Y>> data){
         final Y first = data.get(0).getResponse();
         return data.stream().allMatch(row -> row.getResponse().equals(first));
     }
