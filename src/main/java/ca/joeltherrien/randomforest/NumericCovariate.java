@@ -17,18 +17,20 @@ public class NumericCovariate implements Covariate<Double>{
     @Override
     public Collection<NumericSplitRule> generateSplitRules(List<Value<Double>> data, int number) {
 
+        final Random random = ThreadLocalRandom.current();
+
         // for this implementation we need to shuffle the data
         final List<Value<Double>> shuffledData;
         if(number > data.size()){
             shuffledData = new ArrayList<>(data);
-            Collections.shuffle(shuffledData);
+            Collections.shuffle(shuffledData, random);
         }
         else{ // only need the top number entries
             shuffledData = new ArrayList<>(number);
             final Set<Integer> indexesToUse = new HashSet<>();
 
             while(indexesToUse.size() < number){
-                final int index = ThreadLocalRandom.current().nextInt(data.size());
+                final int index = random.nextInt(data.size());
 
                 if(indexesToUse.add(index)){
                     shuffledData.add(data.get(index));
