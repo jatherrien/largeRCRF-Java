@@ -60,7 +60,7 @@ public class NumericCovariate implements Covariate<Double>{
         }
 
         @Override
-        public Covariate<Double> getParent() {
+        public NumericCovariate getParent() {
             return NumericCovariate.this;
         }
 
@@ -84,7 +84,7 @@ public class NumericCovariate implements Covariate<Double>{
         }
 
         @Override
-        public Covariate<Double> getParent() {
+        public NumericCovariate getParent() {
             return NumericCovariate.this;
         }
 
