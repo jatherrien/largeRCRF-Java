@@ -26,7 +26,7 @@ public final class FactorCovariate implements Covariate<String>{
         for(int i=0; i<levels.size()-1; i++){
             numberOfPossiblePairingsTemp *= 2;
         }
-        this.numberOfPossiblePairings = numberOfPossiblePairingsTemp;
+        this.numberOfPossiblePairings = numberOfPossiblePairingsTemp-1;
 
     }
 
@@ -37,7 +37,7 @@ public final class FactorCovariate implements Covariate<String>{
     }
 
     @Override
-    public Collection<FactorSplitRule> generateSplitRules(List<Value<String>> data, int number) {
+    public Set<FactorSplitRule> generateSplitRules(List<Value<String>> data, int number) {
         final Set<FactorSplitRule> splitRules = new HashSet<>();
 
         // This is to ensure we don't get stuck in an infinite loop for small factors
