@@ -9,6 +9,7 @@ public final class FactorCovariate implements Covariate<String>{
 
     private final String name;
     private final Map<String, FactorValue> factorLevels;
+    private final FactorValue naValue;
     private final int numberOfPossiblePairings;
 
 
@@ -28,6 +29,7 @@ public final class FactorCovariate implements Covariate<String>{
         }
         this.numberOfPossiblePairings = numberOfPossiblePairingsTemp-1;
 
+        this.naValue = new FactorValue(null);
     }
 
 
@@ -67,6 +69,10 @@ public final class FactorCovariate implements Covariate<String>{
 
     @Override
     public FactorValue createValue(String value) {
+        if(value == null){
+            return this.naValue;
+        }
+
         final FactorValue factorValue = factorLevels.get(value);
 
         if(factorValue == null){
@@ -94,6 +100,11 @@ public final class FactorCovariate implements Covariate<String>{
         public String getValue() {
             return value;
         }
+
+        @Override
+        public boolean isNA() {
+            return value == null;
+        }
     }
 
     @EqualsAndHashCode
@@ -111,12 +122,12 @@ public final class FactorCovariate implements Covariate<String>{
         }
 
         @Override
-        public boolean isLeftHand(CovariateRow row) {
-            final FactorValue value = (FactorValue) row.getCovariateValue(getName()).getValue();
+        public boolean isLeftHand(final Value<String> value) {
+            if(value.isNA()){
+                throw new IllegalArgumentException("Trying to determine split on missing value");
+            }
 
             return leftSideValues.contains(value);
-
-
         }
     }
 }

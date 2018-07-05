@@ -1,12 +1,9 @@
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.exceptions.MissingValueException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class BooleanCovariate implements Covariate<Boolean>{
@@ -28,9 +25,9 @@ public class BooleanCovariate implements Covariate<Boolean>{
 
     public class BooleanValue implements Value<Boolean>{
 
-        private final boolean value;
+        private final Boolean value;
 
-        private BooleanValue(final boolean value){
+        private BooleanValue(final Boolean value){
             this.value = value;
         }
 
@@ -42,6 +39,11 @@ public class BooleanCovariate implements Covariate<Boolean>{
         @Override
         public Boolean getValue() {
             return value;
+        }
+
+        @Override
+        public boolean isNA() {
+            return value == null;
         }
     }
 
@@ -58,15 +60,12 @@ public class BooleanCovariate implements Covariate<Boolean>{
         }
 
         @Override
-        public boolean isLeftHand(CovariateRow row) {
-            final Value<?> x = row.getCovariateValue(getParent().getName());
-            if(x == null) {
-                throw new MissingValueException(row, this);
+        public boolean isLeftHand(final Value<Boolean> value) {
+            if(value.isNA()) {
+                throw new IllegalArgumentException("Trying to determine split on missing value");
             }
 
-            final boolean xBoolean = (Boolean) x.getValue();
-
-            return !xBoolean;
+            return !value.getValue();
         }
     }
 }

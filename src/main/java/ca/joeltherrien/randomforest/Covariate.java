@@ -1,9 +1,8 @@
 package ca.joeltherrien.randomforest;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public interface Covariate<V> extends Serializable {
 
@@ -18,6 +17,8 @@ public interface Covariate<V> extends Serializable {
         Covariate<V> getParent();
 
         V getValue();
+
+        boolean isNA();
 
     }
 
@@ -37,9 +38,22 @@ public interface Covariate<V> extends Serializable {
             final List<Row<Y>> leftHand = new LinkedList<>();
             final List<Row<Y>> rightHand = new LinkedList<>();
 
-            for(final Row<Y> row : rows) {
+            final List<Boolean> nonMissingDecisions = new ArrayList<>();
+            final List<Row<Y>> missingValueRows = new ArrayList<>();
 
-                if(isLeftHand(row)){
+
+            for(final Row<Y> row : rows) {
+                final Value<V> value = (Value<V>) row.getCovariateValue(getParent().getName());
+
+                if(value.isNA()){
+                    missingValueRows.add(row);
+                    continue;
+                }
+
+                final boolean isLeftHand = isLeftHand(value);
+                nonMissingDecisions.add(isLeftHand);
+
+                if(isLeftHand){
                     leftHand.add(row);
                 }
                 else{
@@ -48,10 +62,31 @@ public interface Covariate<V> extends Serializable {
 
             }
 
+            if(nonMissingDecisions.size() == 0 && missingValueRows.size() > 0){
+                throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
+            }
+
+            final Random random = ThreadLocalRandom.current();
+            for(final Row<Y> missingValueRow : missingValueRows){
+                final boolean randomDecision = nonMissingDecisions.get(random.nextInt(nonMissingDecisions.size()));
+
+                if(randomDecision){
+                    leftHand.add(missingValueRow);
+                }
+                else{
+                    rightHand.add(missingValueRow);
+                }
+            }
+
             return new Split<>(leftHand, rightHand);
         }
 
-        boolean isLeftHand(CovariateRow row);
+        default boolean isLeftHand(CovariateRow row){
+            final Value<V> value = (Value<V>) row.getCovariateValue(getParent().getName());
+            return isLeftHand(value);
+        }
+
+        boolean isLeftHand(Value<V> value);
     }
 
 

@@ -1,6 +1,5 @@
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.exceptions.MissingValueException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +17,9 @@ public class NumericCovariate implements Covariate<Double>{
     public Collection<NumericSplitRule> generateSplitRules(List<Value<Double>> data, int number) {
 
         final Random random = ThreadLocalRandom.current();
+
+        // only work with non-NA values
+        data = data.stream().filter(value -> !value.isNA()).collect(Collectors.toList());
 
         // for this implementation we need to shuffle the data
         final List<Value<Double>> shuffledData;
@@ -55,9 +57,9 @@ public class NumericCovariate implements Covariate<Double>{
 
     public class NumericValue implements Covariate.Value<Double>{
 
-        private final double value;
+        private final Double value; // may be null
 
-        private NumericValue(final double value){
+        private NumericValue(final Double value){
             this.value = value;
         }
 
@@ -69,6 +71,11 @@ public class NumericCovariate implements Covariate<Double>{
         @Override
         public Double getValue() {
             return value;
+        }
+
+        @Override
+        public boolean isNA() {
+            return value == null;
         }
     }
 
@@ -91,13 +98,12 @@ public class NumericCovariate implements Covariate<Double>{
         }
 
         @Override
-        public boolean isLeftHand(CovariateRow row) {
-            final Covariate.Value<?> x = row.getCovariateValue(getParent().getName());
-            if(x == null) {
-                throw new MissingValueException(row, this);
+        public boolean isLeftHand(final Value<Double> x) {
+            if(x.isNA()) {
+                throw new IllegalArgumentException("Trying to determine split on missing value");
             }
 
-            final double xNum = (Double) x.getValue();
+            final double xNum = x.getValue();
 
             return xNum <= threshold;
         }
