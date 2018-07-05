@@ -1,7 +1,6 @@
 package ca.joeltherrien.randomforest.covariates;
 
 
-import ca.joeltherrien.randomforest.FactorCovariate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 

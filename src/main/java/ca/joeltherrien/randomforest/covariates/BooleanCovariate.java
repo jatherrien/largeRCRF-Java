@@ -1,4 +1,4 @@
-package ca.joeltherrien.randomforest;
+package ca.joeltherrien.randomforest.covariates;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

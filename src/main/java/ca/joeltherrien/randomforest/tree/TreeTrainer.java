@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.*;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Builder;
 
 import java.util.*;

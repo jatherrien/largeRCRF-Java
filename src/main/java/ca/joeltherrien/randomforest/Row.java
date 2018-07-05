@@ -1,6 +1,8 @@
 package ca.joeltherrien.randomforest;
 
 
+import ca.joeltherrien.randomforest.covariates.Covariate;
+
 import java.util.Map;
 
 public class Row<Y> extends CovariateRow {

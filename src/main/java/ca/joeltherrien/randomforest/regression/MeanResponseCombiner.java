@@ -1,6 +1,6 @@
 package ca.joeltherrien.randomforest.regression;
 
-import ca.joeltherrien.randomforest.ResponseCombiner;
+import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 
 import java.util.List;
 import java.util.Set;

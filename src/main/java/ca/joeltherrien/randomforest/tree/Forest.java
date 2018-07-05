@@ -1,11 +1,9 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.ResponseCombiner;
 import lombok.Builder;
 
 import java.util.Collection;
-import java.util.List;
 
 @Builder
 public class Forest<Y> {

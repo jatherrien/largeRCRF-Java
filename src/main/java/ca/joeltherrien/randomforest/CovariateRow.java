@@ -1,5 +1,6 @@
 package ca.joeltherrien.randomforest;
 
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

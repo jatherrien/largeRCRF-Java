@@ -1,5 +1,6 @@
-package ca.joeltherrien.randomforest;
+package ca.joeltherrien.randomforest.tree;
 
+import ca.joeltherrien.randomforest.Row;
 import lombok.Data;
 
 import java.util.List;

@@ -1,4 +1,8 @@
-package ca.joeltherrien.randomforest;
+package ca.joeltherrien.randomforest.covariates;
+
+import ca.joeltherrien.randomforest.CovariateRow;
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.tree.Split;
 
 import java.io.Serializable;
 import java.util.*;

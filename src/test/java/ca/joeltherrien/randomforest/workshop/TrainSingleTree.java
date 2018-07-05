@@ -1,9 +1,9 @@
 package ca.joeltherrien.randomforest.workshop;
 
 
-import ca.joeltherrien.randomforest.Covariate;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.NumericCovariate;
+import ca.joeltherrien.randomforest.covariates.NumericCovariate;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
