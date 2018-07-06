@@ -22,6 +22,7 @@ public class TestLoadingCSV {
         5,3.0,"mouse",true
         2,1.0,"dog",false
         9,1.5,"cat",true
+        -3,NA,NA,NA
      */
 
     @Test
@@ -41,7 +42,7 @@ public class TestLoadingCSV {
 
         final List<Row<Double>> data = Main.loadData(covariates, settings);
 
-        assertEquals(3, data.size());
+        assertEquals(4, data.size());
 
         Row<Double> row = data.get(0);
         assertEquals(5.0, (double)row.getResponse());
@@ -60,6 +61,12 @@ public class TestLoadingCSV {
         assertEquals(1.5, row.getCovariateValue("x1").getValue());
         assertEquals("cat", row.getCovariateValue("x2").getValue());
         assertEquals(true, row.getCovariateValue("x3").getValue());
+
+        row = data.get(3);
+        assertEquals(-3.0, (double)row.getResponse());
+        assertEquals(true, row.getCovariateValue("x1").isNA());
+        assertEquals(true, row.getCovariateValue("x2").isNA());
+        assertEquals(true, row.getCovariateValue("x3").isNA());
 
     }
 

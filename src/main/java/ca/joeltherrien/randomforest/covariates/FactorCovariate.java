@@ -69,7 +69,7 @@ public final class FactorCovariate implements Covariate<String>{
 
     @Override
     public FactorValue createValue(String value) {
-        if(value == null){
+        if(value == null || value.equalsIgnoreCase("na")){
             return this.naValue;
         }
 
