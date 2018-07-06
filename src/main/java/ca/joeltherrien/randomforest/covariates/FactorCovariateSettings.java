@@ -18,7 +18,7 @@ public final class FactorCovariateSettings extends CovariateSettings<String> {
     }
 
     @Override
-    FactorCovariate build() {
+    public FactorCovariate build() {
         return new FactorCovariate(name, levels);
     }
 }

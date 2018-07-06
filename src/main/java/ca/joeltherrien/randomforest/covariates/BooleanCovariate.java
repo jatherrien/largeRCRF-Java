@@ -25,6 +25,23 @@ public final class BooleanCovariate implements Covariate<Boolean>{
         return new BooleanValue(value);
     }
 
+    @Override
+    public Value<Boolean> createValue(String value) {
+        if(value == null || value.equalsIgnoreCase("na")){
+            return createValue( (Boolean) null);
+        }
+
+        if(value.equalsIgnoreCase("true")){
+            return createValue(true);
+        }
+        else if(value.equalsIgnoreCase("false")){
+            return createValue(false);
+        }
+        else{
+            throw new IllegalArgumentException("Require either true/false/na to create BooleanCovariate");
+        }
+    }
+
     public class BooleanValue implements Value<Boolean>{
 
         private final Boolean value;

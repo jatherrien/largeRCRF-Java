@@ -55,6 +55,15 @@ public final class NumericCovariate implements Covariate<Double>{
         return new NumericValue(value);
     }
 
+    @Override
+    public Value<Double> createValue(String value) {
+        if(value == null || value.equalsIgnoreCase("na")){
+            return createValue((Double) null);
+        }
+
+        return createValue(Double.parseDouble(value));
+    }
+
     public class NumericValue implements Covariate.Value<Double>{
 
         private final Double value; // may be null

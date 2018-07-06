@@ -16,6 +16,14 @@ public interface Covariate<V> extends Serializable {
 
     Value<V> createValue(V value);
 
+    /**
+     * Creates a Value of the appropriate type from a String; primarily used when parsing CSVs.
+     *
+     * @param value
+     * @return
+     */
+    Value<V> createValue(String value);
+
     interface Value<V> extends Serializable{
 
         Covariate<V> getParent();

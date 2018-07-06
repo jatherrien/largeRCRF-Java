@@ -4,6 +4,8 @@ import ca.joeltherrien.randomforest.Settings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ca.joeltherrien.randomforest.covariates.*;
+import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
+import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -22,6 +24,7 @@ public class TestPersistence {
                         new FactorCovariateSettings("x3", List.of("cat", "mouse", "dog"))
                         )
                 )
+                .yVar("y")
                 .dataFileLocation("data.csv")
                 .groupDifferentiator("WeightedVarianceGroupDifferentiator")
                 .responseCombiner("MeanResponseCombiner")

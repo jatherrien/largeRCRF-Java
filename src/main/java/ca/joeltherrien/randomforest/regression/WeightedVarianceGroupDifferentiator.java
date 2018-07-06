@@ -6,6 +6,10 @@ import java.util.List;
 
 public class WeightedVarianceGroupDifferentiator implements GroupDifferentiator<Double> {
 
+    static{
+        GroupDifferentiator.registerGroupDifferentiator("WeightedVarianceGroupDifferentiator", new WeightedVarianceGroupDifferentiator());
+    }
+
     @Override
     public Double differentiate(List<Double> leftHand, List<Double> rightHand) {
 

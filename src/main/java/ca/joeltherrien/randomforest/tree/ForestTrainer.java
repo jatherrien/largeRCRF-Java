@@ -1,8 +1,11 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
+import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.Row;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.io.FileOutputStream;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Builder
+@AllArgsConstructor(access=AccessLevel.PRIVATE)
 public class ForestTrainer<Y> {
 
     private final TreeTrainer<Y> treeTrainer;
@@ -33,6 +37,19 @@ public class ForestTrainer<Y> {
 
     private final boolean displayProgress;
     private final String saveTreeLocation;
+
+    public ForestTrainer(final Settings settings, final List<Row<Y>> data, final List<Covariate> covariates){
+        this.mtry = settings.getMtry();
+        this.ntree = settings.getNtree();
+        this.data = data;
+        this.displayProgress = true;
+        this.saveTreeLocation = settings.getSaveTreeLocation();
+
+        this.covariatesToTry = covariates;
+        this.treeResponseCombiner = ResponseCombiner.loadResponseCombinerByName(settings.getTreeResponseCombiner());
+        this.treeTrainer = new TreeTrainer<>(settings);
+
+    }
 
     public Forest<Y> trainSerial(){
 

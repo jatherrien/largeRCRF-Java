@@ -17,6 +17,10 @@ import java.util.function.Supplier;
  */
 public class MeanResponseCombiner implements ResponseCombiner<Double, MeanResponseCombiner.Container> {
 
+    static{
+        ResponseCombiner.registerResponseCombiner("MeanResponseCombiner", new MeanResponseCombiner());
+    }
+
     @Override
     public Double combine(List<Double> responses) {
         double size = responses.size();

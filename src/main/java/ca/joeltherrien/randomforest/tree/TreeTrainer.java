@@ -2,12 +2,15 @@ package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.Covariate;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TreeTrainer<Y> {
 
     private final ResponseCombiner<Y, ?> responseCombiner;
@@ -21,6 +24,14 @@ public class TreeTrainer<Y> {
     private final int nodeSize;
     private final int maxNodeDepth;
 
+    public TreeTrainer(final Settings settings){
+        this.numberOfSplits = settings.getNumberOfSplits();
+        this.nodeSize = settings.getNodeSize();
+        this.maxNodeDepth = settings.getMaxNodeDepth();
+
+        this.responseCombiner = ResponseCombiner.loadResponseCombinerByName(settings.getResponseCombiner());
+        this.groupDifferentiator = GroupDifferentiator.loadGroupDifferentiatorByName(settings.getGroupDifferentiator());
+    }
 
     public Node<Y> growTree(List<Row<Y>> data, List<Covariate> covariatesToTry){
         return growNode(data, covariatesToTry, 0);

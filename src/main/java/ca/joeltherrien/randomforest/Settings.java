@@ -2,6 +2,9 @@ package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.CovariateSettings;
+import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
+import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.*;
@@ -9,7 +12,9 @@ import lombok.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is saved & loaded using a saved configuration file. It contains all relevant settings when training a forest.
@@ -29,6 +34,7 @@ public class Settings {
     private String treeResponseCombiner;
 
     private List<CovariateSettings> covariates = new ArrayList<>();
+    private String yVar = "y";
 
     // number of covariates to randomly try
     private int mtry = 0;
@@ -63,6 +69,5 @@ public class Settings {
 
         mapper.writeValue(file, this);
     }
-
 
 }
