@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class NumericCovariate implements Covariate<Double>{
+public final class NumericCovariate implements Covariate<Double>{
 
     @Getter
     private final String name;

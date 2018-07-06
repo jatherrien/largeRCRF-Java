@@ -3,10 +3,12 @@ package ca.joeltherrien.randomforest.covariates;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @RequiredArgsConstructor
-public class BooleanCovariate implements Covariate<Boolean>{
+public final class BooleanCovariate implements Covariate<Boolean>{
 
     @Getter
     private final String name;

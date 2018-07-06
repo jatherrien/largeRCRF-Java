@@ -1,10 +1,10 @@
 package ca.joeltherrien.randomforest;
 
+import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.covariates.CovariateSettings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +17,7 @@ import java.util.List;
 @Data
 @Builder
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Settings {
 
     private int numberOfSplits = 5;
@@ -27,7 +28,7 @@ public class Settings {
     private String groupDifferentiator;
     private String treeResponseCombiner;
 
-    private List<String> covariates = new ArrayList<>();
+    private List<CovariateSettings> covariates = new ArrayList<>();
 
     // number of covariates to randomly try
     private int mtry = 0;
@@ -45,6 +46,7 @@ public class Settings {
 
     public static Settings load(File file) throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        //mapper.enableDefaultTyping();
 
         final Settings settings = mapper.readValue(file, Settings.class);
 
@@ -54,6 +56,10 @@ public class Settings {
 
     public void save(File file) throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        //mapper.enableDefaultTyping();
+
+        // Jackson can struggle with some types of Lists, such as that returned by the useful List.of(...)
+        this.covariates = new ArrayList<>(this.covariates);
 
         mapper.writeValue(file, this);
     }

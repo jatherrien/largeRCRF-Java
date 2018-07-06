@@ -2,10 +2,13 @@ package ca.joeltherrien.randomforest.settings;
 
 import ca.joeltherrien.randomforest.Settings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import ca.joeltherrien.randomforest.covariates.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestPersistence {
@@ -13,7 +16,12 @@ public class TestPersistence {
     @Test
     public void testSaving() throws IOException {
         final Settings settingsOriginal = Settings.builder()
-                .covariates(List.of("x1", "x2", "x3"))
+                .covariates(List.of(
+                        new NumericCovariateSettings("x1"),
+                        new BooleanCovariateSettings("x2"),
+                        new FactorCovariateSettings("x3", List.of("cat", "mouse", "dog"))
+                        )
+                )
                 .dataFileLocation("data.csv")
                 .groupDifferentiator("WeightedVarianceGroupDifferentiator")
                 .responseCombiner("MeanResponseCombiner")
