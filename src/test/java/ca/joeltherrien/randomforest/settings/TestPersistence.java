@@ -4,31 +4,38 @@ import ca.joeltherrien.randomforest.Settings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ca.joeltherrien.randomforest.covariates.*;
-import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TestPersistence {
 
     @Test
     public void testSaving() throws IOException {
-        final Settings settingsOriginal = Settings.builder()
+        final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
+        groupDifferentiatorSettings.set("type", new TextNode("WeightedVarianceGroupDifferentiator"));
+
+        final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
+        yVarSettings.set("type", new TextNode("Double"));
+        yVarSettings.set("name", new TextNode("y"));
+
+        final Settings settingsOriginal =  Settings.builder()
                 .covariates(List.of(
                         new NumericCovariateSettings("x1"),
                         new BooleanCovariateSettings("x2"),
                         new FactorCovariateSettings("x3", List.of("cat", "mouse", "dog"))
                         )
                 )
-                .yVar("y")
                 .dataFileLocation("data.csv")
-                .groupDifferentiator("WeightedVarianceGroupDifferentiator")
                 .responseCombiner("MeanResponseCombiner")
                 .treeResponseCombiner("MeanResponseCombiner")
+                .groupDifferentiatorSettings(groupDifferentiatorSettings)
+                .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)
                 .mtry(2)
                 .nodeSize(5)
@@ -46,7 +53,7 @@ public class TestPersistence {
 
         assertEquals(settingsOriginal, reloadedSettings);
 
-        templateFile.delete();
+        //templateFile.delete();
 
 
     }

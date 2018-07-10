@@ -5,8 +5,8 @@ import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.FactorCovariate;
 import ca.joeltherrien.randomforest.covariates.NumericCovariate;
-import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.regression.WeightedVarianceGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
+import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 

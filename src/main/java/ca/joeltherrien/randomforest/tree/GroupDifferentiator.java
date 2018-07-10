@@ -1,5 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +16,11 @@ public interface GroupDifferentiator<Y> {
 
     Double differentiate(List<Y> leftHand, List<Y> rightHand);
 
-    Map<String, GroupDifferentiator> GROUP_DIFFERENTIATOR_MAP = new HashMap<>();
-    static GroupDifferentiator loadGroupDifferentiatorByName(final String name){
-        return GROUP_DIFFERENTIATOR_MAP.get(name);
-    }
-    static void registerGroupDifferentiator(final String name, final GroupDifferentiator groupDifferentiator){
-        GROUP_DIFFERENTIATOR_MAP.put(name, groupDifferentiator);
+    @FunctionalInterface
+    interface GroupDifferentiatorConstructor<Y>{
+
+        GroupDifferentiator<Y> construct(ObjectNode node);
+
     }
 
 }

@@ -1,15 +1,10 @@
-package ca.joeltherrien.randomforest.regression;
+package ca.joeltherrien.randomforest.responses.regression;
 
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
-import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 
 import java.util.List;
 
 public class MeanGroupDifferentiator implements GroupDifferentiator<Double> {
-
-    static{
-        GroupDifferentiator.registerGroupDifferentiator("MeanGroupDifferentiator", new MeanGroupDifferentiator());
-    }
 
     @Override
     public Double differentiate(List<Double> leftHand, List<Double> rightHand) {

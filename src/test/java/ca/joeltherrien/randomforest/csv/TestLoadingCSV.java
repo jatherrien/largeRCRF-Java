@@ -1,12 +1,15 @@
 package ca.joeltherrien.randomforest.csv;
 
-import ca.joeltherrien.randomforest.Main;
+import ca.joeltherrien.randomforest.DataLoader;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -26,7 +29,11 @@ public class TestLoadingCSV {
      */
 
     @Test
-    public void verifyLoading() throws IOException {
+    public void verifyLoading() throws IOException, ClassNotFoundException {
+        final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
+        yVarSettings.set("type", new TextNode("Double"));
+        yVarSettings.set("name", new TextNode("y"));
+
         final Settings settings = Settings.builder()
                 .dataFileLocation("src/test/resources/testCSV.csv")
                 .covariates(
@@ -34,13 +41,16 @@ public class TestLoadingCSV {
                                 new FactorCovariateSettings("x2", List.of("dog", "cat", "mouse")),
                                 new BooleanCovariateSettings("x3"))
                 )
-                .yVar("y")
+                .yVarSettings(yVarSettings)
                 .build();
 
         final List<Covariate> covariates = settings.getCovariates().stream()
                 .map(cs -> cs.build()).collect(Collectors.toList());
 
-        final List<Row<Double>> data = Main.loadData(covariates, settings);
+
+        final DataLoader.ResponseLoader loader = settings.getResponseLoader();
+
+        final List<Row<Double>> data = DataLoader.loadData(covariates, loader, settings.getDataFileLocation());
 
         assertEquals(4, data.size());
 

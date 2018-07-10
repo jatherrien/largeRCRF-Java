@@ -30,7 +30,7 @@ public class TreeTrainer<Y> {
         this.maxNodeDepth = settings.getMaxNodeDepth();
 
         this.responseCombiner = ResponseCombiner.loadResponseCombinerByName(settings.getResponseCombiner());
-        this.groupDifferentiator = GroupDifferentiator.loadGroupDifferentiatorByName(settings.getGroupDifferentiator());
+        this.groupDifferentiator = settings.getGroupDifferentiator();
     }
 
     public Node<Y> growTree(List<Row<Y>> data, List<Covariate> covariatesToTry){

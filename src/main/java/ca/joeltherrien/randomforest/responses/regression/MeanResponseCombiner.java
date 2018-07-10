@@ -1,4 +1,4 @@
-package ca.joeltherrien.randomforest.regression;
+package ca.joeltherrien.randomforest.responses.regression;
 
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 

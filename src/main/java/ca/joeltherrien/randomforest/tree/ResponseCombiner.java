@@ -1,7 +1,5 @@
 package ca.joeltherrien.randomforest.tree;
 
-import ca.joeltherrien.randomforest.regression.MeanResponseCombiner;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
