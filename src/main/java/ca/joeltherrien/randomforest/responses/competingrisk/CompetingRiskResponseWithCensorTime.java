@@ -11,16 +11,16 @@ import org.apache.commons.csv.CSVRecord;
  *
  */
 @Data
-public class CompetingResponseWithCensorTime extends CompetingResponse{
+public class CompetingRiskResponseWithCensorTime extends CompetingRiskResponse {
     private final double c;
 
-    public CompetingResponseWithCensorTime(int delta, double u, double c) {
+    public CompetingRiskResponseWithCensorTime(int delta, double u, double c) {
         super(delta, u);
         this.c = c;
     }
 
     @RequiredArgsConstructor
-    public static class CompetingResponseWithCensorTimeLoader implements DataLoader.ResponseLoader<CompetingResponseWithCensorTime>{
+    public static class CompetingResponseWithCensorTimeLoader implements DataLoader.ResponseLoader<CompetingRiskResponseWithCensorTime>{
 
         private final String deltaName;
         private final String uName;
@@ -33,12 +33,12 @@ public class CompetingResponseWithCensorTime extends CompetingResponse{
         }
 
         @Override
-        public CompetingResponseWithCensorTime parse(CSVRecord record) {
+        public CompetingRiskResponseWithCensorTime parse(CSVRecord record) {
             final int delta = Integer.parseInt(record.get(deltaName));
             final double u = Double.parseDouble(record.get(uName));
             final double c = Double.parseDouble(record.get(cName));
 
-            return new CompetingResponseWithCensorTime(delta, u, c);
+            return new CompetingRiskResponseWithCensorTime(delta, u, c);
         }
     }
 }

@@ -5,12 +5,12 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @RequiredArgsConstructor
 public class Bootstrapper<T> {
 
     final private List<T> originalData;
-    final private Random random = new Random();
 
     public List<T> bootstrap(){
         final int n = originalData.size();
@@ -18,7 +18,7 @@ public class Bootstrapper<T> {
         final List<T> newList = new ArrayList<>(n);
 
         for(int i=0; i<n; i++){
-            final int index = random.nextInt(n);
+            final int index = ThreadLocalRandom.current().nextInt(n);
 
             newList.add(originalData.get(index));
         }

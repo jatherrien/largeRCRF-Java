@@ -69,18 +69,21 @@ public class TrainSingleTreeFactor {
             trainingSet.add(generateRow(x1, x2, x3, i));
         }
 
-        final TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
+        final List<Covariate> covariateNames = List.of(x1Covariate, x2Covariate);
+
+        final TreeTrainer<Double, Double> treeTrainer = TreeTrainer.<Double, Double>builder()
                 .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
                 .responseCombiner(new MeanResponseCombiner())
+                .covariates(covariateNames)
                 .maxNodeDepth(30)
                 .nodeSize(5)
                 .numberOfSplits(5)
                 .build();
 
-        final List<Covariate> covariateNames = List.of(x1Covariate, x2Covariate);
+
 
         final long startTime = System.currentTimeMillis();
-        final Node<Double> baseNode = treeTrainer.growTree(trainingSet, covariateNames);
+        final Node<Double> baseNode = treeTrainer.growTree(trainingSet);
         final long endTime = System.currentTimeMillis();
 
         System.out.println(((double)(endTime - startTime))/1000.0);

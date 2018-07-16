@@ -1,11 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -13,12 +9,12 @@ import java.util.List;
  *
  */
 @RequiredArgsConstructor
-public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingResponse> {
+public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponse> {
 
     private final int[] events;
 
     @Override
-    public Double differentiate(List<CompetingResponse> leftHand, List<CompetingResponse> rightHand) {
+    public Double differentiate(List<CompetingRiskResponse> leftHand, List<CompetingRiskResponse> rightHand) {
         if(leftHand.size() == 0 || rightHand.size() == 0){
             return null;
         }
@@ -29,8 +25,8 @@ public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDiffer
         for(final int eventOfFocus : events){
             final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, leftHand, rightHand);
 
-            numerator += valueOfInterest.getNumerator()*valueOfInterest.getVariance();
-            denominatorSquared += valueOfInterest.getVarianceSquared();
+            numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
+            denominatorSquared += valueOfInterest.getVariance();
 
         }
 
@@ -39,7 +35,7 @@ public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDiffer
     }
 
     @Override
-    double riskSet(List<CompetingResponse> eventList, double time, int eventOfFocus) {
+    double riskSet(List<CompetingRiskResponse> eventList, double time, int eventOfFocus) {
         return eventList.stream()
                 .filter(event -> event.getU() >= time)
                 .count();

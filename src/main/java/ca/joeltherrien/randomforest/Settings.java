@@ -3,8 +3,10 @@ package ca.joeltherrien.randomforest;
 import ca.joeltherrien.randomforest.covariates.CovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.regression.MeanGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +18,7 @@ import lombok.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * This class is saved & loaded using a saved configuration file. It contains all relevant settings when training a forest.
@@ -26,11 +29,11 @@ import java.util.*;
 @EqualsAndHashCode
 public class Settings {
 
-    private static Map<String, DataLoader.ResponseLoaderConstructor> RESPONSE_LOADER_MAP = new HashMap<>();
-    public static DataLoader.ResponseLoaderConstructor getResponseLoaderConstructor(final String name){
+    private static Map<String, Function<ObjectNode, DataLoader.ResponseLoader>> RESPONSE_LOADER_MAP = new HashMap<>();
+    public static Function<ObjectNode, DataLoader.ResponseLoader> getResponseLoaderConstructor(final String name){
         return RESPONSE_LOADER_MAP.get(name.toLowerCase());
     }
-    public static void registerResponseLoaderConstructor(final String name, final DataLoader.ResponseLoaderConstructor responseLoaderConstructor){
+    public static void registerResponseLoaderConstructor(final String name, final Function<ObjectNode, DataLoader.ResponseLoader> responseLoaderConstructor){
         RESPONSE_LOADER_MAP.put(name.toLowerCase(), responseLoaderConstructor);
     }
 
@@ -38,19 +41,19 @@ public class Settings {
         registerResponseLoaderConstructor("double",
                 node -> new DataLoader.DoubleLoader(node)
         );
-        registerResponseLoaderConstructor("CompetingResponse",
-                node -> new CompetingResponse.CompetingResponseLoader(node)
+        registerResponseLoaderConstructor("CompetingRiskResponse",
+                node -> new CompetingRiskResponse.CompetingResponseLoader(node)
         );
-        registerResponseLoaderConstructor("CompetingResponseWithCensorTime",
-                node -> new CompetingResponseWithCensorTime.CompetingResponseWithCensorTimeLoader(node)
+        registerResponseLoaderConstructor("CompetingRiskResponseWithCensorTime",
+                node -> new CompetingRiskResponseWithCensorTime.CompetingResponseWithCensorTimeLoader(node)
         );
     }
 
-    private static Map<String, GroupDifferentiator.GroupDifferentiatorConstructor> GROUP_DIFFERENTIATOR_MAP = new HashMap<>();
-    public static GroupDifferentiator.GroupDifferentiatorConstructor getGroupDifferentiatorConstructor(final String name){
+    private static Map<String, Function<ObjectNode, GroupDifferentiator>> GROUP_DIFFERENTIATOR_MAP = new HashMap<>();
+    public static Function<ObjectNode, GroupDifferentiator> getGroupDifferentiatorConstructor(final String name){
         return GROUP_DIFFERENTIATOR_MAP.get(name.toLowerCase());
     }
-    public static void registerGroupDifferentiatorConstructor(final String name, final GroupDifferentiator.GroupDifferentiatorConstructor groupDifferentiatorConstructor){
+    public static void registerGroupDifferentiatorConstructor(final String name, final Function<ObjectNode, GroupDifferentiator> groupDifferentiatorConstructor){
         GROUP_DIFFERENTIATOR_MAP.put(name.toLowerCase(), groupDifferentiatorConstructor);
     }
     static{
@@ -98,13 +101,67 @@ public class Settings {
         );
     }
 
+    private static Map<String, Function<ObjectNode, ResponseCombiner>> RESPONSE_COMBINER_MAP = new HashMap<>();
+    public static Function<ObjectNode, ResponseCombiner> getResponseCombinerConstructor(final String name){
+        return RESPONSE_COMBINER_MAP.get(name.toLowerCase());
+    }
+    public static void registerResponseCombinerConstructor(final String name, final Function<ObjectNode, ResponseCombiner> responseCombinerConstructor){
+        RESPONSE_COMBINER_MAP.put(name.toLowerCase(), responseCombinerConstructor);
+    }
+
+    static{
+
+        registerResponseCombinerConstructor("MeanResponseCombiner",
+                (node) -> new MeanResponseCombiner()
+        );
+        registerResponseCombinerConstructor("CompetingRiskResponseCombiner",
+                (node) -> {
+                    final List<Integer> eventList = new ArrayList<>();
+                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
+                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
+
+                    double[] times = null;
+                    // note that times may be null
+                    if(node.hasNonNull("times")){
+                        final List<Double> timeList = new ArrayList<>();
+                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                    }
+
+                    return new CompetingRiskResponseCombiner(events, times);
+
+                }
+        );
+
+        registerResponseCombinerConstructor("CompetingRiskFunctionCombiner",
+                (node) -> {
+                    final List<Integer> eventList = new ArrayList<>();
+                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
+                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
+
+                    double[] times = null;
+                    // note that times may be null
+                    if(node.hasNonNull("times")){
+                        final List<Double> timeList = new ArrayList<>();
+                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                    }
+
+                    return new CompetingRiskFunctionCombiner(events, times);
+
+                }
+        );
+
+
+    }
+
     private int numberOfSplits = 5;
     private int nodeSize = 5;
     private int maxNodeDepth = 1000000; // basically no maxNodeDepth
 
-    private String responseCombiner;
+    private ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
     private ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-    private String treeResponseCombiner;
+    private ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
 
     private List<CovariateSettings> covariates = new ArrayList<>();
     private ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
@@ -148,14 +205,28 @@ public class Settings {
     public GroupDifferentiator getGroupDifferentiator(){
         final String type = groupDifferentiatorSettings.get("type").asText();
 
-        return getGroupDifferentiatorConstructor(type).construct(groupDifferentiatorSettings);
+        return getGroupDifferentiatorConstructor(type).apply(groupDifferentiatorSettings);
     }
 
     @JsonIgnore
     public DataLoader.ResponseLoader getResponseLoader(){
         final String type = yVarSettings.get("type").asText();
 
-        return getResponseLoaderConstructor(type).construct(yVarSettings);
+        return getResponseLoaderConstructor(type).apply(yVarSettings);
+    }
+
+    @JsonIgnore
+    public ResponseCombiner getResponseCombiner(){
+        final String type = responseCombinerSettings.get("type").asText();
+
+        return getResponseCombinerConstructor(type).apply(responseCombinerSettings);
+    }
+
+    @JsonIgnore
+    public ResponseCombiner getTreeCombiner(){
+        final String type = treeCombinerSettings.get("type").asText();
+
+        return getResponseCombinerConstructor(type).apply(treeCombinerSettings);
     }
 
 }

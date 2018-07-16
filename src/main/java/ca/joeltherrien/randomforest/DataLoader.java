@@ -1,7 +1,6 @@
 package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
@@ -47,11 +46,6 @@ public class DataLoader {
     @FunctionalInterface
     public interface ResponseLoader<Y>{
         Y parse(CSVRecord record);
-    }
-
-    @FunctionalInterface
-    public interface ResponseLoaderConstructor<Y>{
-        ResponseLoader<Y> construct(ObjectNode node);
     }
 
     @RequiredArgsConstructor

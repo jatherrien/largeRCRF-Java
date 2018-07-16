@@ -1,13 +1,16 @@
 package ca.joeltherrien.randomforest.covariates;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
+@ToString
 public final class NumericCovariate implements Covariate<Double>{
 
     @Getter
@@ -20,16 +23,18 @@ public final class NumericCovariate implements Covariate<Double>{
 
         // only work with non-NA values
         data = data.stream().filter(value -> !value.isNA()).collect(Collectors.toList());
+        //data = data.stream().filter(value -> !value.isNA()).distinct().collect(Collectors.toList()); // TODO which to use?
 
         // for this implementation we need to shuffle the data
         final List<Value<Double>> shuffledData;
-        if(number > data.size()){
+        if(number >= data.size()){
             shuffledData = new ArrayList<>(data);
             Collections.shuffle(shuffledData, random);
         }
         else{ // only need the top number entries
             shuffledData = new ArrayList<>(number);
             final Set<Integer> indexesToUse = new HashSet<>();
+            //final List<Integer> indexesToUse = new ArrayList<>(); // TODO which to use?
 
             while(indexesToUse.size() < number){
                 final int index = random.nextInt(data.size());
@@ -56,7 +61,7 @@ public final class NumericCovariate implements Covariate<Double>{
     }
 
     @Override
-    public Value<Double> createValue(String value) {
+    public NumericValue createValue(String value) {
         if(value == null || value.equalsIgnoreCase("na")){
             return createValue((Double) null);
         }
@@ -64,6 +69,7 @@ public final class NumericCovariate implements Covariate<Double>{
         return createValue(Double.parseDouble(value));
     }
 
+    @EqualsAndHashCode
     public class NumericValue implements Covariate.Value<Double>{
 
         private final Double value; // may be null
@@ -88,6 +94,7 @@ public final class NumericCovariate implements Covariate<Double>{
         }
     }
 
+    @EqualsAndHashCode
     public class NumericSplitRule implements Covariate.SplitRule<Double>{
 
         private final double threshold;

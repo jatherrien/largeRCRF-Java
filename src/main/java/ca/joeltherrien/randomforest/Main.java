@@ -44,7 +44,7 @@ public class Main {
 
         final List<Row<Double>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
 
-        final ForestTrainer<Double> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+        final ForestTrainer<Double, Double, Double> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
         if(settings.isSaveProgress()){
             forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
@@ -63,8 +63,14 @@ public class Main {
         final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
         groupDifferentiatorSettings.set("type", new TextNode("WeightedVarianceGroupDifferentiator"));
 
+        final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
+        responseCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
+
+        final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
+        treeCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
+
         final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
-        yVarSettings.set("type", new TextNode("y"));
+        yVarSettings.set("type", new TextNode("Double"));
         yVarSettings.set("name", new TextNode("y"));
 
         final Settings settings =  Settings.builder()
@@ -75,8 +81,8 @@ public class Main {
                         )
                 )
                 .dataFileLocation("data.csv")
-                .responseCombiner("MeanResponseCombiner")
-                .treeResponseCombiner("MeanResponseCombiner")
+                .responseCombinerSettings(responseCombinerSettings)
+                .treeCombinerSettings(treeCombinerSettings)
                 .groupDifferentiatorSettings(groupDifferentiatorSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)

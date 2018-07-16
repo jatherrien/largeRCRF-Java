@@ -8,8 +8,6 @@ import lombok.Data;
  */
 @Data
 public class Point {
-
     private final Double time;
     private final Double y;
-
 }

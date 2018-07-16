@@ -16,17 +16,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Builder
 @AllArgsConstructor(access=AccessLevel.PRIVATE)
-public class ForestTrainer<Y> {
+public class ForestTrainer<Y, TO, FO> {
 
-    private final TreeTrainer<Y> treeTrainer;
-    private final List<Covariate> covariatesToTry;
-    private final ResponseCombiner<Y, ?> treeResponseCombiner;
+    private final TreeTrainer<Y, TO> treeTrainer;
+    private final List<Covariate> covariates;
+    private final ResponseCombiner<TO, FO> treeResponseCombiner;
     private final List<Row<Y>> data;
 
     // number of covariates to randomly try
@@ -45,15 +46,15 @@ public class ForestTrainer<Y> {
         this.displayProgress = true;
         this.saveTreeLocation = settings.getSaveTreeLocation();
 
-        this.covariatesToTry = covariates;
-        this.treeResponseCombiner = ResponseCombiner.loadResponseCombinerByName(settings.getTreeResponseCombiner());
-        this.treeTrainer = new TreeTrainer<>(settings);
+        this.covariates = covariates;
+        this.treeResponseCombiner = settings.getTreeCombiner();
+        this.treeTrainer = new TreeTrainer<>(settings, covariates);
 
     }
 
-    public Forest<Y> trainSerial(){
+    public Forest<TO, FO> trainSerial(){
 
-        final List<Node<Y>> trees = new ArrayList<>(ntree);
+        final List<Node<TO>> trees = new ArrayList<>(ntree);
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
 
         for(int j=0; j<ntree; j++){
@@ -71,18 +72,18 @@ public class ForestTrainer<Y> {
             }
         }
 
-        return Forest.<Y>builder()
+        return Forest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
                 .trees(trees)
                 .build();
 
     }
 
-    public Forest<Y> trainParallelInMemory(int threads){
+    public Forest<TO, FO> trainParallelInMemory(int threads){
 
         // create a list that is prespecified in size (I can call the .set method at any index < ntree without
         // the earlier indexes being filled.
-        final List<Node<Y>> trees = Stream.<Node<Y>>generate(() -> null).limit(ntree).collect(Collectors.toList());
+        final List<Node<TO>> trees = Stream.<Node<TO>>generate(() -> null).limit(ntree).collect(Collectors.toList());
 
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
@@ -102,7 +103,7 @@ public class ForestTrainer<Y> {
 
             if(displayProgress) {
                 int numberTreesSet = 0;
-                for (final Node<Y> tree : trees) {
+                for (final Node<TO> tree : trees) {
                     if (tree != null) {
                         numberTreesSet++;
                     }
@@ -117,7 +118,7 @@ public class ForestTrainer<Y> {
             System.out.println("\nFinished");
         }
 
-        return Forest.<Y>builder()
+        return Forest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
                 .trees(trees)
                 .build();
@@ -156,20 +157,12 @@ public class ForestTrainer<Y> {
 
     }
 
-    private Node<Y> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
-        final List<Covariate> treeCovariates = new ArrayList<>(covariatesToTry);
-        Collections.shuffle(treeCovariates);
-
-        for(int treeIndex = covariatesToTry.size()-1; treeIndex >= mtry; treeIndex--){
-            treeCovariates.remove(treeIndex);
-        }
-
+    private Node<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
         final List<Row<Y>> bootstrappedData = bootstrapper.bootstrap();
-
-        return treeTrainer.growTree(bootstrappedData, treeCovariates);
+        return treeTrainer.growTree(bootstrappedData);
     }
 
-    public void saveTree(final Node<Y> tree, String name) throws IOException {
+    public void saveTree(final Node<TO> tree, String name) throws IOException {
         final String filename = saveTreeLocation + "/" + name;
 
         final ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(filename));
@@ -184,9 +177,9 @@ public class ForestTrainer<Y> {
 
         private final Bootstrapper<Row<Y>> bootstrapper;
         private final int treeIndex;
-        private final List<Node<Y>> treeList;
+        private final List<Node<TO>> treeList;
 
-        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Node<Y>> treeList) {
+        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Node<TO>> treeList) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.treeIndex = treeIndex;
             this.treeList = treeList;
@@ -195,7 +188,7 @@ public class ForestTrainer<Y> {
         @Override
         public void run() {
 
-            final Node<Y> tree = trainTree(bootstrapper);
+            final Node<TO> tree = trainTree(bootstrapper);
 
             // should be okay as the list structure isn't changing
             treeList.set(treeIndex, tree);
@@ -218,7 +211,7 @@ public class ForestTrainer<Y> {
         @Override
         public void run() {
 
-            final Node<Y> tree = trainTree(bootstrapper);
+            final Node<TO> tree = trainTree(bootstrapper);
 
             try {
                 saveTree(tree, filename);

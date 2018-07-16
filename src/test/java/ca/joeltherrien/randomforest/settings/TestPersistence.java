@@ -20,6 +20,12 @@ public class TestPersistence {
         final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
         groupDifferentiatorSettings.set("type", new TextNode("WeightedVarianceGroupDifferentiator"));
 
+        final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
+        responseCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
+
+        final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
+        treeCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
+
         final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
         yVarSettings.set("type", new TextNode("Double"));
         yVarSettings.set("name", new TextNode("y"));
@@ -32,8 +38,8 @@ public class TestPersistence {
                         )
                 )
                 .dataFileLocation("data.csv")
-                .responseCombiner("MeanResponseCombiner")
-                .treeResponseCombiner("MeanResponseCombiner")
+                .responseCombinerSettings(responseCombinerSettings)
+                .treeCombinerSettings(treeCombinerSettings)
                 .groupDifferentiatorSettings(groupDifferentiatorSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)

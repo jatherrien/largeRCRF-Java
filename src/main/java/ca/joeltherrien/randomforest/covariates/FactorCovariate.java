@@ -82,6 +82,11 @@ public final class FactorCovariate implements Covariate<String>{
         return factorValue;
     }
 
+    @Override
+    public String toString(){
+        return "FactorCovariate(name=" + name + ")";
+    }
+
     @EqualsAndHashCode
     public final class FactorValue implements Covariate.Value<String>{
 

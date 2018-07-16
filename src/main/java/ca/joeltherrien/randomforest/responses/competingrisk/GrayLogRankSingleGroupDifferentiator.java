@@ -1,11 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -13,24 +9,24 @@ import java.util.List;
  *
  */
 @RequiredArgsConstructor
-public class GrayLogRankSingleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingResponseWithCensorTime> {
+public class GrayLogRankSingleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponseWithCensorTime> {
 
     private final int eventOfFocus;
 
     @Override
-    public Double differentiate(List<CompetingResponseWithCensorTime> leftHand, List<CompetingResponseWithCensorTime> rightHand) {
+    public Double differentiate(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand) {
         if(leftHand.size() == 0 || rightHand.size() == 0){
             return null;
         }
 
         final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, leftHand, rightHand);
 
-        return Math.abs(valueOfInterest.getNumerator() / valueOfInterest.getVariance());
+        return Math.abs(valueOfInterest.getNumerator() / valueOfInterest.getVarianceSqrt());
 
     }
 
     @Override
-    double riskSet(List<CompetingResponseWithCensorTime> eventList, double time, int eventOfFocus) {
+    double riskSet(List<CompetingRiskResponseWithCensorTime> eventList, double time, int eventOfFocus) {
         return eventList.stream()
                 .filter(event -> event.getU() >= time ||
                         (event.getU() < time && event.getDelta() != eventOfFocus && event.getC() > time)

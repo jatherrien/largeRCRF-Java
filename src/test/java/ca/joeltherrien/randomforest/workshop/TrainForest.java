@@ -51,7 +51,7 @@ public class TrainForest {
         }
 
 
-        final TreeTrainer<Double> treeTrainer = TreeTrainer.<Double>builder()
+        final TreeTrainer<Double, Double> treeTrainer = TreeTrainer.<Double, Double>builder()
                 .numberOfSplits(5)
                 .nodeSize(5)
                 .maxNodeDepth(100000000)
@@ -59,10 +59,10 @@ public class TrainForest {
                 .responseCombiner(new MeanResponseCombiner())
                 .build();
 
-        final ForestTrainer<Double> forestTrainer = ForestTrainer.<Double>builder()
+        final ForestTrainer<Double, Double, Double> forestTrainer = ForestTrainer.<Double, Double, Double>builder()
                 .treeTrainer(treeTrainer)
                 .data(data)
-                .covariatesToTry(covariateList)
+                .covariates(covariateList)
                 .mtry(4)
                 .ntree(100)
                 .treeResponseCombiner(new MeanResponseCombiner())

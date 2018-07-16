@@ -7,14 +7,18 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVRecord;
 
 @Data
-public class CompetingResponse {
+public class CompetingRiskResponse {
 
     private final int delta;
     private final double u;
 
+    public boolean isCensored(){
+        return delta == 0;
+    }
+
 
     @RequiredArgsConstructor
-    public static class CompetingResponseLoader implements DataLoader.ResponseLoader<CompetingResponse>{
+    public static class CompetingResponseLoader implements DataLoader.ResponseLoader<CompetingRiskResponse>{
 
         private final String deltaName;
         private final String uName;
@@ -25,11 +29,11 @@ public class CompetingResponse {
         }
 
         @Override
-        public CompetingResponse parse(CSVRecord record) {
+        public CompetingRiskResponse parse(CSVRecord record) {
             final int delta = Integer.parseInt(record.get(deltaName));
             final double u = Double.parseDouble(record.get(uName));
 
-            return new CompetingResponse(delta, u);
+            return new CompetingRiskResponse(delta, u);
         }
     }
 

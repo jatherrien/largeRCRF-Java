@@ -42,6 +42,11 @@ public final class BooleanCovariate implements Covariate<Boolean>{
         }
     }
 
+    @Override
+    public String toString(){
+        return "BooleanCovariate(name=" + name + ")";
+    }
+
     public class BooleanValue implements Value<Boolean>{
 
         private final Boolean value;

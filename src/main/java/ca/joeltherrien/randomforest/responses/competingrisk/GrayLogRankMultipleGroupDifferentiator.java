@@ -1,12 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -14,12 +9,12 @@ import java.util.List;
  *
  */
 @RequiredArgsConstructor
-public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingResponseWithCensorTime> {
+public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponseWithCensorTime> {
 
     private final int[] events;
 
     @Override
-    public Double differentiate(List<CompetingResponseWithCensorTime> leftHand, List<CompetingResponseWithCensorTime> rightHand) {
+    public Double differentiate(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand) {
         if(leftHand.size() == 0 || rightHand.size() == 0){
             return null;
         }
@@ -30,8 +25,8 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
         for(final int eventOfFocus : events){
             final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, leftHand, rightHand);
 
-            numerator += valueOfInterest.getNumerator()*valueOfInterest.getVariance();
-            denominatorSquared += valueOfInterest.getVarianceSquared();
+            numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
+            denominatorSquared += valueOfInterest.getVariance();
 
         }
 
@@ -40,7 +35,7 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
     }
 
     @Override
-    double riskSet(List<CompetingResponseWithCensorTime> eventList, double time, int eventOfFocus) {
+    double riskSet(List<CompetingRiskResponseWithCensorTime> eventList, double time, int eventOfFocus) {
         return eventList.stream()
                 .filter(event -> event.getU() >= time ||
                         (event.getU() < time && event.getDelta() != eventOfFocus && event.getC() > time)
