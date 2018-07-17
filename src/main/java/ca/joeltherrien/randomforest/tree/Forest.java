@@ -4,12 +4,13 @@ import ca.joeltherrien.randomforest.CovariateRow;
 import lombok.Builder;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Builder
 public class Forest<O, FO> { // O = output of trees, FO = forest output. In practice O == FO, even in competing risk & survival settings
 
-    private final Collection<Node<O>> trees;
+    private final Collection<Tree<O>> trees;
     private final ResponseCombiner<O, FO> treeResponseCombiner;
 
     public FO evaluate(CovariateRow row){
@@ -20,6 +21,10 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
                 .collect(Collectors.toList())
         );
 
+    }
+
+    public Collection<Tree<O>> getTrees(){
+        return Collections.unmodifiableCollection(trees);
     }
 
 }

@@ -4,10 +4,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Builder
-public class CompetingRiskFunctions {
+public class CompetingRiskFunctions implements Serializable {
 
     private final Map<Integer, MathFunction> causeSpecificHazardFunctionMap;
     private final Map<Integer, MathFunction> cumulativeIncidenceFunctionMap;

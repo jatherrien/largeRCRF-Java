@@ -1,19 +1,17 @@
 package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.tree.Forest;
+import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import ca.joeltherrien.randomforest.tree.Tree;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 public class DataLoader {
 
@@ -40,6 +38,36 @@ public class DataLoader {
         }
 
         return dataset;
+
+    }
+
+    public static <O, FO> Forest<O, FO> loadForest(File folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
+        if(!folder.isDirectory()){
+            throw new IllegalArgumentException("Tree directory must be a directory!");
+        }
+
+        final File[] treeFiles = folder.listFiles(((file, s) -> s.endsWith(".tree")));
+        final List<File> treeFileList = Arrays.asList(treeFiles);
+
+        Collections.sort(treeFileList, Comparator.comparing(File::getName));
+
+        final List<Tree<O>> treeList = new ArrayList<>(treeFileList.size());
+
+        for(final File treeFile : treeFileList){
+            final ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(treeFile));
+
+            final Tree<O> tree = (Tree) inputStream.readObject();
+
+            treeList.add(tree);
+
+        }
+
+        final Forest forest = Forest.<O, FO>builder()
+                .trees(treeList)
+                .treeResponseCombiner(treeResponseCombiner)
+                .build();
+
+        return forest;
 
     }
 

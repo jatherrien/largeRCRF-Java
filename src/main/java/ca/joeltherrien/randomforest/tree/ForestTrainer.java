@@ -1,9 +1,9 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
+import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.Row;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,11 +12,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,7 +52,7 @@ public class ForestTrainer<Y, TO, FO> {
 
     public Forest<TO, FO> trainSerial(){
 
-        final List<Node<TO>> trees = new ArrayList<>(ntree);
+        final List<Tree<TO>> trees = new ArrayList<>(ntree);
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
 
         for(int j=0; j<ntree; j++){
@@ -83,7 +81,7 @@ public class ForestTrainer<Y, TO, FO> {
 
         // create a list that is prespecified in size (I can call the .set method at any index < ntree without
         // the earlier indexes being filled.
-        final List<Node<TO>> trees = Stream.<Node<TO>>generate(() -> null).limit(ntree).collect(Collectors.toList());
+        final List<Tree<TO>> trees = Stream.<Tree<TO>>generate(() -> null).limit(ntree).collect(Collectors.toList());
 
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
@@ -103,7 +101,7 @@ public class ForestTrainer<Y, TO, FO> {
 
             if(displayProgress) {
                 int numberTreesSet = 0;
-                for (final Node<TO> tree : trees) {
+                for (final Tree<TO> tree : trees) {
                     if (tree != null) {
                         numberTreesSet++;
                     }
@@ -131,7 +129,7 @@ public class ForestTrainer<Y, TO, FO> {
         final AtomicInteger treeCount = new AtomicInteger(0); // tracks how many trees are finished
 
         for(int j=0; j<ntree; j++){
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1), treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1) + ".tree", treeCount);
             executorService.execute(worker);
         }
 
@@ -157,12 +155,12 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
-    private Node<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
+    private Tree<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
         final List<Row<Y>> bootstrappedData = bootstrapper.bootstrap();
         return treeTrainer.growTree(bootstrappedData);
     }
 
-    public void saveTree(final Node<TO> tree, String name) throws IOException {
+    public void saveTree(final Tree<TO> tree, String name) throws IOException {
         final String filename = saveTreeLocation + "/" + name;
 
         final ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(filename));
@@ -177,9 +175,9 @@ public class ForestTrainer<Y, TO, FO> {
 
         private final Bootstrapper<Row<Y>> bootstrapper;
         private final int treeIndex;
-        private final List<Node<TO>> treeList;
+        private final List<Tree<TO>> treeList;
 
-        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Node<TO>> treeList) {
+        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Tree<TO>> treeList) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.treeIndex = treeIndex;
             this.treeList = treeList;
@@ -188,7 +186,7 @@ public class ForestTrainer<Y, TO, FO> {
         @Override
         public void run() {
 
-            final Node<TO> tree = trainTree(bootstrapper);
+            final Tree<TO> tree = trainTree(bootstrapper);
 
             // should be okay as the list structure isn't changing
             treeList.set(treeIndex, tree);
@@ -211,7 +209,7 @@ public class ForestTrainer<Y, TO, FO> {
         @Override
         public void run() {
 
-            final Node<TO> tree = trainTree(bootstrapper);
+            final Tree<TO> tree = trainTree(bootstrapper);
 
             try {
                 saveTree(tree, filename);

@@ -2,6 +2,7 @@ package ca.joeltherrien.randomforest.responses.competingrisk;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Optional;
  * constant at the value of the previous encountered point.
  *
  */
-public class MathFunction {
+public class MathFunction implements Serializable {
 
     @Getter
     private final List<Point> points;

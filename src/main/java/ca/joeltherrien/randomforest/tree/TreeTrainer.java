@@ -39,8 +39,13 @@ public class TreeTrainer<Y, O> {
         this.covariates = covariates;
     }
 
-    public Node<O> growTree(List<Row<Y>> data){
-        return growNode(data, 0);
+    public Tree<O> growTree(List<Row<Y>> data){
+
+        final Node<O> rootNode = growNode(data, 0);
+        final Tree<O> tree = new Tree<>(rootNode, data.stream().mapToInt(Row::getId).toArray());
+
+        return tree;
+
     }
 
     private Node<O> growNode(List<Row<Y>> data, int depth){
