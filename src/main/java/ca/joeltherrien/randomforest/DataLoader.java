@@ -66,7 +66,7 @@ public class DataLoader {
         final List<Tree<O>> treeList = new ArrayList<>(treeFileList.size());
 
         for(final File treeFile : treeFileList){
-            final ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(treeFile));
+            final ObjectInputStream inputStream = new ObjectInputStream(new GZIPInputStream(new FileInputStream(treeFile)));
 
             final Tree<O> tree = (Tree) inputStream.readObject();
 

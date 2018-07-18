@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 @Builder
 @AllArgsConstructor(access=AccessLevel.PRIVATE)
@@ -163,7 +164,7 @@ public class ForestTrainer<Y, TO, FO> {
     public void saveTree(final Tree<TO> tree, String name) throws IOException {
         final String filename = saveTreeLocation + "/" + name;
 
-        final ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(filename));
+        final ObjectOutputStream outputStream = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(filename)));
 
         outputStream.writeObject(tree);
 
