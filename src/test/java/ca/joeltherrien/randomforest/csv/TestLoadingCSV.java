@@ -28,14 +28,14 @@ public class TestLoadingCSV {
         -3,NA,NA,NA
      */
 
-    @Test
-    public void verifyLoading() throws IOException, ClassNotFoundException {
+
+    public List<Row<Double>> loadData(String filename) throws IOException {
         final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
         yVarSettings.set("type", new TextNode("Double"));
         yVarSettings.set("name", new TextNode("y"));
 
         final Settings settings = Settings.builder()
-                .dataFileLocation("src/test/resources/testCSV.csv")
+                .dataFileLocation(filename)
                 .covariates(
                         List.of(new NumericCovariateSettings("x1"),
                                 new FactorCovariateSettings("x2", List.of("dog", "cat", "mouse")),
@@ -52,6 +52,25 @@ public class TestLoadingCSV {
 
         final List<Row<Double>> data = DataLoader.loadData(covariates, loader, settings.getDataFileLocation());
 
+        return data;
+    }
+
+    @Test
+    public void verifyLoadingNormal() throws IOException {
+        final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv");
+
+        assertData(data);
+    }
+
+    @Test
+    public void verifyLoadingGz() throws IOException {
+        final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv.gz");
+
+        assertData(data);
+    }
+
+
+    private void assertData(final List<Row<Double>> data){
         assertEquals(4, data.size());
 
         Row<Double> row = data.get(0);
@@ -77,7 +96,6 @@ public class TestLoadingCSV {
         assertEquals(true, row.getCovariateValue("x1").isNA());
         assertEquals(true, row.getCovariateValue("x2").isNA());
         assertEquals(true, row.getCovariateValue("x3").isNA());
-
     }
 
 }

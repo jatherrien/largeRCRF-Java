@@ -12,6 +12,7 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 
 public class DataLoader {
 
@@ -19,7 +20,18 @@ public class DataLoader {
 
         final List<Row<Y>> dataset = new ArrayList<>();
 
-        final Reader input = new FileReader(filename);
+        final Reader input;
+        if(filename.endsWith(".gz")){
+            final FileInputStream inputStream = new FileInputStream(filename);
+            final GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
+
+            input = new InputStreamReader(gzipInputStream);
+        }
+        else{
+            input = new FileReader(filename);
+        }
+
+
         final CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(input);
 
 
