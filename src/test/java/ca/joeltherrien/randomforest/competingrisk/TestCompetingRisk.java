@@ -2,10 +2,7 @@ package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.*;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.MathFunction;
-import ca.joeltherrien.randomforest.responses.competingrisk.Point;
+import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.Node;
@@ -16,11 +13,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class TestCompetingRisk {
@@ -79,6 +73,10 @@ public class TestCompetingRisk {
                 .saveProgress(true)
                 .saveTreeLocation("trees/")
                 .build();
+    }
+
+    public List<Covariate> getCovariates(Settings settings){
+        return settings.getCovariates().stream().map(covariateSettings -> covariateSettings.build()).collect(Collectors.toList());
     }
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
@@ -194,10 +192,6 @@ public class TestCompetingRisk {
 
     }
 
-    public List<Covariate> getCovariates(Settings settings){
-        return settings.getCovariates().stream().map(covariateSettings -> covariateSettings.build()).collect(Collectors.toList());
-    }
-
     @Test
     public void testLogRankSingleGroupDifferentiatorTwoBooleans() throws IOException {
         final Settings settings = getSettings();
@@ -232,6 +226,15 @@ public class TestCompetingRisk {
 
         closeEnough(0.163, functions.getCumulativeIncidenceFunction(2).evaluate(4.0).getY(), 0.01);
         closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8).getY(), 0.01);
+
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
+        final double[] errorRates = errorRateCalculator.calculateAll(dataset, forest);
+
+        // Error rates happen to be about the same
+        closeEnough(0.4795, errorRates[0], 0.007);
+        closeEnough(0.478, errorRates[1], 0.008);
+
+
     }
 
     @Test
@@ -294,8 +297,16 @@ public class TestCompetingRisk {
         final List<Point> causeOneCIFPoints = functions.getCumulativeIncidenceFunction(1).getPoints();
 
         // We seem to consistently underestimate the results.
-        assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.75, "Results should match randomForestSRC");
+        assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.75, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
+        final CompetingRiskErrorRateCalculator errorRate = new CompetingRiskErrorRateCalculator((CompetingRiskFunctionCombiner) settings.getTreeCombiner(), new int[]{1,2});
+        final double[] errorRates = errorRate.calculateAll(dataset, forest);
+
+        System.out.println(errorRates[0]);
+        System.out.println(errorRates[1]);
+
+        closeEnough(0.41, errorRates[0], 0.02);
+        closeEnough(0.38, errorRates[1], 0.02);
 
     }
 

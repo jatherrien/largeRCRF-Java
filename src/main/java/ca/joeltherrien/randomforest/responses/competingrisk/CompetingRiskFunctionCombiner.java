@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class CompetingRiskFunctionCombiner implements ResponseCombiner<Competing
 
     private final int[] events;
     private final double[] times; // We may restrict ourselves to specific times.
+
 
     @Override
     public CompetingRiskFunctions combine(List<CompetingRiskFunctions> responses) {
