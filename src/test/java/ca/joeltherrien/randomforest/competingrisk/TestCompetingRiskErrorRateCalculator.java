@@ -1,12 +1,19 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
+
+import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.tree.Forest;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestCompetingRiskErrorRateCalculator {
 
@@ -23,7 +30,8 @@ public class TestCompetingRiskErrorRateCalculator {
 
         final int event = 1;
 
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> fakeForest = Forest.<CompetingRiskFunctions, CompetingRiskFunctions>builder().build();
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(Collections.emptyList(), fakeForest);
 
         final double concordance = errorRateCalculator.calculateConcordance(responseList, mortalityArray, event);
 
@@ -31,5 +39,62 @@ public class TestCompetingRiskErrorRateCalculator {
         assertEquals(3.0/5.0, concordance);
 
     }
+
+    @Test
+    public void testNaiveMortality(){
+        final CompetingRiskResponse response1 = new CompetingRiskResponse(1, 5.0);
+        final CompetingRiskResponse response2 = new CompetingRiskResponse(0, 6.0);
+        final CompetingRiskResponse response3 = new CompetingRiskResponse(2, 8.0);
+        final CompetingRiskResponse response4 = new CompetingRiskResponse(1, 3.0);
+
+        final List<Row<CompetingRiskResponse>> dataset = List.of(
+                new Row<>(Collections.emptyMap(), 1, response1),
+                new Row<>(Collections.emptyMap(), 2, response2),
+                new Row<>(Collections.emptyMap(), 3, response3),
+                new Row<>(Collections.emptyMap(), 4, response4)
+        );
+
+        final double[] mortalityOneArray = new double[]{1, 4, 3, 9};
+        final double[] mortalityTwoArray = new double[]{2, 3, 4, 7};
+
+        // response1 was predicted incorrectly
+        // response2 doesn't matter; censored
+        // response3 was correctly predicted
+        // response4 was correctly predicted
+
+        // Expect 1/3 for my error
+
+        final CompetingRiskFunctions function1 = mock(CompetingRiskFunctions.class);
+        when(function1.calculateEventSpecificMortality(1, response1.getU())).thenReturn(mortalityOneArray[0]);
+        when(function1.calculateEventSpecificMortality(2, response1.getU())).thenReturn(mortalityTwoArray[0]);
+
+        final CompetingRiskFunctions function2 = mock(CompetingRiskFunctions.class);
+        when(function2.calculateEventSpecificMortality(1, response2.getU())).thenReturn(mortalityOneArray[1]);
+        when(function2.calculateEventSpecificMortality(2, response2.getU())).thenReturn(mortalityTwoArray[1]);
+
+        final CompetingRiskFunctions function3 = mock(CompetingRiskFunctions.class);
+        when(function3.calculateEventSpecificMortality(1, response3.getU())).thenReturn(mortalityOneArray[2]);
+        when(function3.calculateEventSpecificMortality(2, response3.getU())).thenReturn(mortalityTwoArray[2]);
+
+        final CompetingRiskFunctions function4 = mock(CompetingRiskFunctions.class);
+        when(function4.calculateEventSpecificMortality(1, response4.getU())).thenReturn(mortalityOneArray[3]);
+        when(function4.calculateEventSpecificMortality(2, response4.getU())).thenReturn(mortalityTwoArray[3]);
+
+        final Forest mockForest = mock(Forest.class);
+        when(mockForest.evaluateOOB(dataset.get(0))).thenReturn(function1);
+        when(mockForest.evaluateOOB(dataset.get(1))).thenReturn(function2);
+        when(mockForest.evaluateOOB(dataset.get(2))).thenReturn(function3);
+        when(mockForest.evaluateOOB(dataset.get(3))).thenReturn(function4);
+
+
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, mockForest);
+
+        final double error = errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2});
+
+        assertEquals(1.0/3.0, error);
+
+    }
+
+
 
 }

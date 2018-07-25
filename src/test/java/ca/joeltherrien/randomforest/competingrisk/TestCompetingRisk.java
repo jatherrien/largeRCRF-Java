@@ -227,8 +227,8 @@ public class TestCompetingRisk {
         closeEnough(0.163, functions.getCumulativeIncidenceFunction(2).evaluate(4.0).getY(), 0.01);
         closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8).getY(), 0.01);
 
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
-        final double[] errorRates = errorRateCalculator.calculateConcordance(dataset, forest);
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
+        final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
 
         // Error rates happen to be about the same
         /* randomForestSRC results; ignored for now
@@ -308,8 +308,8 @@ public class TestCompetingRisk {
         // We seem to consistently underestimate the results.
         assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.75, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
-        final CompetingRiskErrorRateCalculator errorRate = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
-        final double[] errorRates = errorRate.calculateConcordance(dataset, forest);
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
+        final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
 
         System.out.println(errorRates[0]);
         System.out.println(errorRates[1]);

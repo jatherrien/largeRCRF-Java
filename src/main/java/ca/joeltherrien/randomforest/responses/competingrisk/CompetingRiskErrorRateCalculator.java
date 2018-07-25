@@ -3,10 +3,8 @@ package ca.joeltherrien.randomforest.responses.competingrisk;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.VisibleForTesting;
 import ca.joeltherrien.randomforest.tree.Forest;
-import ca.joeltherrien.randomforest.tree.Tree;
-import lombok.RequiredArgsConstructor;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -15,42 +13,75 @@ import java.util.stream.Collectors;
  * Note that this is the same version implemented in randomForestSRC. The downsides of this approach is that we can expect the errors to be biased, possibly severely.
  * Therefore I suggest that this measure only be used in comparing models, but not as a final output.
  */
-@RequiredArgsConstructor
 public class CompetingRiskErrorRateCalculator {
 
-    private final CompetingRiskFunctionCombiner combiner;
-    private final int[] events;
+    private final List<Row<CompetingRiskResponse>> dataset;
+    private final List<CompetingRiskFunctions> riskFunctions;
 
-    public CompetingRiskErrorRateCalculator(final int[] events, final double[] times){
-        this.events = events;
-        this.combiner = new CompetingRiskFunctionCombiner(events, times);
-    }
-
-    public double[] calculateConcordance(final List<Row<CompetingRiskResponse>> rows, final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest){
-        final double tau = rows.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
-
-        return calculateConcordance(rows, forest, tau);
-    }
-
-    private double[] calculateConcordance(final List<Row<CompetingRiskResponse>> rows, final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest, final double tau){
-
-        final Collection<Tree<CompetingRiskFunctions>> trees = forest.getTrees();
-
-        // This predicts for rows based on their OOB trees.
-
-        final List<CompetingRiskFunctions> riskFunctions = rows.stream()
-                .map(row -> {
-                    return trees.stream().filter(tree -> !tree.idInBootstrapSample(row.getId())).map(tree -> tree.evaluate(row)).collect(Collectors.toList());
-                })
-                .map(combiner::combine)
+    public CompetingRiskErrorRateCalculator(final List<Row<CompetingRiskResponse>> dataset, final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest){
+        this.dataset = dataset;
+        this.riskFunctions = dataset.stream()
+                .map(forest::evaluateOOB)
                 .collect(Collectors.toList());
+    }
+
+    public double[] calculateConcordance(final int[] events){
+        final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
+
+        return calculateConcordance(events, tau);
+    }
+
+    /**
+     * Idea for this error rate; go through every observation I have and calculate its mortality for the different events. If the event with the highest mortality is not the one that happened,
+     * then we add one to the error scale.
+     *
+     * Ignore censored observations.
+     *
+     * Possible extensions might involve counting how many other events had higher mortality, instead of just a single PASS / FAIL.
+     *
+     * @return
+     */
+    public double calculateNaiveMortalityError(final int[] events){
+        int failures = 0;
+        int attempts = 0;
+
+        response_loop:
+        for(int i=0; i<dataset.size(); i++){
+            final CompetingRiskResponse response = dataset.get(i).getResponse();
+
+            if(response.isCensored()){
+                continue;
+            }
+            attempts++;
+
+            final CompetingRiskFunctions functions = riskFunctions.get(i);
+            final int delta = response.getDelta();
+            final double time = response.getU();
+            final double shouldBeHighestMortality = functions.calculateEventSpecificMortality(delta, time);
+
+            for(final int event : events){
+                if(event != delta){
+                    final double otherEventMortality = functions.calculateEventSpecificMortality(event, time);
+
+                    if(shouldBeHighestMortality < otherEventMortality){
+                        failures++;
+                        continue response_loop;
+                    }
+
+                }
+            }
+        }
+
+        return (double) failures / (double) attempts;
 
 
-        //final List<CompetingRiskFunctions> riskFunctions = rows.stream().map(row -> forest.evaluate(row)).collect(Collectors.toList());
+    }
+
+    private double[] calculateConcordance(final int[] events, final double tau){
 
         final double[] errorRates = new double[events.length];
 
-        final List<CompetingRiskResponse> responses = rows.stream().map(Row::getResponse).collect(Collectors.toList());
+        final List<CompetingRiskResponse> responses = dataset.stream().map(Row::getResponse).collect(Collectors.toList());
 
         // Let \tau be the max time.
 
@@ -58,8 +89,7 @@ public class CompetingRiskErrorRateCalculator {
             final int event = events[e];
 
             final double[] mortalityList = riskFunctions.stream()
-                    .map(riskFunction -> riskFunction.getCumulativeIncidenceFunction(event))
-                    .mapToDouble(cif -> functionToMortality(cif, tau))
+                    .mapToDouble(riskFunction -> riskFunction.calculateEventSpecificMortality(event, tau))
                     .toArray();
 
             final double concordance = calculateConcordance(responses, mortalityList, event);
@@ -110,26 +140,5 @@ public class CompetingRiskErrorRateCalculator {
         return numerator / (double) permissible;
 
     }
-
-    private double functionToMortality(final MathFunction cif, final double tau){
-        double summation = 0.0;
-        Point previousPoint = null;
-
-        for(final Point point : cif.getPoints()){
-            if(previousPoint != null){
-                summation += previousPoint.getY() * (point.getTime() - previousPoint.getTime());
-            }
-            previousPoint = point;
-
-        }
-
-        // this is to ensure that we integrate over the same range for every function and get comparable results.
-        // Don't need to assert whether previousPoint is null or not; if it is null then the MathFunction was incorrectly made as there will always be at least one point for a response
-        summation += previousPoint.getY() * (tau - previousPoint.getTime());
-
-        return summation;
-
-    }
-
 
 }

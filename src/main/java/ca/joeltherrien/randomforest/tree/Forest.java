@@ -2,6 +2,7 @@ package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
 import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -19,6 +20,17 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
                 trees.parallelStream()
                 .map(node -> node.evaluate(row))
                 .collect(Collectors.toList())
+        );
+
+    }
+
+    public FO evaluateOOB(CovariateRow row){
+
+        return treeResponseCombiner.combine(
+          trees.stream()
+          .filter(tree -> !tree.idInBootstrapSample(row.getId()))
+          .map(node -> node.evaluate(row))
+          .collect(Collectors.toList())
         );
 
     }
