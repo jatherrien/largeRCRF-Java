@@ -228,11 +228,20 @@ public class TestCompetingRisk {
         closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8).getY(), 0.01);
 
         final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
-        final double[] errorRates = errorRateCalculator.calculateAll(dataset, forest);
+        final double[] errorRates = errorRateCalculator.calculateConcordance(dataset, forest);
 
         // Error rates happen to be about the same
+        /* randomForestSRC results; ignored for now
         closeEnough(0.4795, errorRates[0], 0.007);
         closeEnough(0.478, errorRates[1], 0.008);
+        */
+
+        System.out.println(errorRates[0]);
+        System.out.println(errorRates[1]);
+
+
+        closeEnough(0.452, errorRates[0], 0.01);
+        closeEnough(0.446, errorRates[1], 0.01);
 
 
     }
@@ -299,15 +308,20 @@ public class TestCompetingRisk {
         // We seem to consistently underestimate the results.
         assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.75, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
-        final CompetingRiskErrorRateCalculator errorRate = new CompetingRiskErrorRateCalculator((CompetingRiskFunctionCombiner) settings.getTreeCombiner(), new int[]{1,2});
-        final double[] errorRates = errorRate.calculateAll(dataset, forest);
+        final CompetingRiskErrorRateCalculator errorRate = new CompetingRiskErrorRateCalculator(new int[]{1,2}, null);
+        final double[] errorRates = errorRate.calculateConcordance(dataset, forest);
 
         System.out.println(errorRates[0]);
         System.out.println(errorRates[1]);
 
-        closeEnough(0.41, errorRates[0], 0.02);
-        closeEnough(0.38, errorRates[1], 0.02);
+        /* randomForestSRC results; ignored for now
+        closeEnough(0.412, errorRates[0], 0.007);
+        closeEnough(0.384, errorRates[1], 0.007);
+        */
 
+        // Consistency results
+        closeEnough(0.395, errorRates[0], 0.01);
+        closeEnough(0.345, errorRates[1], 0.01);
     }
 
     /**
