@@ -1,6 +1,8 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.Point;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;

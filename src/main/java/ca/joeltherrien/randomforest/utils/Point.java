@@ -1,4 +1,4 @@
-package ca.joeltherrien.randomforest.responses.competingrisk;
+package ca.joeltherrien.randomforest.utils;
 
 import lombok.Data;
 

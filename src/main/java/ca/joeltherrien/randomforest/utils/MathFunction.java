@@ -1,4 +1,4 @@
-package ca.joeltherrien.randomforest.responses.competingrisk;
+package ca.joeltherrien.randomforest.utils;
 
 import lombok.Getter;
 
@@ -41,6 +41,14 @@ public class MathFunction implements Serializable {
 
         return pointOptional.orElse(defaultValue);
 
+    }
+
+    public Point evaluatePrevious(double time){
+        final Optional<Point> pointOptional = points.stream()
+                .filter(point -> point.getTime() < time)
+                .max(Comparator.comparingDouble(Point::getTime));
+
+        return pointOptional.orElse(defaultValue);
     }
 
     @Override

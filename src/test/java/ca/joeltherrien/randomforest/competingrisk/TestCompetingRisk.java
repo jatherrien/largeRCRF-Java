@@ -7,9 +7,13 @@ import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
+import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.Point;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 
+import static ca.joeltherrien.randomforest.TestUtils.assertCumulativeFunction;
+import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
@@ -240,10 +244,10 @@ public class TestCompetingRisk {
         System.out.println(errorRates[1]);
 
 
-        closeEnough(0.452, errorRates[0], 0.01);
-        closeEnough(0.446, errorRates[1], 0.01);
+        closeEnough(0.452, errorRates[0], 0.02);
+        closeEnough(0.446, errorRates[1], 0.02);
 
-
+        System.out.println(errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2}));
     }
 
     @Test
@@ -306,7 +310,7 @@ public class TestCompetingRisk {
         final List<Point> causeOneCIFPoints = functions.getCumulativeIncidenceFunction(1).getPoints();
 
         // We seem to consistently underestimate the results.
-        assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.75, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
+        assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.74, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
         final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
         final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
@@ -322,29 +326,9 @@ public class TestCompetingRisk {
         // Consistency results
         closeEnough(0.395, errorRates[0], 0.01);
         closeEnough(0.345, errorRates[1], 0.01);
-    }
 
-    /**
-     * We know the function is cumulative; make sure it is ordered correctly and that that function is monotone.
-     *
-     * @param function
-     */
-    private void assertCumulativeFunction(MathFunction function){
-        Point previousPoint = null;
-        for(final Point point : function.getPoints()){
+        System.out.println(errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2}));
 
-            if(previousPoint != null){
-                assertTrue(previousPoint.getTime() < point.getTime(), "Points should be ordered and strictly different");
-                assertTrue(previousPoint.getY() <= point.getY(), "Cumulative incidence functions are monotone");
-            }
-
-
-            previousPoint = point;
-        }
-    }
-
-    private void closeEnough(double expected, double actual, double margin){
-        assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);
     }
 
 }

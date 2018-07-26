@@ -1,8 +1,9 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
+import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.Point;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -31,6 +32,10 @@ public class CompetingRiskFunctions implements Serializable {
         Point previousPoint = null;
 
         for(final Point point : cif.getPoints()){
+            if(point.getTime() > tau){
+                break;
+            }
+
             if(previousPoint != null){
                 summation += previousPoint.getY() * (point.getTime() - previousPoint.getTime());
             }
@@ -38,9 +43,11 @@ public class CompetingRiskFunctions implements Serializable {
 
         }
 
-        // this is to ensure that we integrate over the same range for every function and get comparable results.
-        // Don't need to assert whether previousPoint is null or not; if it is null then the MathFunction was incorrectly made as there will always be at least one point for a response
-        summation += previousPoint.getY() * (tau - previousPoint.getTime());
+        // this is to ensure that we integrate over the proper range
+        if(previousPoint != null){
+            summation += cif.evaluate(tau).getY() * (tau - previousPoint.getTime());
+        }
+
 
         return summation;
 

@@ -3,8 +3,10 @@ package ca.joeltherrien.randomforest.competingrisk;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.MathFunction;
+import ca.joeltherrien.randomforest.utils.MathFunction;
 import org.junit.jupiter.api.Test;
+
+import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
@@ -85,10 +87,6 @@ public class TestCompetingRiskResponseCombiner {
         closeEnough(0.3333333, cic2.evaluate(2.0).getY(), margin);
         closeEnough(0.3333333, cic2.evaluate(2.5).getY(), margin);
 
-    }
-
-    private void closeEnough(double expected, double actual, double margin){
-        assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);
     }
 
 }

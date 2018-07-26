@@ -1,16 +1,16 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
-
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.tree.Forest;
+import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.Point;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 
+import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -33,10 +33,16 @@ public class TestCompetingRiskErrorRateCalculator {
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> fakeForest = Forest.<CompetingRiskFunctions, CompetingRiskFunctions>builder().build();
         final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(Collections.emptyList(), fakeForest);
 
-        final double concordance = errorRateCalculator.calculateConcordance(responseList, mortalityArray, event);
+        final double naiveConcordance = errorRateCalculator.calculateConcordance(responseList, mortalityArray, event);
+
+        final MathFunction fakeCensorDistribution = new MathFunction(Collections.emptyList(), new Point(0.0, 1.0));
+        // This distribution will make the IPCW weights == 1, giving identical results to the naive concordance.
+        final double ipcwConcordance = errorRateCalculator.calculateIPCWConcordance(responseList, mortalityArray, event, fakeCensorDistribution);
+
+        closeEnough(naiveConcordance, ipcwConcordance, 0.0001);
 
         // Expected value found through calculations by hand
-        assertEquals(3.0/5.0, concordance);
+        assertEquals(3.0/5.0, naiveConcordance);
 
     }
 

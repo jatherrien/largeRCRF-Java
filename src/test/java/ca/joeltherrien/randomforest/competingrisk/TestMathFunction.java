@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.responses.competingrisk.MathFunction;
-import ca.joeltherrien.randomforest.responses.competingrisk.Point;
+import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.Point;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

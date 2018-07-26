@@ -3,6 +3,7 @@ package ca.joeltherrien.randomforest.responses.competingrisk;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.VisibleForTesting;
 import ca.joeltherrien.randomforest.tree.Forest;
+import ca.joeltherrien.randomforest.utils.MathFunction;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,12 +26,6 @@ public class CompetingRiskErrorRateCalculator {
                 .collect(Collectors.toList());
     }
 
-    public double[] calculateConcordance(final int[] events){
-        final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
-
-        return calculateConcordance(events, tau);
-    }
-
     /**
      * Idea for this error rate; go through every observation I have and calculate its mortality for the different events. If the event with the highest mortality is not the one that happened,
      * then we add one to the error scale.
@@ -38,6 +33,8 @@ public class CompetingRiskErrorRateCalculator {
      * Ignore censored observations.
      *
      * Possible extensions might involve counting how many other events had higher mortality, instead of just a single PASS / FAIL.
+     *
+     * My observation is that this error rate isn't very useful...
      *
      * @return
      */
@@ -77,6 +74,13 @@ public class CompetingRiskErrorRateCalculator {
 
     }
 
+
+    public double[] calculateConcordance(final int[] events){
+        final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
+
+        return calculateConcordance(events, tau);
+    }
+
     private double[] calculateConcordance(final int[] events, final double tau){
 
         final double[] errorRates = new double[events.length];
@@ -93,6 +97,36 @@ public class CompetingRiskErrorRateCalculator {
                     .toArray();
 
             final double concordance = calculateConcordance(responses, mortalityList, event);
+            errorRates[e] = 1.0 - concordance;
+
+        }
+
+        return errorRates;
+
+    }
+
+    public double[] calculateIPCWConcordance(final int[] events, final MathFunction censoringDistribution){
+        final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
+
+        return calculateIPCWConcordance(events, censoringDistribution, tau);
+    }
+
+    private double[] calculateIPCWConcordance(final int[] events, final MathFunction censoringDistribution, final double tau){
+
+        final double[] errorRates = new double[events.length];
+
+        final List<CompetingRiskResponse> responses = dataset.stream().map(Row::getResponse).collect(Collectors.toList());
+
+        // Let \tau be the max time.
+
+        for(int e=0; e<events.length; e++){
+            final int event = events[e];
+
+            final double[] mortalityList = riskFunctions.stream()
+                    .mapToDouble(riskFunction -> riskFunction.calculateEventSpecificMortality(event, tau))
+                    .toArray();
+
+            final double concordance = calculateIPCWConcordance(responses, mortalityList, event, censoringDistribution);
             errorRates[e] = 1.0 - concordance;
 
         }
@@ -138,6 +172,57 @@ public class CompetingRiskErrorRateCalculator {
         }
 
         return numerator / (double) permissible;
+
+    }
+
+
+    @VisibleForTesting
+    public double calculateIPCWConcordance(final List<CompetingRiskResponse> responseList, double[] mortalityArray, final int event, final MathFunction censoringDistribution){
+
+        // Let \tau be the max time.
+
+        double denominator = 0.0;
+        double numerator = 0.0;
+
+        for(int i = 0; i<mortalityArray.length; i++){
+            final CompetingRiskResponse responseI = responseList.get(i);
+            if(responseI.getDelta() != event){ // \tilde{N}_i^1(\tau) == 1 check
+                continue; // skip if it's 0
+            }
+
+            final double mortalityI = mortalityArray[i];
+
+            for(int j=0; j<mortalityArray.length; j++){
+                final CompetingRiskResponse responseJ = responseList.get(j);
+
+                final double AijWeightPlusBijWeight;
+
+                if(responseI.getU() < responseJ.getU()){ // Aij == 1
+                    final double Ti = responseI.getU();
+                    AijWeightPlusBijWeight = 1.0 / (censoringDistribution.evaluate(Ti).getY() * censoringDistribution.evaluatePrevious(Ti).getY());
+                }
+                else if(responseI.getU() >= responseJ.getU() && !responseJ.isCensored() && responseJ.getDelta() != event){ // Bij == 1
+                    AijWeightPlusBijWeight = 1.0 / (censoringDistribution.evaluatePrevious(responseI.getU()).getY() * censoringDistribution.evaluatePrevious(responseJ.getU()).getY());
+                }
+                else{
+                    continue;
+                }
+
+                denominator += AijWeightPlusBijWeight;
+
+                final double mortalityJ = mortalityArray[j];
+                if(mortalityI > mortalityJ){
+                    numerator += AijWeightPlusBijWeight*1.0;
+                }
+                else if(mortalityI == mortalityJ){
+                    numerator += AijWeightPlusBijWeight*0.5; // Edge case that can happen in trees with only a few BooleanCovariates, when you're looking at training error
+                }
+
+            }
+
+        }
+
+        return numerator / denominator;
 
     }
 
