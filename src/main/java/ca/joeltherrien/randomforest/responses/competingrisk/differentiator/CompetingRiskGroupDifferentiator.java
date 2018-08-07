@@ -1,5 +1,6 @@
-package ca.joeltherrien.randomforest.responses.competingrisk;
+package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import lombok.AllArgsConstructor;
 import lombok.Data;

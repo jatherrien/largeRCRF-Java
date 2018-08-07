@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

@@ -2,12 +2,11 @@ package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
 import ca.joeltherrien.randomforest.utils.MathFunction;
 import org.junit.jupiter.api.Test;
 
 import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;

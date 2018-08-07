@@ -3,7 +3,7 @@ package ca.joeltherrien.randomforest;
 import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctionCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.Forest;

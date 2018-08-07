@@ -1,5 +1,6 @@
-package ca.joeltherrien.randomforest.responses.competingrisk;
+package ca.joeltherrien.randomforest.responses.competingrisk.combiner;
 
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.MathFunction;
 import ca.joeltherrien.randomforest.utils.Point;

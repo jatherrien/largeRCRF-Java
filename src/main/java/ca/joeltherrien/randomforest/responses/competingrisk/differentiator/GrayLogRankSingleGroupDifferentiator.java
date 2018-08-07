@@ -1,5 +1,6 @@
-package ca.joeltherrien.randomforest.responses.competingrisk;
+package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
