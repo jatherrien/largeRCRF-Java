@@ -10,7 +10,13 @@ public class Tree<Y> implements Node<Y> {
 
     private final Node<Y> rootNode;
     private final int[] bootstrapRowIds;
-    private boolean bootStrapRowIdsSorted = false;
+
+
+    public Tree(Node<Y> rootNode, int[] bootstrapRowIds) {
+        this.rootNode = rootNode;
+        this.bootstrapRowIds = bootstrapRowIds;
+        Arrays.sort(bootstrapRowIds);
+    }
 
     @Override
     public Y evaluate(CovariateRow row) {
@@ -21,21 +27,8 @@ public class Tree<Y> implements Node<Y> {
         return bootstrapRowIds.clone();
     }
 
-    /**
-     * Sort bootstrapRowIds. This is not done automatically for efficiency purposes, as in many cases we may not be interested in using bootstrapRowIds();
-     *
-     */
-    public void sortBootstrapRowIds(){
-        if(!bootStrapRowIdsSorted){
-            Arrays.sort(bootstrapRowIds);
-            bootStrapRowIdsSorted = true;
-        }
-
-    }
 
     public boolean idInBootstrapSample(int id){
-        this.sortBootstrapRowIds();
-
         return Arrays.binarySearch(this.bootstrapRowIds, id) >= 0;
     }
 

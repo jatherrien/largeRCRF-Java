@@ -19,7 +19,7 @@ public class CompetingRiskErrorRateCalculator {
     private final List<Row<CompetingRiskResponse>> dataset;
     private final List<CompetingRiskFunctions> riskFunctions;
 
-    public CompetingRiskErrorRateCalculator(final List<Row<CompetingRiskResponse>> dataset, final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest){
+    public CompetingRiskErrorRateCalculator(final List<Row<CompetingRiskResponse>> dataset, final Forest<?, CompetingRiskFunctions> forest){
         this.dataset = dataset;
         this.riskFunctions = dataset.stream()
                 .map(forest::evaluateOOB)

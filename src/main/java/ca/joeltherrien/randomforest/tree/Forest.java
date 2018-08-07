@@ -27,7 +27,7 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
     public FO evaluateOOB(CovariateRow row){
 
         return treeResponseCombiner.combine(
-          trees.stream()
+          trees.parallelStream()
           .filter(tree -> !tree.idInBootstrapSample(row.getId()))
           .map(node -> node.evaluate(row))
           .collect(Collectors.toList())

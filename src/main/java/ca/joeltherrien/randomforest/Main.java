@@ -6,8 +6,10 @@ import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskListCombiner;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
+import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.MathFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -54,16 +56,29 @@ public class Main {
 
             if(args.length < 3){
                 System.out.println("Specify error sample size");
+                return;
             }
 
             final String yVarType = settings.getYVarSettings().get("type").asText();
 
             if(!yVarType.equalsIgnoreCase("CompetingRiskResponse") && !yVarType.equalsIgnoreCase("CompetingRiskResponseWithCensorTime")){
                 System.out.println("Analyze currently only works on competing risk data");
+                return;
             }
 
-            final CompetingRiskFunctionCombiner responseCombiner = (CompetingRiskFunctionCombiner) settings.getTreeCombiner();
-            final int[] events = responseCombiner.getEvents();
+            final ResponseCombiner<?, CompetingRiskFunctions> responseCombiner = settings.getTreeCombiner();
+            final int[] events;
+
+            if(responseCombiner instanceof CompetingRiskFunctionCombiner){
+                events = ((CompetingRiskFunctionCombiner) responseCombiner).getEvents();
+            }
+            else if(responseCombiner instanceof CompetingRiskListCombiner){
+                events = ((CompetingRiskListCombiner) responseCombiner).getOriginalCombiner().getEvents();
+            }
+            else{
+                System.out.println("Unsupported tree combiner");
+                return;
+            }
 
             final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
 
@@ -72,7 +87,7 @@ public class Main {
             Utils.reduceListToSize(dataset, n);
 
             final File folder = new File(settings.getSaveTreeLocation());
-            final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataLoader.loadForest(folder, responseCombiner);
+            final Forest<?, CompetingRiskFunctions> forest = DataLoader.loadForest(folder, responseCombiner);
 
             System.out.println("Finished loading trees + dataset; creating calculator and evaluating OOB predictions");
 

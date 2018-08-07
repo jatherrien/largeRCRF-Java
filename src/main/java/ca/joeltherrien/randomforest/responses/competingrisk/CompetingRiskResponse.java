@@ -6,8 +6,10 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVRecord;
 
+import java.io.Serializable;
+
 @Data
-public class CompetingRiskResponse {
+public class CompetingRiskResponse implements Serializable {
 
     private final int delta;
     private final double u;

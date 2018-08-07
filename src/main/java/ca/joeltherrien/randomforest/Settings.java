@@ -4,6 +4,8 @@ import ca.joeltherrien.randomforest.covariates.CovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskListCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskResponseCombinerToList;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankMultipleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankSingleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
@@ -156,6 +158,30 @@ public class Settings {
                     return new CompetingRiskFunctionCombiner(events, times);
 
                 }
+        );
+
+        registerResponseCombinerConstructor("CompetingRiskListCombiner",
+                (node) -> {
+                    final List<Integer> eventList = new ArrayList<>();
+                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
+                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
+
+                    double[] times = null;
+                    // note that times may be null
+                    if(node.hasNonNull("times")){
+                        final List<Double> timeList = new ArrayList<>();
+                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                    }
+
+                    final CompetingRiskResponseCombiner responseCombiner = new CompetingRiskResponseCombiner(events, times);
+                    return new CompetingRiskListCombiner(responseCombiner);
+
+                }
+        );
+
+        registerResponseCombinerConstructor("CompetingRiskResponseCombinerToList",
+                (node) -> new CompetingRiskResponseCombinerToList()
         );
 
 
