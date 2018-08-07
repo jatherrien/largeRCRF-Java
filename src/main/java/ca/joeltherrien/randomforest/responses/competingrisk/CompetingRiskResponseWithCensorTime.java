@@ -11,7 +11,7 @@ import org.apache.commons.csv.CSVRecord;
  *
  */
 @Data
-public class CompetingRiskResponseWithCensorTime extends CompetingRiskResponse {
+public final class CompetingRiskResponseWithCensorTime extends CompetingRiskResponse {
     private final double c;
 
     public CompetingRiskResponseWithCensorTime(int delta, double u, double c) {

@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.utils;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Utils {
 
@@ -34,6 +35,33 @@ public class Utils {
 
         return new MathFunction(pointList, defaultPoint);
 
+    }
+
+    public static <T> void reduceListToSize(List<T> list, int n){
+        if(list.size() <= n){
+            return;
+        }
+
+        final Random random = ThreadLocalRandom.current();
+        if(n > list.size()/2){
+            // faster to randomly remove items
+            while(list.size() > n){
+                final int indexToRemove = random.nextInt(list.size());
+                list.remove(indexToRemove);
+            }
+        }
+        else{
+            // Faster to create a new list
+            final List<T> newList = new ArrayList<>(n);
+            while(newList.size() < n){
+                final int indexToAdd = random.nextInt(list.size());
+                newList.add(list.remove(indexToAdd));
+            }
+
+            list.clear();
+            list.addAll(newList);
+
+        }
     }
 
 

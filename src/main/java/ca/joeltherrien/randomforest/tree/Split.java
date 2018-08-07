@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * Very simple class that contains two lists; it's essentially a tuple.
+ * Very simple class that contains three lists; it's essentially a thruple.
  * 
  * @author joel
  *
@@ -16,5 +16,6 @@ public class Split<Y> {
 
 	public final List<Row<Y>> leftHand;
 	public final List<Row<Y>> rightHand;
+	public final List<Row<Y>> naHand;
 
 }

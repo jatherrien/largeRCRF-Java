@@ -5,6 +5,11 @@ import ca.joeltherrien.randomforest.utils.Point;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestUtils {
@@ -68,6 +73,33 @@ public class TestUtils {
 
         assertSurvivalCurve(survivalCurve);
 
+    }
+
+    @Test
+    public void reduceListToSize(){
+        final List<Integer> testList = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        for(int i=0; i<100; i++) { // want to test many times to ensure it doesn't work just due to randomness
+            final List<Integer> testList1 = new ArrayList<>(testList);
+            // Test when removing elements
+            Utils.reduceListToSize(testList1, 7);
+            assertEquals(7, testList1.size()); // verify proper size
+            assertEquals(7, new HashSet<>(testList1).size()); // verify the items are unique
+
+
+            final List<Integer> testList2 = new ArrayList<>(testList);
+            // Test when adding elements
+            Utils.reduceListToSize(testList2, 3);
+            assertEquals(3, testList2.size()); // verify proper size
+            assertEquals(3, new HashSet<>(testList2).size()); // verify the items are unique
+
+            final List<Integer> testList3 = new ArrayList<>(testList);
+            // verify no change
+            Utils.reduceListToSize(testList3, 15);
+            assertEquals(10, testList3.size()); // verify proper size
+            assertEquals(10, new HashSet<>(testList3).size()); // verify the items are unique
+
+        }
     }
 
 }

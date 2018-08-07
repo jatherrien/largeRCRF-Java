@@ -67,10 +67,29 @@ public class TreeTrainer<Y, O> {
 
             final Split<Y> split = bestSplitRule.applyRule(data); // TODO optimize this as we're duplicating work done in findBestSplitRule
 
+            // We have to handle any NAs
+            if(split.leftHand.size() == 0 && split.rightHand.size() == 0 && split.naHand.size() > 0){
+                throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
+            }
+
+            final double probabilityLeftHand = (double) split.leftHand.size() / (double) (split.leftHand.size() + split.rightHand.size());
+
+            final Random random = ThreadLocalRandom.current();
+            for(final Row<Y> missingValueRow : split.naHand){
+                final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
+                if(randomDecision){
+                    split.leftHand.add(missingValueRow);
+                }
+                else{
+                    split.rightHand.add(missingValueRow);
+                }
+            }
+
+
             final Node<O> leftNode = growNode(split.leftHand, depth+1);
             final Node<O> rightNode = growNode(split.rightHand, depth+1);
 
-            return new SplitNode<>(leftNode, rightNode, bestSplitRule);
+            return new SplitNode<>(leftNode, rightNode, bestSplitRule, probabilityLeftHand);
 
         }
         else{
@@ -119,11 +138,28 @@ public class TreeTrainer<Y, O> {
             for(final Covariate.SplitRule possibleRule : splitRulesToTry){
                 final Split<Y> possibleSplit = possibleRule.applyRule(data);
 
+                // We have to handle any NAs
+                if(possibleSplit.leftHand.size() == 0 && possibleSplit.rightHand.size() == 0 && possibleSplit.naHand.size() > 0){
+                    throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
+                }
+
+                final double probabilityLeftHand = (double) possibleSplit.leftHand.size() / (double) (possibleSplit.leftHand.size() + possibleSplit.rightHand.size());
+
+                final Random random = ThreadLocalRandom.current();
+                for(final Row<Y> missingValueRow : possibleSplit.naHand){
+                    final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
+                    if(randomDecision){
+                        possibleSplit.leftHand.add(missingValueRow);
+                    }
+                    else{
+                        possibleSplit.rightHand.add(missingValueRow);
+                    }
+                }
+
                 final Double score = groupDifferentiator.differentiate(
                         possibleSplit.leftHand.stream().map(row -> row.getResponse()).collect(Collectors.toList()),
                         possibleSplit.rightHand.stream().map(row -> row.getResponse()).collect(Collectors.toList())
                 );
-
 
 
                 if(score != null && !Double.isNaN(score) && (score > bestSplitScore || first)){

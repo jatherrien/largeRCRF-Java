@@ -10,6 +10,6 @@ import java.io.Serializable;
  */
 @Data
 public class Point implements Serializable {
-    private final Double time;
-    private final Double y;
+    private final double time;
+    private final double y;
 }

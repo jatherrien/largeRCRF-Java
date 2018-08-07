@@ -50,7 +50,6 @@ public interface Covariate<V> extends Serializable {
             final List<Row<Y>> leftHand = new LinkedList<>();
             final List<Row<Y>> rightHand = new LinkedList<>();
 
-            final List<Boolean> nonMissingDecisions = new ArrayList<>();
             final List<Row<Y>> missingValueRows = new ArrayList<>();
 
 
@@ -63,8 +62,6 @@ public interface Covariate<V> extends Serializable {
                 }
 
                 final boolean isLeftHand = isLeftHand(value);
-                nonMissingDecisions.add(isLeftHand);
-
                 if(isLeftHand){
                     leftHand.add(row);
                 }
@@ -74,27 +71,17 @@ public interface Covariate<V> extends Serializable {
 
             }
 
-            if(nonMissingDecisions.size() == 0 && missingValueRows.size() > 0){
-                throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
-            }
 
-            final Random random = ThreadLocalRandom.current();
-            for(final Row<Y> missingValueRow : missingValueRows){
-                final boolean randomDecision = nonMissingDecisions.get(random.nextInt(nonMissingDecisions.size()));
-
-                if(randomDecision){
-                    leftHand.add(missingValueRow);
-                }
-                else{
-                    rightHand.add(missingValueRow);
-                }
-            }
-
-            return new Split<>(leftHand, rightHand);
+            return new Split<>(leftHand, rightHand, missingValueRows);
         }
 
-        default boolean isLeftHand(CovariateRow row){
+        default boolean isLeftHand(CovariateRow row, final double probabilityNaLeftHand){
             final Value<V> value = (Value<V>) row.getCovariateValue(getParent().getName());
+
+            if(value.isNA()){
+                return ThreadLocalRandom.current().nextDouble() <= probabilityNaLeftHand;
+            }
+
             return isLeftHand(value);
         }
 

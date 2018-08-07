@@ -20,6 +20,14 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
     private final int[] events;
     private final double[] times; // We may restrict ourselves to specific times.
 
+    public int[] getEvents(){
+        return events.clone();
+    }
+
+    public double[] getTimes(){
+        return times.clone();
+    }
+
     @Override
     public CompetingRiskFunctions combine(List<CompetingRiskResponse> responses) {
 

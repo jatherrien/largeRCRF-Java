@@ -191,6 +191,9 @@ public class CompetingRiskErrorRateCalculator {
             }
 
             final double mortalityI = mortalityArray[i];
+            final double Ti = responseI.getU();
+            final double G_Ti_minus = censoringDistribution.evaluatePrevious(Ti).getY();
+            final double AijWeight = 1.0 / (censoringDistribution.evaluate(Ti).getY() * G_Ti_minus);
 
             for(int j=0; j<mortalityArray.length; j++){
                 final CompetingRiskResponse responseJ = responseList.get(j);
@@ -198,11 +201,10 @@ public class CompetingRiskErrorRateCalculator {
                 final double AijWeightPlusBijWeight;
 
                 if(responseI.getU() < responseJ.getU()){ // Aij == 1
-                    final double Ti = responseI.getU();
-                    AijWeightPlusBijWeight = 1.0 / (censoringDistribution.evaluate(Ti).getY() * censoringDistribution.evaluatePrevious(Ti).getY());
+                    AijWeightPlusBijWeight = AijWeight;
                 }
                 else if(responseI.getU() >= responseJ.getU() && !responseJ.isCensored() && responseJ.getDelta() != event){ // Bij == 1
-                    AijWeightPlusBijWeight = 1.0 / (censoringDistribution.evaluatePrevious(responseI.getU()).getY() * censoringDistribution.evaluatePrevious(responseJ.getU()).getY());
+                    AijWeightPlusBijWeight = 1.0 / (G_Ti_minus * censoringDistribution.evaluatePrevious(responseJ.getU()).getY());
                 }
                 else{
                     continue;
