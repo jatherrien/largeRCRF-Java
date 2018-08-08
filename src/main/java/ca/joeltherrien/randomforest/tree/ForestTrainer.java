@@ -29,9 +29,6 @@ public class ForestTrainer<Y, TO, FO> {
     private final ResponseCombiner<TO, FO> treeResponseCombiner;
     private final List<Row<Y>> data;
 
-    // number of covariates to randomly try
-    private final int mtry;
-
     // number of trees to try
     private final int ntree;
 
@@ -39,7 +36,6 @@ public class ForestTrainer<Y, TO, FO> {
     private final String saveTreeLocation;
 
     public ForestTrainer(final Settings settings, final List<Row<Y>> data, final List<Covariate> covariates){
-        this.mtry = settings.getMtry();
         this.ntree = settings.getNtree();
         this.data = data;
         this.displayProgress = true;
