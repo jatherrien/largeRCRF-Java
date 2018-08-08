@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
-import ca.joeltherrien.randomforest.*;
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -52,9 +53,9 @@ public class TreeTrainer<Y, O> {
         // TODO; what is minimum per tree?
         if(data.size() >= 2*nodeSize && depth < maxNodeDepth && !nodeIsPure(data)){
             final List<Covariate> covariatesToTry = selectCovariates(this.mtry);
-            final Covariate.SplitRule bestSplitRule = findBestSplitRule(data, covariatesToTry);
+            final SplitRuleAndSplit bestSplitRuleAndSplit = findBestSplitRule(data, covariatesToTry);
 
-            if(bestSplitRule == null){
+            if(bestSplitRuleAndSplit.splitRule == null){
 
                 return new TerminalNode<>(
                         responseCombiner.combine(
@@ -65,31 +66,14 @@ public class TreeTrainer<Y, O> {
 
             }
 
-            final Split<Y> split = bestSplitRule.applyRule(data); // TODO optimize this as we're duplicating work done in findBestSplitRule
-
-            // We have to handle any NAs
-            if(split.leftHand.size() == 0 && split.rightHand.size() == 0 && split.naHand.size() > 0){
-                throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
-            }
-
-            final double probabilityLeftHand = (double) split.leftHand.size() / (double) (split.leftHand.size() + split.rightHand.size());
-
-            final Random random = ThreadLocalRandom.current();
-            for(final Row<Y> missingValueRow : split.naHand){
-                final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
-                if(randomDecision){
-                    split.leftHand.add(missingValueRow);
-                }
-                else{
-                    split.rightHand.add(missingValueRow);
-                }
-            }
+            final Split<Y> split = bestSplitRuleAndSplit.split;
+            // Note that NAs have already been handled
 
 
             final Node<O> leftNode = growNode(split.leftHand, depth+1);
             final Node<O> rightNode = growNode(split.rightHand, depth+1);
 
-            return new SplitNode<>(leftNode, rightNode, bestSplitRule, probabilityLeftHand);
+            return new SplitNode<>(leftNode, rightNode, bestSplitRuleAndSplit.splitRule, bestSplitRuleAndSplit.probabilityLeftHand);
 
         }
         else{
@@ -118,8 +102,8 @@ public class TreeTrainer<Y, O> {
         return splitCovariates;
     }
 
-    private Covariate.SplitRule findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry){
-        Covariate.SplitRule bestSplitRule = null;
+    private SplitRuleAndSplit findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry){
+        SplitRuleAndSplit bestSplitRuleAndSplit = new SplitRuleAndSplit();
         double bestSplitScore = 0.0;
         boolean first = true;
 
@@ -163,7 +147,10 @@ public class TreeTrainer<Y, O> {
 
 
                 if(score != null && !Double.isNaN(score) && (score > bestSplitScore || first)){
-                    bestSplitRule = possibleRule;
+                    bestSplitRuleAndSplit.splitRule = possibleRule;
+                    bestSplitRuleAndSplit.split = possibleSplit;
+                    bestSplitRuleAndSplit.probabilityLeftHand = probabilityLeftHand;
+
                     bestSplitScore = score;
                     first = false;
                 }
@@ -171,13 +158,19 @@ public class TreeTrainer<Y, O> {
 
         }
 
-        return bestSplitRule;
+        return bestSplitRuleAndSplit;
 
     }
 
     private boolean nodeIsPure(List<Row<Y>> data){
         final Y first = data.get(0).getResponse();
         return data.stream().allMatch(row -> row.getResponse().equals(first));
+    }
+
+    private class SplitRuleAndSplit{
+        private Covariate.SplitRule splitRule = null;
+        private Split<Y> split = null;
+        private double probabilityLeftHand;
     }
 
 }

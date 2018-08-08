@@ -1,11 +1,9 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 
-@RequiredArgsConstructor
 public class Tree<Y> implements Node<Y> {
 
     private final Node<Y> rootNode;
@@ -26,7 +24,6 @@ public class Tree<Y> implements Node<Y> {
     public int[] getBootstrapRowIds(){
         return bootstrapRowIds.clone();
     }
-
 
     public boolean idInBootstrapSample(int id){
         return Arrays.binarySearch(this.bootstrapRowIds, id) >= 0;
