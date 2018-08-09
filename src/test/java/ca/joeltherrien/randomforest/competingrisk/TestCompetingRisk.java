@@ -289,6 +289,7 @@ public class TestCompetingRisk {
     public void testLogRankSingleGroupDifferentiatorAllCovariates() throws IOException {
 
         final Settings settings = getSettings();
+        settings.setNtree(300); // results are too variable at 100
 
         final List<Covariate> covariates = getCovariates(settings);
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
