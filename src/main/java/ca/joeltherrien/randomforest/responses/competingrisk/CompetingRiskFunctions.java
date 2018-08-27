@@ -26,7 +26,7 @@ public class CompetingRiskFunctions implements Serializable {
     }
 
     public double calculateEventSpecificMortality(final int event, final double tau){
-        final MathFunction cif = getCauseSpecificHazardFunction(event);
+        final MathFunction cif = getCumulativeIncidenceFunction(event);
 
         double summation = 0.0;
         Point previousPoint = null;
