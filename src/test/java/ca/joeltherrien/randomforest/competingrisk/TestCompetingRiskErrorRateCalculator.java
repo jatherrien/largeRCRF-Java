@@ -31,13 +31,12 @@ public class TestCompetingRiskErrorRateCalculator {
         final int event = 1;
 
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> fakeForest = Forest.<CompetingRiskFunctions, CompetingRiskFunctions>builder().build();
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(Collections.emptyList(), fakeForest);
 
-        final double naiveConcordance = errorRateCalculator.calculateConcordance(responseList, mortalityArray, event);
+        final double naiveConcordance = CompetingRiskUtils.calculateConcordance(responseList, mortalityArray, event);
 
         final MathFunction fakeCensorDistribution = new MathFunction(Collections.emptyList(), new Point(0.0, 1.0));
         // This distribution will make the IPCW weights == 1, giving identical results to the naive concordance.
-        final double ipcwConcordance = errorRateCalculator.calculateIPCWConcordance(responseList, mortalityArray, event, fakeCensorDistribution);
+        final double ipcwConcordance = CompetingRiskUtils.calculateIPCWConcordance(responseList, mortalityArray, event, fakeCensorDistribution);
 
         closeEnough(naiveConcordance, ipcwConcordance, 0.0001);
 
