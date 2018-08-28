@@ -55,8 +55,9 @@ public class CompetingRiskFunctionCombiner implements ResponseCombiner<Competing
         }
 
         final MathFunction survivalFunction = new MathFunction(survivalPoints, new Point(0.0, 1.0));
-        final Map<Integer, MathFunction> causeSpecificCumulativeHazardFunctionMap = new HashMap<>();
-        final Map<Integer, MathFunction> cumulativeIncidenceFunctionMap = new HashMap<>();
+
+        final List<MathFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
+        final List<MathFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
 
         for(final int event : events){
 
@@ -78,14 +79,14 @@ public class CompetingRiskFunctionCombiner implements ResponseCombiner<Competing
 
             }
 
-            causeSpecificCumulativeHazardFunctionMap.put(event, new MathFunction(cumulativeHazardFunctionPoints));
-            cumulativeIncidenceFunctionMap.put(event, new MathFunction(cumulativeIncidenceFunctionPoints));
+            causeSpecificCumulativeHazardFunctionList.add(event-1, new MathFunction(cumulativeHazardFunctionPoints));
+            cumulativeIncidenceFunctionList.add(event-1, new MathFunction(cumulativeIncidenceFunctionPoints));
 
         }
 
         return CompetingRiskFunctions.builder()
-                .causeSpecificHazardFunctionMap(causeSpecificCumulativeHazardFunctionMap)
-                .cumulativeIncidenceFunctionMap(cumulativeIncidenceFunctionMap)
+                .causeSpecificHazards(causeSpecificCumulativeHazardFunctionList)
+                .cumulativeIncidenceCurves(cumulativeIncidenceFunctionList)
                 .survivalCurve(survivalFunction)
                 .build();
     }

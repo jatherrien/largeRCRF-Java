@@ -6,23 +6,24 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 @Builder
 public class CompetingRiskFunctions implements Serializable {
 
-    private final Map<Integer, MathFunction> causeSpecificHazardFunctionMap;
-    private final Map<Integer, MathFunction> cumulativeIncidenceFunctionMap;
+    private final List<MathFunction> causeSpecificHazards;
+    private final List<MathFunction> cumulativeIncidenceCurves;
 
     @Getter
     private final MathFunction survivalCurve;
 
     public MathFunction getCauseSpecificHazardFunction(int cause){
-        return causeSpecificHazardFunctionMap.get(cause);
+        return causeSpecificHazards.get(cause-1);
     }
 
     public MathFunction getCumulativeIncidenceFunction(int cause) {
-        return cumulativeIncidenceFunctionMap.get(cause);
+        return cumulativeIncidenceCurves.get(cause-1);
     }
 
     public double calculateEventSpecificMortality(final int event, final double tau){
