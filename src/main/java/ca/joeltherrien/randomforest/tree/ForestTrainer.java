@@ -184,7 +184,7 @@ public class ForestTrainer<Y, TO, FO> {
         private final int treeIndex;
         private final List<Tree<TO>> treeList;
 
-        public TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Tree<TO>> treeList) {
+        TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Tree<TO>> treeList) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.treeIndex = treeIndex;
             this.treeList = treeList;

@@ -3,6 +3,7 @@ package ca.joeltherrien.randomforest.responses.competingrisk;
 import ca.joeltherrien.randomforest.DataLoader;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVRecord;
 
@@ -10,6 +11,7 @@ import org.apache.commons.csv.CSVRecord;
  * See Ishwaran paper on splitting rule modelled after Gray's test. This requires that we know the censor times.
  *
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
 public final class CompetingRiskResponseWithCensorTime extends CompetingRiskResponse {
     private final double c;

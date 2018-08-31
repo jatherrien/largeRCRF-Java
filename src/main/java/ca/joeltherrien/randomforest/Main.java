@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         if(args.length < 2){
             System.out.println("Must provide two arguments - the path to the settings.yaml file and instructions to either train or analyze.");
@@ -160,7 +159,7 @@ public class Main {
         yVarSettings.set("type", new TextNode("Double"));
         yVarSettings.set("name", new TextNode("y"));
 
-        final Settings settings =  Settings.builder()
+        return Settings.builder()
                 .covariates(Utils.easyList(
                         new NumericCovariateSettings("x1"),
                         new BooleanCovariateSettings("x2"),
@@ -181,9 +180,6 @@ public class Main {
                 .saveProgress(true)
                 .saveTreeLocation("trees/")
                 .build();
-
-
-        return settings;
     }
 
 }

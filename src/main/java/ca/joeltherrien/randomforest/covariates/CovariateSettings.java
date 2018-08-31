@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = BooleanCovariateSettings.class, name = "boolean"),

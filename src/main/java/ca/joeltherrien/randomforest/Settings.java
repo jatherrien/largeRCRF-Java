@@ -133,7 +133,7 @@ public class Settings {
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
                         node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
-                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                        times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
                     return new CompetingRiskResponseCombiner(events, times);
@@ -152,7 +152,7 @@ public class Settings {
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
                         node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
-                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                        times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
                     return new CompetingRiskFunctionCombiner(events, times);
@@ -171,7 +171,7 @@ public class Settings {
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
                         node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
-                        times = eventList.stream().mapToDouble(db -> db).toArray();
+                        times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
                     final CompetingRiskResponseCombiner responseCombiner = new CompetingRiskResponseCombiner(events, times);
@@ -217,9 +217,7 @@ public class Settings {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         //mapper.enableDefaultTyping();
 
-        final Settings settings = mapper.readValue(file, Settings.class);
-
-        return settings;
+        return mapper.readValue(file, Settings.class);
 
     }
 

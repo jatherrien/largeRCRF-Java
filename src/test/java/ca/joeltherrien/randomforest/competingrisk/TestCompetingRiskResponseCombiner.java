@@ -26,9 +26,7 @@ public class TestCompetingRiskResponseCombiner {
 
         final CompetingRiskResponseCombiner combiner = new CompetingRiskResponseCombiner(new int[]{1,2}, null);
 
-        final CompetingRiskFunctions functions = combiner.combine(data);
-
-        return functions;
+        return combiner.combine(data);
     }
 
     @Test

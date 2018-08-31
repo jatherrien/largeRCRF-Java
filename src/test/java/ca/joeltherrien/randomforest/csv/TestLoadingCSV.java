@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestLoadingCSV {
 
@@ -51,9 +52,7 @@ public class TestLoadingCSV {
 
         final DataLoader.ResponseLoader loader = settings.getResponseLoader();
 
-        final List<Row<Double>> data = DataLoader.loadData(covariates, loader, settings.getDataFileLocation());
-
-        return data;
+        return DataLoader.loadData(covariates, loader, settings.getDataFileLocation());
     }
 
     @Test
@@ -94,9 +93,9 @@ public class TestLoadingCSV {
 
         row = data.get(3);
         assertEquals(-3.0, (double)row.getResponse());
-        assertEquals(true, row.getCovariateValue("x1").isNA());
-        assertEquals(true, row.getCovariateValue("x2").isNA());
-        assertEquals(true, row.getCovariateValue("x3").isNA());
+        assertTrue(row.getCovariateValue("x1").isNA());
+        assertTrue(row.getCovariateValue("x2").isNA());
+        assertTrue(row.getCovariateValue("x3").isNA());
     }
 
 }

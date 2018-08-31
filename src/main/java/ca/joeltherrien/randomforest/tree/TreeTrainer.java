@@ -43,9 +43,7 @@ public class TreeTrainer<Y, O> {
     public Tree<O> growTree(List<Row<Y>> data){
 
         final Node<O> rootNode = growNode(data, 0);
-        final Tree<O> tree = new Tree<>(rootNode, data.stream().mapToInt(Row::getId).toArray());
-
-        return tree;
+        return new Tree<>(rootNode, data.stream().mapToInt(Row::getId).toArray());
 
     }
 
@@ -95,8 +93,8 @@ public class TreeTrainer<Y, O> {
         final List<Covariate> splitCovariates = new ArrayList<>(covariates);
         Collections.shuffle(splitCovariates, ThreadLocalRandom.current());
 
-        for(int treeIndex = splitCovariates.size()-1; treeIndex >= mtry; treeIndex--){
-            splitCovariates.remove(treeIndex);
+        if (splitCovariates.size() > mtry) {
+            splitCovariates.subList(mtry, splitCovariates.size()).clear();
         }
 
         return splitCovariates;

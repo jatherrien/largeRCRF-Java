@@ -74,12 +74,10 @@ public class DataLoader {
 
         }
 
-        final Forest forest = Forest.<O, FO>builder()
+        return Forest.<O, FO>builder()
                 .trees(treeList)
                 .treeResponseCombiner(treeResponseCombiner)
                 .build();
-
-        return forest;
 
     }
 

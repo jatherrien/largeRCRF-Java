@@ -74,9 +74,7 @@ public class Utils {
     public static <T> List<T> easyList(T... array){
         final List<T> list = new ArrayList<>(array.length);
 
-        for(final T item : array){
-            list.add(item);
-        }
+        Collections.addAll(list, array);
 
         return list;
 
