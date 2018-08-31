@@ -64,5 +64,92 @@ public class Utils {
         }
     }
 
+    /**
+     * Replacement for Java 9's List.of
+     *
+     * @param array
+     * @param <T>
+     * @return A list
+     */
+    public static <T> List<T> easyList(T... array){
+        final List<T> list = new ArrayList<>(array.length);
+
+        for(final T item : array){
+            list.add(item);
+        }
+
+        return list;
+
+    }
+
+    /**
+     * Replacement for Java 9's Map.of
+     *
+     * @param array
+     * @return A map
+     */
+    public static Map easyMap(Object... array){
+        if(array.length % 2 != 0){
+            throw new IllegalArgumentException("Must provide a value for every key");
+        }
+
+        final Map map = new HashMap();
+        for(int i=0; i<array.length; i+=2){
+            map.put(array[i], array[i+1]);
+        }
+
+        return map;
+    }
+
+    /**
+     * Replacement for Java 9's Map.of
+     * @return A map
+     */
+    public static <K,V> Map<K,V> easyMap(K k1, V v1){
+        final Map<K,V> map = new HashMap<>();
+        map.put(k1, v1);
+
+        return map;
+    }
+
+    /**
+     * Replacement for Java 9's Map.of
+     * @return A map
+     */
+    public static <K,V> Map<K,V> easyMap(K k1, V v1, K k2, V v2){
+        final Map<K,V> map = new HashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+
+        return map;
+    }
+
+    /**
+     * Replacement for Java 9's Map.of
+     * @return A map
+     */
+    public static <K,V> Map<K,V> easyMap(K k1, V v1, K k2, V v2, K k3, V v3){
+        final Map<K,V> map = new HashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        map.put(k3, v3);
+
+        return map;
+    }
+
+    /**
+     * Replacement for Java 9's Map.of
+     * @return A map
+     */
+    public static <K,V> Map<K,V> easyMap(K k1, V v1, K k2, V v2, K k3, V v3, K k4, V v4){
+        final Map<K,V> map = new HashMap<>();
+        map.put(k1, v1);
+        map.put(k2, v2);
+        map.put(k3, v3);
+        map.put(k4, v4);
+
+        return map;
+    }
+
 
 }

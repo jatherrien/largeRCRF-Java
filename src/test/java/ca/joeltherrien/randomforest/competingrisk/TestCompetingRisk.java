@@ -9,6 +9,7 @@ import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.MathFunction;
 import ca.joeltherrien.randomforest.utils.Point;
+import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ public class TestCompetingRisk {
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
         responseCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, List.of(new IntNode(1), new IntNode(2)))
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
         // not setting times
 
@@ -45,7 +46,7 @@ public class TestCompetingRisk {
         final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         treeCombinerSettings.set("type", new TextNode("CompetingRiskFunctionCombiner"));
         treeCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, List.of(new IntNode(1), new IntNode(2)))
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
         // not setting times
 
@@ -55,7 +56,7 @@ public class TestCompetingRisk {
         yVarSettings.set("delta", new TextNode("status"));
 
         return Settings.builder()
-                .covariates(List.of(
+                .covariates(Utils.easyList(
                         new NumericCovariateSettings("ageatfda"),
                         new BooleanCovariateSettings("idu"),
                         new BooleanCovariateSettings("black"),
@@ -84,7 +85,7 @@ public class TestCompetingRisk {
     }
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
-        return CovariateRow.createSimple(Map.of(
+        return CovariateRow.createSimple(Utils.easyMap(
                 "ageatfda", "35",
                 "idu", "false",
                 "black", "false",
@@ -96,7 +97,7 @@ public class TestCompetingRisk {
     public void testSingleTree() throws IOException {
         final Settings settings = getSettings();
         settings.setDataFileLocation("src/test/resources/wihs.bootstrapped.csv");
-        settings.setCovariates(List.of(
+        settings.setCovariates(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
                 new BooleanCovariateSettings("black")
                 )); // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
@@ -199,7 +200,7 @@ public class TestCompetingRisk {
     @Test
     public void testLogRankSingleGroupDifferentiatorTwoBooleans() throws IOException {
         final Settings settings = getSettings();
-        settings.setCovariates(List.of(
+        settings.setCovariates(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
                 new BooleanCovariateSettings("black")
         ));

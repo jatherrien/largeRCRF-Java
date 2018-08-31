@@ -9,6 +9,7 @@ import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
+import ca.joeltherrien.randomforest.utils.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +49,7 @@ public class TrainSingleTree {
             trainingSet.add(generateRow(x1, x2, i));
         }
 
-        final List<Covariate> covariateNames = List.of(x1Covariate, x2Covariate);
+        final List<Covariate> covariateNames = Utils.easyList(x1Covariate, x2Covariate);
 
         final TreeTrainer<Double, Double> treeTrainer = TreeTrainer.<Double, Double>builder()
                 .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
@@ -99,7 +100,7 @@ public class TrainSingleTree {
 	public static Row<Double> generateRow(Covariate.Value<Double> x1, Covariate.Value<Double> x2, int id){
 	    double y = generateResponse(x1.getValue(), x2.getValue());
 
-	    final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2);
+	    final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2);
 
         return new Row<>(map, id, y);
 
@@ -107,7 +108,7 @@ public class TrainSingleTree {
 
 
     public static CovariateRow generateCovariateRow(Covariate.Value x1, Covariate.Value x2, int id){
-        final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2);
+        final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2);
 
         return new CovariateRow(map, id);
 

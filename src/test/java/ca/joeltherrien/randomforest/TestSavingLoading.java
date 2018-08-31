@@ -8,6 +8,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctio
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
+import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +36,7 @@ public class TestSavingLoading {
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
         responseCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, List.of(new IntNode(1), new IntNode(2)))
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
         // not setting times
 
@@ -43,7 +44,7 @@ public class TestSavingLoading {
         final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         treeCombinerSettings.set("type", new TextNode("CompetingRiskFunctionCombiner"));
         treeCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, List.of(new IntNode(1), new IntNode(2)))
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
         // not setting times
 
@@ -53,7 +54,7 @@ public class TestSavingLoading {
         yVarSettings.set("delta", new TextNode("status"));
 
         return Settings.builder()
-                .covariates(List.of(
+                .covariates(Utils.easyList(
                         new NumericCovariateSettings("ageatfda"),
                         new BooleanCovariateSettings("idu"),
                         new BooleanCovariateSettings("black"),
@@ -78,7 +79,7 @@ public class TestSavingLoading {
     }
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
-        return CovariateRow.createSimple(Map.of(
+        return CovariateRow.createSimple(Utils.easyMap(
                 "ageatfda", "35",
                 "idu", "false",
                 "black", "false",

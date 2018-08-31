@@ -4,6 +4,7 @@ import ca.joeltherrien.randomforest.Settings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import ca.joeltherrien.randomforest.covariates.*;
+import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -31,10 +32,10 @@ public class TestPersistence {
         yVarSettings.set("name", new TextNode("y"));
 
         final Settings settingsOriginal =  Settings.builder()
-                .covariates(List.of(
+                .covariates(Utils.easyList(
                         new NumericCovariateSettings("x1"),
                         new BooleanCovariateSettings("x2"),
-                        new FactorCovariateSettings("x3", List.of("cat", "mouse", "dog"))
+                        new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"))
                         )
                 )
                 .dataFileLocation("data.csv")

@@ -9,6 +9,7 @@ import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
+import ca.joeltherrien.randomforest.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class TrainSingleTreeFactor {
 
         final Covariate<Double> x1Covariate = new NumericCovariate("x1");
         final Covariate<Double> x2Covariate = new NumericCovariate("x2");
-        final FactorCovariate x3Covariate = new FactorCovariate("x3", List.of("cat", "dog", "mouse"));
+        final FactorCovariate x3Covariate = new FactorCovariate("x3", Utils.easyList("cat", "dog", "mouse"));
 
         final List<Covariate.Value<Double>> x1List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)
@@ -69,7 +70,7 @@ public class TrainSingleTreeFactor {
             trainingSet.add(generateRow(x1, x2, x3, i));
         }
 
-        final List<Covariate> covariateNames = List.of(x1Covariate, x2Covariate);
+        final List<Covariate> covariateNames = Utils.easyList(x1Covariate, x2Covariate);
 
         final TreeTrainer<Double, Double> treeTrainer = TreeTrainer.<Double, Double>builder()
                 .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
@@ -127,7 +128,7 @@ public class TrainSingleTreeFactor {
 	public static Row<Double> generateRow(Covariate.Value<Double> x1, Covariate.Value<Double> x2, Covariate.Value<String> x3, int id){
 	    double y = generateResponse(x1.getValue(), x2.getValue(), x3.getValue());
 
-	    final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2);
+	    final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2);
 
         return new Row<>(map, id, y);
 
@@ -135,7 +136,7 @@ public class TrainSingleTreeFactor {
 
 
     public static CovariateRow generateCovariateRow(Covariate.Value x1, Covariate.Value x2, Covariate.Value x3, int id){
-        final Map<String, Covariate.Value> map = Map.of("x1", x1, "x2", x2, "x3", x3);
+        final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2, "x3", x3);
 
         return new CovariateRow(map, id);
 

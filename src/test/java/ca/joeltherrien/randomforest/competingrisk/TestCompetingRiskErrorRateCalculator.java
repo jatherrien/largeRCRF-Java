@@ -5,6 +5,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.utils.MathFunction;
 import ca.joeltherrien.randomforest.utils.Point;
+import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -26,7 +27,7 @@ public class TestCompetingRiskErrorRateCalculator {
         final CompetingRiskResponse response4 = new CompetingRiskResponse(1, 3.0);
 
         final double[] mortalityArray = new double[]{1, 4, 3, 9};
-        final List<CompetingRiskResponse> responseList = List.of(response1, response2, response3, response4);
+        final List<CompetingRiskResponse> responseList = Utils.easyList(response1, response2, response3, response4);
 
         final int event = 1;
 
@@ -52,7 +53,7 @@ public class TestCompetingRiskErrorRateCalculator {
         final CompetingRiskResponse response3 = new CompetingRiskResponse(2, 8.0);
         final CompetingRiskResponse response4 = new CompetingRiskResponse(1, 3.0);
 
-        final List<Row<CompetingRiskResponse>> dataset = List.of(
+        final List<Row<CompetingRiskResponse>> dataset = Utils.easyList(
                 new Row<>(Collections.emptyMap(), 1, response1),
                 new Row<>(Collections.emptyMap(), 2, response2),
                 new Row<>(Collections.emptyMap(), 3, response3),

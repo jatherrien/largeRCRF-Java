@@ -7,6 +7,7 @@ import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -37,8 +38,8 @@ public class TestLoadingCSV {
         final Settings settings = Settings.builder()
                 .dataFileLocation(filename)
                 .covariates(
-                        List.of(new NumericCovariateSettings("x1"),
-                                new FactorCovariateSettings("x2", List.of("dog", "cat", "mouse")),
+                        Utils.easyList(new NumericCovariateSettings("x1"),
+                                new FactorCovariateSettings("x2", Utils.easyList("dog", "cat", "mouse")),
                                 new BooleanCovariateSettings("x3"))
                 )
                 .yVarSettings(yVarSettings)

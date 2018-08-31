@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.covariates;
 
 
+import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
@@ -55,7 +56,7 @@ public class FactorCovariateTest {
 
 
     private FactorCovariate createTestCovariate(){
-        final List<String> levels = List.of("DOG", "CAT", "MOUSE");
+        final List<String> levels = Utils.easyList("DOG", "CAT", "MOUSE");
 
         return new FactorCovariate("pet", levels);
     }
