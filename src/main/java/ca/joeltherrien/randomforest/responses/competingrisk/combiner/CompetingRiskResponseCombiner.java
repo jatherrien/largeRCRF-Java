@@ -56,6 +56,12 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
         for(int i=0; i<timesToUse.length; i++){
             final double time_k = timesToUse[i];
             final double individualsAtRisk = individualsAtRiskArray[i]; // Y(t_k)
+
+            if(individualsAtRisk == 0){
+                // if we continue we'll get NaN
+                break;
+            }
+
             final double numberOfEventsAtTime = (double) responses.stream()
                     .filter(event -> !event.isCensored())
                     .filter(event -> event.getU() == time_k) // since delta != 0 we know censoring didn't occur prior to this
@@ -81,6 +87,12 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
             for(int i=0; i<timesToUse.length; i++){
                 final double time_k = timesToUse[i];
                 final double individualsAtRisk = individualsAtRiskArray[i]; // Y(t_k)
+
+                if(individualsAtRisk == 0){
+                    // if we continue we'll get NaN
+                    break;
+                }
+
                 final double numberEventsAtTime = numberOfEventsAtTime(event, responses, time_k); // d_j(t_k)
 
                 // Cause-specific cumulative hazard function
