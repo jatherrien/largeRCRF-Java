@@ -132,7 +132,7 @@ public class Settings {
                     // note that times may be null
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
                         times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
@@ -151,7 +151,7 @@ public class Settings {
                     // note that times may be null
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
                         times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
@@ -170,7 +170,7 @@ public class Settings {
                     // note that times may be null
                     if(node.hasNonNull("times")){
                         final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(event -> timeList.add(event.asDouble()));
+                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
                         times = timeList.stream().mapToDouble(db -> db).toArray();
                     }
 
