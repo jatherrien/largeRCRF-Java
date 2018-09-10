@@ -5,6 +5,7 @@ import lombok.Builder;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Builder
@@ -16,17 +17,29 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
     public FO evaluate(CovariateRow row){
 
         return treeResponseCombiner.combine(
-                trees.parallelStream()
+                trees.stream()
                 .map(node -> node.evaluate(row))
                 .collect(Collectors.toList())
         );
 
     }
 
+    /**
+     * Used primarily in the R package interface to avoid R loops; and for easier parallelization.
+     *
+     * @param rowList List of CovariateRows to evaluate
+     * @return A List of predictions.
+     */
+    public List<FO> evaluate(List<CovariateRow> rowList){
+        return rowList.parallelStream()
+                .map(this::evaluate)
+                .collect(Collectors.toList());
+    }
+
     public FO evaluateOOB(CovariateRow row){
 
         return treeResponseCombiner.combine(
-          trees.parallelStream()
+          trees.stream()
           .filter(tree -> !tree.idInBootstrapSample(row.getId()))
           .map(node -> node.evaluate(row))
           .collect(Collectors.toList())

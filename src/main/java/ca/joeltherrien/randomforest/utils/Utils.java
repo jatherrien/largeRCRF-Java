@@ -3,7 +3,7 @@ package ca.joeltherrien.randomforest.utils;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Utils {
+public final class Utils {
 
     public static MathFunction estimateOneMinusECDF(final double[] times){
         final Point defaultPoint = new Point(0.0, 1.0);
