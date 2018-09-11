@@ -35,20 +35,29 @@ public class MathFunction implements Serializable {
     }
 
     public Point evaluate(double time){
-        final Optional<Point> pointOptional = points.stream()
-                .filter(point -> point.getTime() <= time)
-                .max(Comparator.comparingDouble(Point::getTime));
+        Point point = defaultValue;
 
-        return pointOptional.orElse(defaultValue);
+        for(final Point currentPoint: points){
+            if(currentPoint.getTime() > time){
+                break;
+            }
+            point = currentPoint;
+        }
 
+        return point;
     }
 
     public Point evaluatePrevious(double time){
-        final Optional<Point> pointOptional = points.stream()
-                .filter(point -> point.getTime() < time)
-                .max(Comparator.comparingDouble(Point::getTime));
+        Point point = defaultValue;
 
-        return pointOptional.orElse(defaultValue);
+        for(final Point currentPoint: points){
+            if(currentPoint.getTime() >= time){
+                break;
+            }
+            point = currentPoint;
+        }
+
+        return point;
     }
 
     @Override
