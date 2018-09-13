@@ -60,7 +60,8 @@ public class TestSavingLoading {
                         new NumericCovariateSettings("cd4nadir")
                         )
                 )
-                .dataFileLocation("src/test/resources/wihs.csv")
+                .trainingDataLocation("src/test/resources/wihs.csv")
+                .validationDataLocation("src/test/resources/wihs.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
                 .groupDifferentiatorSettings(groupDifferentiatorSettings)
@@ -94,7 +95,7 @@ public class TestSavingLoading {
     public void testSavingLoading() throws IOException, ClassNotFoundException {
         final Settings settings = getSettings();
         final List<Covariate> covariates = getCovariates(settings);
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final File directory = new File(settings.getSaveTreeLocation());
         assertFalse(directory.exists());

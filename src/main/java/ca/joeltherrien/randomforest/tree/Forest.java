@@ -30,7 +30,7 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
      * @param rowList List of CovariateRows to evaluate
      * @return A List of predictions.
      */
-    public List<FO> evaluate(List<CovariateRow> rowList){
+    public List<FO> evaluate(List<? extends CovariateRow> rowList){
         return rowList.parallelStream()
                 .map(this::evaluate)
                 .collect(Collectors.toList());

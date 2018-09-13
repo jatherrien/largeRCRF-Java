@@ -204,7 +204,8 @@ public class Settings {
     // number of trees to try
     private int ntree = 500;
 
-    private String dataFileLocation = "data.csv";
+    private String trainingDataLocation = "data.csv";
+    private String validationDataLocation = "data.csv";
     private String saveTreeLocation = "trees/";
 
     private int numberOfThreads = 1;

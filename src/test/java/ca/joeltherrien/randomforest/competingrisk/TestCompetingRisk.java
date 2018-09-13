@@ -62,7 +62,7 @@ public class TestCompetingRisk {
                         new NumericCovariateSettings("cd4nadir")
                         )
                 )
-                .dataFileLocation("src/test/resources/wihs.csv")
+                .trainingDataLocation("src/test/resources/wihs.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
                 .groupDifferentiatorSettings(groupDifferentiatorSettings)
@@ -95,7 +95,7 @@ public class TestCompetingRisk {
     @Test
     public void testSingleTree() throws IOException {
         final Settings settings = getSettings();
-        settings.setDataFileLocation("src/test/resources/wihs.bootstrapped.csv");
+        settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped.csv");
         settings.setCovariates(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
                 new BooleanCovariateSettings("black")
@@ -103,7 +103,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = getCovariates(settings);
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset);
@@ -152,11 +152,11 @@ public class TestCompetingRisk {
         final Settings settings = getSettings();
         settings.setMtry(4);
         settings.setNumberOfSplits(0);
-        settings.setDataFileLocation("src/test/resources/wihs.bootstrapped2.csv");
+        settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped2.csv");
 
         final List<Covariate> covariates = getCovariates(settings);
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset);
@@ -206,7 +206,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = getCovariates(settings);
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
@@ -231,7 +231,7 @@ public class TestCompetingRisk {
         closeEnough(0.163, functions.getCumulativeIncidenceFunction(2).evaluate(4.0).getY(), 0.01);
         closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8).getY(), 0.01);
 
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, true);
         final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
 
         // Error rates happen to be about the same
@@ -256,7 +256,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = getCovariates(settings);
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         // Let's count the events and make sure the data was correctly read.
         int countCensored = 0;
@@ -292,7 +292,7 @@ public class TestCompetingRisk {
         settings.setNtree(300); // results are too variable at 100
 
         final List<Covariate> covariates = getCovariates(settings);
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();
 
@@ -313,7 +313,7 @@ public class TestCompetingRisk {
         // We seem to consistently underestimate the results.
         assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.74, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, true);
         final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
 
         System.out.println(errorRates[0]);

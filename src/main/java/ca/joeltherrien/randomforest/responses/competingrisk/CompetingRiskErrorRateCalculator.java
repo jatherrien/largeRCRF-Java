@@ -18,11 +18,17 @@ public class CompetingRiskErrorRateCalculator {
     private final List<Row<CompetingRiskResponse>> dataset;
     private final List<CompetingRiskFunctions> riskFunctions;
 
-    public CompetingRiskErrorRateCalculator(final List<Row<CompetingRiskResponse>> dataset, final Forest<?, CompetingRiskFunctions> forest){
+    public CompetingRiskErrorRateCalculator(final List<Row<CompetingRiskResponse>> dataset, final Forest<?, CompetingRiskFunctions> forest, boolean useBootstrapPredictions){
         this.dataset = dataset;
-        this.riskFunctions = dataset.stream()
-                .map(forest::evaluateOOB)
-                .collect(Collectors.toList());
+        if(useBootstrapPredictions){
+            this.riskFunctions = dataset.stream()
+                    .map(forest::evaluateOOB)
+                    .collect(Collectors.toList());
+        }
+        else{
+            this.riskFunctions = forest.evaluate(dataset);
+        }
+
     }
 
     /**

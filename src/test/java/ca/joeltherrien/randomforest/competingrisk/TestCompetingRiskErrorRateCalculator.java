@@ -93,7 +93,7 @@ public class TestCompetingRiskErrorRateCalculator {
         when(mockForest.evaluateOOB(dataset.get(3))).thenReturn(function4);
 
 
-        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, mockForest);
+        final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, mockForest, true);
 
         final double error = errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2});
 

@@ -39,7 +39,7 @@ public class Main {
                 .map(cs -> cs.build()).collect(Collectors.toList());
 
         if(args[1].equalsIgnoreCase("train")){
-            final List<Row> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+            final List<Row> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
             final ForestTrainer forestTrainer = new ForestTrainer(settings, dataset, covariates);
 
@@ -79,7 +79,7 @@ public class Main {
                 return;
             }
 
-            final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getDataFileLocation());
+            final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getValidationDataLocation());
 
             // Let's reduce this down to n
             final int n = Integer.parseInt(args[2]);
@@ -88,9 +88,17 @@ public class Main {
             final File folder = new File(settings.getSaveTreeLocation());
             final Forest<?, CompetingRiskFunctions> forest = DataLoader.loadForest(folder, responseCombiner);
 
-            System.out.println("Finished loading trees + dataset; creating calculator and evaluating OOB predictions");
+            final boolean useBootstrapPredictions = settings.getTrainingDataLocation().equals(settings.getValidationDataLocation());
 
-            final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest);
+            if(useBootstrapPredictions){
+                System.out.println("Finished loading trees + dataset; creating calculator and evaluating OOB predictions");
+            }
+            else{
+                System.out.println("Finished loading trees + dataset; creating calculator and evaluating predictions");
+            }
+
+
+            final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, useBootstrapPredictions);
             final PrintWriter printWriter = new PrintWriter(settings.getSaveTreeLocation() + "/errors.txt");
 
             System.out.println("Running Naive Mortality");
@@ -166,7 +174,8 @@ public class Main {
                         new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"))
                         )
                 )
-                .dataFileLocation("data.csv")
+                .trainingDataLocation("training_data.csv")
+                .validationDataLocation("validation_data.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
                 .groupDifferentiatorSettings(groupDifferentiatorSettings)

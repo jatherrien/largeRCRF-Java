@@ -37,7 +37,7 @@ public class TestLoadingCSV {
         yVarSettings.set("name", new TextNode("y"));
 
         final Settings settings = Settings.builder()
-                .dataFileLocation(filename)
+                .trainingDataLocation(filename)
                 .covariates(
                         Utils.easyList(new NumericCovariateSettings("x1"),
                                 new FactorCovariateSettings("x2", Utils.easyList("dog", "cat", "mouse")),
@@ -52,7 +52,7 @@ public class TestLoadingCSV {
 
         final DataLoader.ResponseLoader loader = settings.getResponseLoader();
 
-        return DataLoader.loadData(covariates, loader, settings.getDataFileLocation());
+        return DataLoader.loadData(covariates, loader, settings.getTrainingDataLocation());
     }
 
     @Test
