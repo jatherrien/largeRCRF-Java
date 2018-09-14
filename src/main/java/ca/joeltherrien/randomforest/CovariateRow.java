@@ -4,12 +4,13 @@ import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
-public class CovariateRow {
+public class CovariateRow implements Serializable {
 
     private final Map<String, Covariate.Value> valueMap;
 
