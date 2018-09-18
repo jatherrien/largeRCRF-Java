@@ -27,22 +27,22 @@ public class TrainForest {
 
         final List<Covariate> covariateList = new ArrayList<>(p);
         for(int j =0; j < p; j++){
-            final NumericCovariate covariate = new NumericCovariate("x"+j);
+            final NumericCovariate covariate = new NumericCovariate("x"+j, j);
             covariateList.add(covariate);
         }
 
         for(int i=0; i<n; i++){
             double y = 0.0;
-            final Map<String, Covariate.Value> map = new HashMap<>();
+            final Covariate.Value[] valueArray = new Covariate.Value[covariateList.size()];
 
             for(final Covariate covariate : covariateList) {
                 final double x = random.nextDouble();
                 y += x;
 
-                map.put(covariate.getName(), covariate.createValue(x));
+                valueArray[covariate.getIndex()] = covariate.createValue(y);
             }
 
-            data.add(i, new Row<>(map, i, y));
+            data.add(i, new Row<>(valueArray, i, y));
 
             if(y < minY){
                 minY = y;

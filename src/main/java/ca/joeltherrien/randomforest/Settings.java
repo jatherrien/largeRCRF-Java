@@ -1,5 +1,6 @@
 package ca.joeltherrien.randomforest;
 
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.CovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
@@ -195,7 +196,7 @@ public class Settings {
     private ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
     private ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
 
-    private List<CovariateSettings> covariates = new ArrayList<>();
+    private List<CovariateSettings> covariateSettings = new ArrayList<>();
     private ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
 
     // number of covariates to randomly try
@@ -227,7 +228,7 @@ public class Settings {
         //mapper.enableDefaultTyping();
 
         // Jackson can struggle with some types of Lists, such as that returned by the useful List.of(...)
-        this.covariates = new ArrayList<>(this.covariates);
+        this.covariateSettings = new ArrayList<>(this.covariateSettings);
 
         mapper.writeValue(file, this);
     }
@@ -258,6 +259,16 @@ public class Settings {
         final String type = treeCombinerSettings.get("type").asText();
 
         return getResponseCombinerConstructor(type).apply(treeCombinerSettings);
+    }
+
+    @JsonIgnore
+    public List<Covariate> getCovariates(){
+        final List<CovariateSettings> covariateSettingsList = this.getCovariateSettings();
+        final List<Covariate> covariates = new ArrayList<>(covariateSettingsList.size());
+        for(int i = 0; i < covariateSettingsList.size(); i++){
+            covariates.add(covariateSettingsList.get(i).build(i));
+        }
+        return covariates;
     }
 
 }

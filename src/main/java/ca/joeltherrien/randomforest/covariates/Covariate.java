@@ -12,6 +12,8 @@ public interface Covariate<V> extends Serializable {
 
     String getName();
 
+    int getIndex();
+
     Collection<? extends SplitRule<V>> generateSplitRules(final List<Value<V>> data, final int number);
 
     Value<V> createValue(V value);
@@ -54,7 +56,7 @@ public interface Covariate<V> extends Serializable {
 
 
             for(final Row<Y> row : rows) {
-                final Value<V> value = (Value<V>) row.getCovariateValue(getParent().getName());
+                final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
 
                 if(value.isNA()){
                     missingValueRows.add(row);
@@ -76,7 +78,7 @@ public interface Covariate<V> extends Serializable {
         }
 
         default boolean isLeftHand(CovariateRow row, final double probabilityNaLeftHand){
-            final Value<V> value = (Value<V>) row.getCovariateValue(getParent().getName());
+            final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
 
             if(value.isNA()){
                 return ThreadLocalRandom.current().nextDouble() <= probabilityNaLeftHand;

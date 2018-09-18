@@ -53,7 +53,7 @@ public class TestSavingLoading {
         yVarSettings.set("delta", new TextNode("status"));
 
         return Settings.builder()
-                .covariates(Utils.easyList(
+                .covariateSettings(Utils.easyList(
                         new NumericCovariateSettings("ageatfda"),
                         new BooleanCovariateSettings("idu"),
                         new BooleanCovariateSettings("black"),
@@ -87,14 +87,10 @@ public class TestSavingLoading {
                 , covariates, 1);
     }
 
-    public List<Covariate> getCovariates(Settings settings){
-        return settings.getCovariates().stream().map(covariateSettings -> covariateSettings.build()).collect(Collectors.toList());
-    }
-
     @Test
     public void testSavingLoading() throws IOException, ClassNotFoundException {
         final Settings settings = getSettings();
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final File directory = new File(settings.getSaveTreeLocation());

@@ -12,14 +12,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CovariateRow implements Serializable {
 
-    private final Map<String, Covariate.Value> valueMap;
+    private final Covariate.Value[] valueArray;
 
     @Getter
     private final int id;
 
-    public Covariate.Value<?> getCovariateValue(String name){
-        return valueMap.get(name);
-
+    public Covariate.Value<?> getCovariateValue(Covariate covariate){
+        return valueArray[covariate.getIndex()];
     }
 
     @Override
@@ -28,18 +27,21 @@ public class CovariateRow implements Serializable {
     }
 
     public static CovariateRow createSimple(Map<String, String> simpleMap, List<Covariate> covariateList, int id){
-        final Map<String, Covariate.Value> valueMap = new HashMap<>();
+        final Covariate.Value[] valueArray = new Covariate.Value[covariateList.size()];
         final Map<String, Covariate> covariateMap = new HashMap<>();
 
         covariateList.forEach(covariate -> covariateMap.put(covariate.getName(), covariate));
 
         simpleMap.forEach((name, valueStr) -> {
-            if(covariateMap.containsKey(name)){
-                valueMap.put(name, covariateMap.get(name).createValue(valueStr));
+            final Covariate covariate = covariateMap.get(name);
+
+            if(covariate != null){ // happens often in tests where we experiment with adding / removing covariates
+                valueArray[covariate.getIndex()] = covariate.createValue(valueStr);
             }
+
             });
 
-        return new CovariateRow(valueMap, id);
+        return new CovariateRow(valueArray, id);
     }
 
 }

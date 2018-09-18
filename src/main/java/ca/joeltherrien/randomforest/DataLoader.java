@@ -37,15 +37,15 @@ public class DataLoader {
 
         int id = 1;
         for(final CSVRecord record : parser){
-            final Map<String, Covariate.Value> covariateValueMap = new HashMap<>();
+            final Covariate.Value[] valueArray = new Covariate.Value[covariates.size()];
 
             for(final Covariate<?> covariate : covariates){
-                covariateValueMap.put(covariate.getName(), covariate.createValue(record.get(covariate.getName())));
+                valueArray[covariate.getIndex()] = covariate.createValue(record.get(covariate.getName()));
             }
 
             final Y y = responseLoader.parse(record);
 
-            dataset.add(new Row<>(covariateValueMap, id++, y));
+            dataset.add(new Row<>(valueArray, id++, y));
 
         }
 

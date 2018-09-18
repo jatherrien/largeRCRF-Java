@@ -58,7 +58,7 @@ public class FactorCovariateTest {
     private FactorCovariate createTestCovariate(){
         final List<String> levels = Utils.easyList("DOG", "CAT", "MOUSE");
 
-        return new FactorCovariate("pet", levels);
+        return new FactorCovariate("pet", 0, levels);
     }
 
 

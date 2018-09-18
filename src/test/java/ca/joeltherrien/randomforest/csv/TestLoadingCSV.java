@@ -38,7 +38,7 @@ public class TestLoadingCSV {
 
         final Settings settings = Settings.builder()
                 .trainingDataLocation(filename)
-                .covariates(
+                .covariateSettings(
                         Utils.easyList(new NumericCovariateSettings("x1"),
                                 new FactorCovariateSettings("x2", Utils.easyList("dog", "cat", "mouse")),
                                 new BooleanCovariateSettings("x3"))
@@ -46,8 +46,7 @@ public class TestLoadingCSV {
                 .yVarSettings(yVarSettings)
                 .build();
 
-        final List<Covariate> covariates = settings.getCovariates().stream()
-                .map(cs -> cs.build()).collect(Collectors.toList());
+        final List<Covariate> covariates = settings.getCovariates();
 
 
         final DataLoader.ResponseLoader loader = settings.getResponseLoader();
@@ -56,46 +55,50 @@ public class TestLoadingCSV {
     }
 
     @Test
-    public void verifyLoadingNormal() throws IOException {
+    public void verifyLoadingNormal(final List<Covariate> covariates) throws IOException {
         final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv");
 
-        assertData(data);
+        assertData(data, covariates);
     }
 
     @Test
-    public void verifyLoadingGz() throws IOException {
+    public void verifyLoadingGz(final List<Covariate> covariates) throws IOException {
         final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv.gz");
 
-        assertData(data);
+        assertData(data, covariates);
     }
 
 
-    private void assertData(final List<Row<Double>> data){
+    private void assertData(final List<Row<Double>> data, final List<Covariate> covariates){
+        final Covariate x1 = covariates.get(0);
+        final Covariate x2 = covariates.get(0);
+        final Covariate x3 = covariates.get(0);
+
         assertEquals(4, data.size());
 
         Row<Double> row = data.get(0);
         assertEquals(5.0, (double)row.getResponse());
-        assertEquals(3.0, row.getCovariateValue("x1").getValue());
-        assertEquals("mouse", row.getCovariateValue("x2").getValue());
-        assertEquals(true, row.getCovariateValue("x3").getValue());
+        assertEquals(3.0, row.getCovariateValue(x1).getValue());
+        assertEquals("mouse", row.getCovariateValue(x2).getValue());
+        assertEquals(true, row.getCovariateValue(x3).getValue());
 
         row = data.get(1);
         assertEquals(2.0, (double)row.getResponse());
-        assertEquals(1.0, row.getCovariateValue("x1").getValue());
-        assertEquals("dog", row.getCovariateValue("x2").getValue());
-        assertEquals(false, row.getCovariateValue("x3").getValue());
+        assertEquals(1.0, row.getCovariateValue(x1).getValue());
+        assertEquals("dog", row.getCovariateValue(x2).getValue());
+        assertEquals(false, row.getCovariateValue(x3).getValue());
 
         row = data.get(2);
         assertEquals(9.0, (double)row.getResponse());
-        assertEquals(1.5, row.getCovariateValue("x1").getValue());
-        assertEquals("cat", row.getCovariateValue("x2").getValue());
-        assertEquals(true, row.getCovariateValue("x3").getValue());
+        assertEquals(1.5, row.getCovariateValue(x1).getValue());
+        assertEquals("cat", row.getCovariateValue(x2).getValue());
+        assertEquals(true, row.getCovariateValue(x3).getValue());
 
         row = data.get(3);
         assertEquals(-3.0, (double)row.getResponse());
-        assertTrue(row.getCovariateValue("x1").isNA());
-        assertTrue(row.getCovariateValue("x2").isNA());
-        assertTrue(row.getCovariateValue("x3").isNA());
+        assertTrue(row.getCovariateValue(x1).isNA());
+        assertTrue(row.getCovariateValue(x2).isNA());
+        assertTrue(row.getCovariateValue(x3).isNA());
     }
 
 }

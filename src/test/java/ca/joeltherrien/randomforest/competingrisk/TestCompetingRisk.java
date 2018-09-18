@@ -55,7 +55,7 @@ public class TestCompetingRisk {
         yVarSettings.set("delta", new TextNode("status"));
 
         return Settings.builder()
-                .covariates(Utils.easyList(
+                .covariateSettings(Utils.easyList(
                         new NumericCovariateSettings("ageatfda"),
                         new BooleanCovariateSettings("idu"),
                         new BooleanCovariateSettings("black"),
@@ -79,9 +79,6 @@ public class TestCompetingRisk {
                 .build();
     }
 
-    public List<Covariate> getCovariates(Settings settings){
-        return settings.getCovariates().stream().map(covariateSettings -> covariateSettings.build()).collect(Collectors.toList());
-    }
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
         return CovariateRow.createSimple(Utils.easyMap(
@@ -96,12 +93,12 @@ public class TestCompetingRisk {
     public void testSingleTree() throws IOException {
         final Settings settings = getSettings();
         settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped.csv");
-        settings.setCovariates(Utils.easyList(
+        settings.setCovariateSettings(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
                 new BooleanCovariateSettings("black")
                 )); // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
 
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
 
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
@@ -154,7 +151,7 @@ public class TestCompetingRisk {
         settings.setNumberOfSplits(0);
         settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped2.csv");
 
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
 
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
@@ -199,12 +196,12 @@ public class TestCompetingRisk {
     @Test
     public void testLogRankSingleGroupDifferentiatorTwoBooleans() throws IOException {
         final Settings settings = getSettings();
-        settings.setCovariates(Utils.easyList(
+        settings.setCovariateSettings(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
                 new BooleanCovariateSettings("black")
         ));
 
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
 
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
@@ -254,7 +251,7 @@ public class TestCompetingRisk {
     public void verifyDataset() throws IOException {
         final Settings settings = getSettings();
 
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
 
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
@@ -291,7 +288,7 @@ public class TestCompetingRisk {
         final Settings settings = getSettings();
         settings.setNtree(300); // results are too variable at 100
 
-        final List<Covariate> covariates = getCovariates(settings);
+        final List<Covariate> covariates = settings.getCovariates();
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();

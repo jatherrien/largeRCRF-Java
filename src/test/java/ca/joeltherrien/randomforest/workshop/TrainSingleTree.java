@@ -18,15 +18,13 @@ import java.util.stream.DoubleStream;
 public class TrainSingleTree {
 
 	public static void main(String[] args) {
-		System.out.println("Hello world!");
-
         final Random random = new Random(123);
 
         final int n = 1000;
         final List<Row<Double>> trainingSet = new ArrayList<>(n);
 
-        final Covariate<Double> x1Covariate = new NumericCovariate("x1");
-        final Covariate<Double> x2Covariate = new NumericCovariate("x2");
+        final Covariate<Double> x1Covariate = new NumericCovariate("x1", 0);
+        final Covariate<Double> x2Covariate = new NumericCovariate("x2", 1);
 
         final List<Covariate.Value<Double>> x1List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)
@@ -100,17 +98,21 @@ public class TrainSingleTree {
 	public static Row<Double> generateRow(Covariate.Value<Double> x1, Covariate.Value<Double> x2, int id){
 	    double y = generateResponse(x1.getValue(), x2.getValue());
 
-	    final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2);
+	    final Covariate.Value[] valueArray = new Covariate.Value[2];
+	    valueArray[0] = x1;
+	    valueArray[1] = x2;
 
-        return new Row<>(map, id, y);
+        return new Row<>(valueArray, id, y);
 
     }
 
 
     public static CovariateRow generateCovariateRow(Covariate.Value x1, Covariate.Value x2, int id){
-        final Map<String, Covariate.Value> map = Utils.easyMap("x1", x1, "x2", x2);
+        final Covariate.Value[] valueArray = new Covariate.Value[2];
+        valueArray[0] = x1;
+        valueArray[1] = x2;
 
-        return new CovariateRow(map, id);
+        return new CovariateRow(valueArray, id);
 
     }
 

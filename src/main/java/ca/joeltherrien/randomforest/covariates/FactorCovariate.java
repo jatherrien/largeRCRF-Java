@@ -1,20 +1,27 @@
 package ca.joeltherrien.randomforest.covariates;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class FactorCovariate implements Covariate<String>{
 
+    @Getter
     private final String name;
+
+    @Getter
+    private final int index;
+
     private final Map<String, FactorValue> factorLevels;
     private final FactorValue naValue;
     private final int numberOfPossiblePairings;
 
 
-    public FactorCovariate(final String name, List<String> levels){
+    public FactorCovariate(final String name, final int index, List<String> levels){
         this.name = name;
+        this.index = index;
         this.factorLevels = new HashMap<>();
 
         for(final String level : levels){
@@ -33,10 +40,6 @@ public final class FactorCovariate implements Covariate<String>{
     }
 
 
-    @Override
-    public String getName() {
-        return name;
-    }
 
     @Override
     public Set<FactorSplitRule> generateSplitRules(List<Value<String>> data, int number) {

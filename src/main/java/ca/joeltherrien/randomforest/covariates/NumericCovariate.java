@@ -16,6 +16,9 @@ public final class NumericCovariate implements Covariate<Double>{
     @Getter
     private final String name;
 
+    @Getter
+    private final int index;
+
     @Override
     public Collection<NumericSplitRule> generateSplitRules(List<Value<Double>> data, int number) {
 

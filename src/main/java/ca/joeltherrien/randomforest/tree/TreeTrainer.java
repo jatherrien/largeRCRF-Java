@@ -113,7 +113,7 @@ public class TreeTrainer<Y, O> {
                     .generateSplitRules(
                             data
                                     .stream()
-                                    .map(row -> row.getCovariateValue(covariate.getName()))
+                                    .map(row -> row.getCovariateValue(covariate))
                                     .collect(Collectors.toList())
                             , numberToTry);
 

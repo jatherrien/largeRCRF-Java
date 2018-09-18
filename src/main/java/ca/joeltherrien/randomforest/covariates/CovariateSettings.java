@@ -28,5 +28,5 @@ public abstract class CovariateSettings<V> {
         this.name = name;
     }
 
-    public abstract Covariate<V> build();
+    public abstract Covariate<V> build(int index);
 }

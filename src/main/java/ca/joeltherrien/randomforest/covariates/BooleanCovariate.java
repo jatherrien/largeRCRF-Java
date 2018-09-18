@@ -13,6 +13,9 @@ public final class BooleanCovariate implements Covariate<Boolean>{
     @Getter
     private final String name;
 
+    @Getter
+    private final int index;
+
     private final BooleanSplitRule splitRule = new BooleanSplitRule(); // there's only one possible rule for BooleanCovariates.
 
     @Override

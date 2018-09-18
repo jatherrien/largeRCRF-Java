@@ -31,7 +31,7 @@ public class TestPersistence {
         yVarSettings.set("name", new TextNode("y"));
 
         final Settings settingsOriginal =  Settings.builder()
-                .covariates(Utils.easyList(
+                .covariateSettings(Utils.easyList(
                         new NumericCovariateSettings("x1"),
                         new BooleanCovariateSettings("x2"),
                         new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"))

@@ -12,7 +12,7 @@ public final class BooleanCovariateSettings extends CovariateSettings<Boolean> {
     }
 
     @Override
-    public BooleanCovariate build() {
-        return new BooleanCovariate(name);
+    public BooleanCovariate build(int index) {
+        return new BooleanCovariate(name, index);
     }
 }

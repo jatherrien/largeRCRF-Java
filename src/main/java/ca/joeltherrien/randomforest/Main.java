@@ -1,9 +1,6 @@
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
-import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
-import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskListCombiner;
@@ -17,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,8 +33,7 @@ public class Main {
         final File settingsFile = new File(args[0]);
         final Settings settings = Settings.load(settingsFile);
 
-        final List<Covariate> covariates = settings.getCovariates().stream()
-                .map(cs -> cs.build()).collect(Collectors.toList());
+        final List<Covariate> covariates = settings.getCovariates();
 
         if(args[1].equalsIgnoreCase("train")){
             final List<Row> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
@@ -168,7 +165,7 @@ public class Main {
         yVarSettings.set("name", new TextNode("y"));
 
         return Settings.builder()
-                .covariates(Utils.easyList(
+                .covariateSettings(Utils.easyList(
                         new NumericCovariateSettings("x1"),
                         new BooleanCovariateSettings("x2"),
                         new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"))

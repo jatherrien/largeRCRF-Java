@@ -12,7 +12,7 @@ public final class NumericCovariateSettings extends CovariateSettings<Double> {
     }
 
     @Override
-    public NumericCovariate build() {
-        return new NumericCovariate(name);
+    public NumericCovariate build(int index) {
+        return new NumericCovariate(name, index);
     }
 }
