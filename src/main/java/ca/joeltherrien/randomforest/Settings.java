@@ -129,15 +129,8 @@ public class Settings {
                     node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
                     final int[] events = eventList.stream().mapToInt(i -> i).toArray();
 
-                    double[] times = null;
-                    // note that times may be null
-                    if(node.hasNonNull("times")){
-                        final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
-                        times = timeList.stream().mapToDouble(db -> db).toArray();
-                    }
 
-                    return new CompetingRiskResponseCombiner(events, times);
+                    return new CompetingRiskResponseCombiner(events);
 
                 }
         );
@@ -167,15 +160,8 @@ public class Settings {
                     node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
                     final int[] events = eventList.stream().mapToInt(i -> i).toArray();
 
-                    double[] times = null;
-                    // note that times may be null
-                    if(node.hasNonNull("times")){
-                        final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
-                        times = timeList.stream().mapToDouble(db -> db).toArray();
-                    }
 
-                    final CompetingRiskResponseCombiner responseCombiner = new CompetingRiskResponseCombiner(events, times);
+                    final CompetingRiskResponseCombiner responseCombiner = new CompetingRiskResponseCombiner(events);
                     return new CompetingRiskListCombiner(responseCombiner);
 
                 }

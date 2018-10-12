@@ -16,18 +16,23 @@ import java.util.*;
  * See https://kogalur.github.io/randomForestSRC/theory.html for details.
  *
  */
-@RequiredArgsConstructor
 public class CompetingRiskResponseCombiner implements ResponseCombiner<CompetingRiskResponse, CompetingRiskFunctions> {
 
     private final int[] events;
-    private final double[] times; // We may restrict ourselves to specific times.
+
+    public CompetingRiskResponseCombiner(final int[] events){
+        this.events = events.clone();
+
+        // Check to make sure that events go from 1 to the right order
+        for(int i=0; i<events.length; i++){
+            if(events[i] != (i+1)){
+                throw new IllegalArgumentException("The events parameter must be in the form 1,2,3,...J with no gaps");
+            }
+        }
+    }
 
     public int[] getEvents(){
         return events.clone();
-    }
-
-    public double[] getTimes(){
-        return times.clone();
     }
 
     @Override
@@ -36,64 +41,83 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
         final List<MathFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
         final List<MathFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
 
-        final double[] timesToUse;
-        if(times != null){
-            timesToUse = this.times;
-        }
-        else{
-            timesToUse = responses.stream()
-                    .filter(response -> !response.isCensored())
-                    .mapToDouble(response -> response.getU())
-                    .sorted().distinct()
-                    .toArray();
-        }
+        Collections.sort(responses, (y1, y2) -> {
+            if(y1.getU() < y2.getU()){
+                return -1;
+            }
+            else if(y1.getU() > y2.getU()){
+                return 1;
+            }
+            else{
+                return 0;
+            }
+        });
 
-        final double[] individualsAtRiskArray = Arrays.stream(timesToUse).map(time -> riskSet(responses, time)).toArray();
+        final int n = responses.size();
 
-        // First we need to develop the overall survival curve!
-        final List<Point> survivalPoints = new ArrayList<>(timesToUse.length);
+        int[] numberOfCurrentEvents = new int[events.length+1];
+
         double previousSurvivalValue = 1.0;
-        for(int i=0; i<timesToUse.length; i++){
-            final double time_k = timesToUse[i];
-            final double individualsAtRisk = individualsAtRiskArray[i]; // Y(t_k)
+        final List<Point> survivalPoints = new ArrayList<>(n); // better to be too large than too small
 
-            if(individualsAtRisk == 0){
-                // if we continue we'll get NaN
-                break;
+        // Also track riskSet variables and numberOfEvents, and timesToUse
+        final List<Double> timesToUseList = new ArrayList<>(n);
+        final List<Integer> riskSetList = new ArrayList<>(n);
+        final List<int[]> numberOfEvents = new ArrayList<>(n);
+
+
+        for(int i=0; i<n; i++){
+            final CompetingRiskResponse currentResponse = responses.get(i);
+            final boolean lastOfTime = (i+1)==n || responses.get(i+1).getU() > currentResponse.getU();
+
+            numberOfCurrentEvents[currentResponse.getDelta()]++;
+
+            if(lastOfTime){
+                int totalNumberOfCurrentEvents = 0;
+                for(int e = 1; e < numberOfCurrentEvents.length; e++){ // exclude censored events
+                    totalNumberOfCurrentEvents += numberOfCurrentEvents[e];
+                }
+
+                if(totalNumberOfCurrentEvents > 0){
+                    // Add point
+                    final double currentTime = currentResponse.getU();
+                    final int riskSet = n - (i+1) + totalNumberOfCurrentEvents + numberOfCurrentEvents[0];
+                    final double newValue = previousSurvivalValue * (1.0 - (double) totalNumberOfCurrentEvents / (double) riskSet);
+                    survivalPoints.add(new Point(currentTime, newValue));
+                    previousSurvivalValue = newValue;
+
+                    timesToUseList.add(currentTime);
+                    riskSetList.add(riskSet);
+                    numberOfEvents.add(numberOfCurrentEvents);
+
+                }
+                // reset counters
+                numberOfCurrentEvents = new int[events.length+1];
+
             }
 
-            final double numberOfEventsAtTime = (double) responses.stream()
-                    .filter(event -> !event.isCensored())
-                    .filter(event -> event.getU() == time_k) // since delta != 0 we know censoring didn't occur prior to this
-                    .count();
-
-            final double newValue = previousSurvivalValue * (1.0 - numberOfEventsAtTime / individualsAtRisk);
-            survivalPoints.add(new Point(time_k, newValue));
-            previousSurvivalValue = newValue;
-
         }
-
         final MathFunction survivalCurve = new MathFunction(survivalPoints, new Point(0.0, 1.0));
 
 
         for(final int event : events){
 
-            final List<Point> hazardFunctionPoints = new ArrayList<>(timesToUse.length);
+            final List<Point> hazardFunctionPoints = new ArrayList<>(timesToUseList.size());
             Point previousHazardFunctionPoint = new Point(0.0, 0.0);
 
-            final List<Point> cifPoints = new ArrayList<>(timesToUse.length);
+            final List<Point> cifPoints = new ArrayList<>(timesToUseList.size());
             Point previousCIFPoint = new Point(0.0, 0.0);
 
-            for(int i=0; i<timesToUse.length; i++){
-                final double time_k = timesToUse[i];
-                final double individualsAtRisk = individualsAtRiskArray[i]; // Y(t_k)
+            for(int i=0; i<timesToUseList.size(); i++){
+                final double time_k = timesToUseList.get(i);
+                final double individualsAtRisk = riskSetList.get(i); // Y(t_k)
 
                 if(individualsAtRisk == 0){
                     // if we continue we'll get NaN
                     break;
                 }
 
-                final double numberEventsAtTime = numberOfEventsAtTime(event, responses, time_k); // d_j(t_k)
+                final double numberEventsAtTime = numberOfEvents.get(i)[event]; // d_j(t_k)
 
                 // Cause-specific cumulative hazard function
                 final double hazardDeltaY = numberEventsAtTime / individualsAtRisk;
@@ -105,7 +129,7 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
                 // Cumulative incidence function
                 // TODO - confirm this behaviour
                 //final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluate(timesToUse[i-1]).getY() : survivalCurve.evaluate(0.0).getY();
-                final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluate(timesToUse[i-1]).getY() : 1.0;
+                final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluate(timesToUseList.get(i-1)).getY() : 1.0;
 
                 final double cifDeltaY = previousSurvivalEvaluation * (numberEventsAtTime / individualsAtRisk);
                 final Point newCIFPoint = new Point(time_k, previousCIFPoint.getY() + cifDeltaY);
@@ -130,18 +154,5 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
     }
 
 
-    private double riskSet(List<CompetingRiskResponse> eventList, double time) {
-        return eventList.stream()
-                .filter(event -> event.getU() >= time)
-                .count();
-    }
-
-    private double numberOfEventsAtTime(int eventOfFocus, List<CompetingRiskResponse> eventList, double time){
-        return (double) eventList.stream()
-                .filter(event -> event.getDelta() == eventOfFocus)
-                .filter(event -> event.getU() == time) // since delta != 0 we know censoring didn't occur prior to this
-                .count();
-
-    }
 
 }
