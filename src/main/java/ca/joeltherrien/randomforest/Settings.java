@@ -177,6 +177,7 @@ public class Settings {
     private int numberOfSplits = 5;
     private int nodeSize = 5;
     private int maxNodeDepth = 1000000; // basically no maxNodeDepth
+    private boolean checkNodePurity = false;
 
     private ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
     private ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
