@@ -2,7 +2,7 @@ package ca.joeltherrien.randomforest.responses.competingrisk;
 
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.tree.Forest;
-import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -110,13 +110,13 @@ public class CompetingRiskErrorRateCalculator {
 
     }
 
-    public double[] calculateIPCWConcordance(final int[] events, final MathFunction censoringDistribution){
+    public double[] calculateIPCWConcordance(final int[] events, final StepFunction censoringDistribution){
         final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);
 
         return calculateIPCWConcordance(events, censoringDistribution, tau);
     }
 
-    private double[] calculateIPCWConcordance(final int[] events, final MathFunction censoringDistribution, final double tau){
+    private double[] calculateIPCWConcordance(final int[] events, final StepFunction censoringDistribution, final double tau){
 
         final double[] errorRates = new double[events.length];
 

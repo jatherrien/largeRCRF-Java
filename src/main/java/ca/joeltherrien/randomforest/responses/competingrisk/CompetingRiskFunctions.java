@@ -1,7 +1,6 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.utils.MathFunction;
-import ca.joeltherrien.randomforest.utils.Point;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,43 +10,47 @@ import java.util.List;
 @Builder
 public class CompetingRiskFunctions implements Serializable {
 
-    private final List<MathFunction> causeSpecificHazards;
-    private final List<MathFunction> cumulativeIncidenceCurves;
+    private final List<StepFunction> causeSpecificHazards;
+    private final List<StepFunction> cumulativeIncidenceCurves;
 
     @Getter
-    private final MathFunction survivalCurve;
+    private final StepFunction survivalCurve;
 
-    public MathFunction getCauseSpecificHazardFunction(int cause){
+    public StepFunction getCauseSpecificHazardFunction(int cause){
         return causeSpecificHazards.get(cause-1);
     }
 
-    public MathFunction getCumulativeIncidenceFunction(int cause) {
+    public StepFunction getCumulativeIncidenceFunction(int cause) {
         return cumulativeIncidenceCurves.get(cause-1);
     }
 
     public double calculateEventSpecificMortality(final int event, final double tau){
-        final MathFunction cif = getCumulativeIncidenceFunction(event);
+        final StepFunction cif = getCumulativeIncidenceFunction(event);
 
         double summation = 0.0;
-        Point previousPoint = null;
 
-        for(final Point point : cif.getPoints()){
-            if(point.getTime() > tau){
+        Double previousTime = null;
+        Double previousY = null;
+
+        final double[] cifTimes = cif.getX();
+        for(int i=0; i<cifTimes.length; i++){
+            final double time = cifTimes[i];
+
+            if(time > tau){
                 break;
             }
 
-            if(previousPoint != null){
-                summation += previousPoint.getY() * (point.getTime() - previousPoint.getTime());
+            if(previousTime != null){
+                summation += previousY * (time - previousTime);
             }
-            previousPoint = point;
-
+            previousTime = time;
+            previousY = cif.evaluateByIndex(i);
         }
 
         // this is to ensure that we integrate over the proper range
-        if(previousPoint != null){
-            summation += cif.evaluate(tau).getY() * (tau - previousPoint.getTime());
+        if(previousTime != null){
+            summation += cif.evaluate(tau) * (tau - previousTime);
         }
-
 
         return summation;
 

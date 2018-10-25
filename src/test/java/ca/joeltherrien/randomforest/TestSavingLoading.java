@@ -16,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TestSavingLoading {
 
@@ -31,6 +30,9 @@ public class TestSavingLoading {
         final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
         groupDifferentiatorSettings.set("type", new TextNode("LogRankSingleGroupDifferentiator"));
         groupDifferentiatorSettings.set("eventOfFocus", new IntNode(1));
+        groupDifferentiatorSettings.set("events",
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
+        );
 
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
@@ -113,7 +115,7 @@ public class TestSavingLoading {
 
         final CompetingRiskFunctions functions = forest.evaluate(predictionRow);
         assertNotNull(functions);
-        assertTrue(functions.getCumulativeIncidenceFunction(1).getPoints().size() > 2);
+        assertTrue(functions.getCumulativeIncidenceFunction(1).getX().length > 2);
 
 
         assertEquals(NTREE, forest.getTrees().size());

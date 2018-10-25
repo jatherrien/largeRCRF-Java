@@ -4,8 +4,8 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.tree.Forest;
-import ca.joeltherrien.randomforest.utils.MathFunction;
-import ca.joeltherrien.randomforest.utils.Point;
+import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ public class TestCompetingRiskErrorRateCalculator {
 
         final double naiveConcordance = CompetingRiskUtils.calculateConcordance(responseList, mortalityArray, event);
 
-        final MathFunction fakeCensorDistribution = new MathFunction(Collections.emptyList(), new Point(0.0, 1.0));
+        final StepFunction fakeCensorDistribution = RightContinuousStepFunction.constructFromPoints(Collections.emptyList(), 1.0);
         // This distribution will make the IPCW weights == 1, giving identical results to the naive concordance.
         final double ipcwConcordance = CompetingRiskUtils.calculateIPCWConcordance(responseList, mortalityArray, event, fakeCensorDistribution);
 

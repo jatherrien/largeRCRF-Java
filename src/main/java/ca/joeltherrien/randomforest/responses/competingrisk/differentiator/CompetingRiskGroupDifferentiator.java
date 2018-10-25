@@ -1,6 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,31 +19,22 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
     @Override
     public abstract Double differentiate(List<Y> leftHand, List<Y> rightHand);
 
-    abstract double riskSet(final List<Y> eventList, double time, int eventOfFocus);
-
-    private double numberOfEventsAtTime(int eventOfFocus, List<Y> eventList, double time){
-        return (double) eventList.stream()
-                .filter(event -> event.getDelta() == eventOfFocus)
-                .filter(event -> event.getU() == time) // since delta != 0 we know censoring didn't occur prior to this
-                .count();
-
-    }
 
     /**
      * Calculates the log rank value (or the Gray's test value) for a *specific* event cause.
      *
      * @param eventOfFocus
-     * @param leftHand A non-empty list of CompetingRiskResponse
-     * @param rightHand A non-empty list of CompetingRiskResponse
+     * @param competingRiskSetsLeft A summary of the different sets used in the calculation for the left side
+     * @param competingRiskSetsRight A summary of the different sets used in the calculation for the right side
      * @return
      */
-    LogRankValue specificLogRankValue(final int eventOfFocus, List<Y> leftHand, List<Y> rightHand){
+    LogRankValue specificLogRankValue(final int eventOfFocus, final CompetingRiskSets competingRiskSetsLeft, final CompetingRiskSets competingRiskSetsRight){
 
         final double[] distinctEventTimes = Stream.concat(
-                leftHand.stream(), rightHand.stream()
-        )
-                .filter(event -> !event.isCensored())
-                .mapToDouble(event -> event.getU())
+                competingRiskSetsLeft.getEventTimes().stream(),
+                competingRiskSetsRight.getEventTimes().stream())
+                .mapToDouble(Double::doubleValue)
+                .sorted()
                 .distinct()
                 .toArray();
 
@@ -51,12 +43,12 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
 
         for(final double time_k : distinctEventTimes){
             final double weight = weight(time_k); // W_j(t_k)
-            final double numberEventsAtTimeDaughterLeft = numberOfEventsAtTime(eventOfFocus, leftHand, time_k); // d_{j,l}(t_k)
-            final double numberEventsAtTimeDaughterRight = numberOfEventsAtTime(eventOfFocus, rightHand, time_k); // d_{j,r}(t_k)
+            final double numberEventsAtTimeDaughterLeft = competingRiskSetsLeft.getNumberOfEvents(time_k, eventOfFocus); // // d_{j,l}(t_k)
+            final double numberEventsAtTimeDaughterRight = competingRiskSetsRight.getNumberOfEvents(time_k, eventOfFocus); // d_{j,r}(t_k)
             final double numberOfEventsAtTime = numberEventsAtTimeDaughterLeft + numberEventsAtTimeDaughterRight; // d_j(t_k)
 
-            final double individualsAtRiskDaughterLeft = riskSet(leftHand, time_k, eventOfFocus); // Y_l(t_k)
-            final double individualsAtRiskDaughterRight = riskSet(rightHand, time_k, eventOfFocus); // Y_r(t_k)
+            final double individualsAtRiskDaughterLeft = competingRiskSetsLeft.getRiskSet(eventOfFocus).evaluate(time_k); // Y_l(t_k)
+            final double individualsAtRiskDaughterRight = competingRiskSetsRight.getRiskSet(eventOfFocus).evaluate(time_k); // Y_r(t_k)
             final double individualsAtRisk = individualsAtRiskDaughterLeft + individualsAtRiskDaughterRight; // Y(t_k)
 
             final double deltaSummation = weight*(numberEventsAtTimeDaughterLeft - numberOfEventsAtTime*individualsAtRiskDaughterLeft/individualsAtRisk);

@@ -1,6 +1,8 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskGraySetsImpl;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -20,11 +22,14 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
             return null;
         }
 
+        final CompetingRiskGraySetsImpl competingRiskSetsLeft = CompetingRiskUtils.calculateGraySetsEfficiently(leftHand, events);
+        final CompetingRiskGraySetsImpl competingRiskSetsRight = CompetingRiskUtils.calculateGraySetsEfficiently(rightHand, events);
+
         double numerator = 0.0;
         double denominatorSquared = 0.0;
 
         for(final int eventOfFocus : events){
-            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, leftHand, rightHand);
+            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSetsLeft, competingRiskSetsRight);
 
             numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
             denominatorSquared += valueOfInterest.getVariance();
@@ -35,13 +40,5 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
 
     }
 
-    @Override
-    double riskSet(List<CompetingRiskResponseWithCensorTime> eventList, double time, int eventOfFocus) {
-        return eventList.stream()
-                .filter(event -> event.getU() >= time ||
-                        (event.getU() < time && event.getDelta() != eventOfFocus && event.getC() > time)
-                )
-                .count();
-    }
 
 }

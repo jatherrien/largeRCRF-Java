@@ -5,8 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class Utils {
 
-    public static MathFunction estimateOneMinusECDF(final double[] times){
-        final Point defaultPoint = new Point(0.0, 1.0);
+    public static StepFunction estimateOneMinusECDF(final double[] times){
         Arrays.sort(times);
 
         final Map<Double, Integer> timeCounterMap = new HashMap<>();
@@ -33,7 +32,7 @@ public final class Utils {
             pointList.add(new Point(entry.getKey(), (double) newCount / n));
         }
 
-        return new MathFunction(pointList, defaultPoint);
+        return RightContinuousStepFunction.constructFromPoints(pointList, 1.0);
 
     }
 
@@ -61,6 +60,48 @@ public final class Utils {
             list.clear();
             list.addAll(newList);
 
+        }
+    }
+
+    /**
+     * Returns the index of the largest (in terms of time) Point that is <= the provided time value.
+     *
+     * @param startIndex Only search from startIndex (inclusive)
+     * @param endIndex Only search up to endIndex (exclusive)
+     * @param time
+     * @return The index of the largest Point who's time is <= the time parameter.
+     */
+    public static int binarySearchLessThan(int startIndex, int endIndex, double[] x, double time){
+        final int range = endIndex - startIndex;
+
+        if(range == 0 || x[endIndex-1] <= time){
+            // we're already too far
+            return endIndex - 1;
+        }
+
+        if(range < 200){
+            for(int i = startIndex; i < endIndex; i++){
+                if(x[i] > time){
+                    return i - 1;
+                }
+            }
+        }
+
+        // else
+
+
+        final int middle = range / 2;
+        final double middleTime = x[middle];
+        if(middleTime < time){
+            // go right
+            return binarySearchLessThan(middle, endIndex, x, time);
+        }
+        else if(middleTime > time){
+            // go left
+            return binarySearchLessThan(0, middle, x, time);
+        }
+        else{ // middleTime == time
+            return middle;
         }
     }
 

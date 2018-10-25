@@ -3,9 +3,9 @@ package ca.joeltherrien.randomforest.responses.competingrisk.combiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
-import ca.joeltherrien.randomforest.utils.MathFunction;
 import ca.joeltherrien.randomforest.utils.Point;
-import lombok.RequiredArgsConstructor;
+import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 
 import java.util.*;
 
@@ -38,8 +38,8 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
     @Override
     public CompetingRiskFunctions combine(List<CompetingRiskResponse> responses) {
 
-        final List<MathFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
-        final List<MathFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
+        final List<StepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
+        final List<StepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
 
         Collections.sort(responses, (y1, y2) -> {
             if(y1.getU() < y2.getU()){
@@ -97,7 +97,7 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
             }
 
         }
-        final MathFunction survivalCurve = new MathFunction(survivalPoints, new Point(0.0, 1.0));
+        final StepFunction survivalCurve = RightContinuousStepFunction.constructFromPoints(survivalPoints, 1.0);
 
 
         for(final int event : events){
@@ -129,7 +129,7 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
                 // Cumulative incidence function
                 // TODO - confirm this behaviour
                 //final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluate(timesToUse[i-1]).getY() : survivalCurve.evaluate(0.0).getY();
-                final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluate(timesToUseList.get(i-1)).getY() : 1.0;
+                final double previousSurvivalEvaluation = i > 0 ? survivalCurve.evaluateByIndex(i-1) : 1.0;
 
                 final double cifDeltaY = previousSurvivalEvaluation * (numberEventsAtTime / individualsAtRisk);
                 final Point newCIFPoint = new Point(time_k, previousCIFPoint.getY() + cifDeltaY);
@@ -138,10 +138,10 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
 
             }
 
-            final MathFunction causeSpecificCumulativeHazardFunction = new MathFunction(hazardFunctionPoints);
+            final StepFunction causeSpecificCumulativeHazardFunction = RightContinuousStepFunction.constructFromPoints(hazardFunctionPoints, 0.0);
             causeSpecificCumulativeHazardFunctionList.add(event-1, causeSpecificCumulativeHazardFunction);
 
-            final MathFunction cifFunction = new MathFunction(cifPoints);
+            final StepFunction cifFunction = RightContinuousStepFunction.constructFromPoints(cifPoints, 0.0);
             cumulativeIncidenceFunctionList.add(event-1, cifFunction);
         }
 

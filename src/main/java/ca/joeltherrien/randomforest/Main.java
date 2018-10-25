@@ -3,20 +3,17 @@ package ca.joeltherrien.randomforest;
 import ca.joeltherrien.randomforest.covariates.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskListCombiner;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
-import ca.joeltherrien.randomforest.utils.MathFunction;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Main {
 
@@ -67,9 +64,6 @@ public class Main {
 
             if(responseCombiner instanceof CompetingRiskFunctionCombiner){
                 events = ((CompetingRiskFunctionCombiner) responseCombiner).getEvents();
-            }
-            else if(responseCombiner instanceof CompetingRiskListCombiner){
-                events = ((CompetingRiskListCombiner) responseCombiner).getOriginalCombiner().getEvents();
             }
             else{
                 System.out.println("Unsupported tree combiner");
@@ -123,7 +117,7 @@ public class Main {
                 final double[] censorTimes = dataset.stream()
                         .mapToDouble(row -> ((CompetingRiskResponseWithCensorTime) row.getResponse()).getC())
                         .toArray();
-                final MathFunction censorDistribution = Utils.estimateOneMinusECDF(censorTimes);
+                final StepFunction censorDistribution = Utils.estimateOneMinusECDF(censorTimes);
 
                 System.out.println("Finished generating censor distribution - running concordance");
 

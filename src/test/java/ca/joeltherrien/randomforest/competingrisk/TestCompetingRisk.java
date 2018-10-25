@@ -7,8 +7,7 @@ import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
-import ca.joeltherrien.randomforest.utils.MathFunction;
-import ca.joeltherrien.randomforest.utils.Point;
+import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
@@ -19,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TestCompetingRisk {
 
@@ -33,6 +31,9 @@ public class TestCompetingRisk {
         final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
         groupDifferentiatorSettings.set("type", new TextNode("LogRankSingleGroupDifferentiator"));
         groupDifferentiatorSettings.set("eventOfFocus", new IntNode(1));
+        groupDifferentiatorSettings.set("events",
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
+        );
 
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
@@ -109,32 +110,32 @@ public class TestCompetingRisk {
 
         final CompetingRiskFunctions functions = node.evaluate(newRow);
 
-        final MathFunction causeOneCIFFunction = functions.getCumulativeIncidenceFunction(1);
-        final MathFunction causeTwoCIFFunction = functions.getCumulativeIncidenceFunction(2);
-        final MathFunction cumHazOneFunction = functions.getCauseSpecificHazardFunction(1);
-        final MathFunction cumHazTwoFunction = functions.getCauseSpecificHazardFunction(2);
+        final StepFunction causeOneCIFFunction = functions.getCumulativeIncidenceFunction(1);
+        final StepFunction causeTwoCIFFunction = functions.getCumulativeIncidenceFunction(2);
+        final StepFunction cumHazOneFunction = functions.getCauseSpecificHazardFunction(1);
+        final StepFunction cumHazTwoFunction = functions.getCauseSpecificHazardFunction(2);
 
         final double margin = 0.0000001;
-        closeEnough(0.003003003, causeOneCIFFunction.evaluate(0.02).getY(), margin);
-        closeEnough(0.166183852, causeOneCIFFunction.evaluate(1.00).getY(), margin);
-        closeEnough(0.715625487, causeOneCIFFunction.evaluate(6.50).getY(), margin);
-        closeEnough(0.794796334, causeOneCIFFunction.evaluate(10.60).getY(), margin);
-        closeEnough(0.794796334, causeOneCIFFunction.evaluate(10.80).getY(), margin);
+        closeEnough(0.003003003, causeOneCIFFunction.evaluate(0.02), margin);
+        closeEnough(0.166183852, causeOneCIFFunction.evaluate(1.00), margin);
+        closeEnough(0.715625487, causeOneCIFFunction.evaluate(6.50), margin);
+        closeEnough(0.794796334, causeOneCIFFunction.evaluate(10.60), margin);
+        closeEnough(0.794796334, causeOneCIFFunction.evaluate(10.80), margin);
 
 
-        closeEnough(0.08149211, causeTwoCIFFunction.evaluate(1.00).getY(), margin);
-        closeEnough(0.14926318, causeTwoCIFFunction.evaluate(6.50).getY(), margin);
-        closeEnough(0.15332850, causeTwoCIFFunction.evaluate(10.80).getY(), margin);
+        closeEnough(0.08149211, causeTwoCIFFunction.evaluate(1.00), margin);
+        closeEnough(0.14926318, causeTwoCIFFunction.evaluate(6.50), margin);
+        closeEnough(0.15332850, causeTwoCIFFunction.evaluate(10.80), margin);
 
 
-        closeEnough(0.1888601, cumHazOneFunction.evaluate(1.00).getY(), margin);
-        closeEnough(1.6189759, cumHazOneFunction.evaluate(6.50).getY(), margin);
-        closeEnough(2.4878342, cumHazOneFunction.evaluate(10.80).getY(), margin);
+        closeEnough(0.1888601, cumHazOneFunction.evaluate(1.00), margin);
+        closeEnough(1.6189759, cumHazOneFunction.evaluate(6.50), margin);
+        closeEnough(2.4878342, cumHazOneFunction.evaluate(10.80), margin);
 
 
-        closeEnough(0.08946513, cumHazTwoFunction.evaluate(1.00).getY(), margin);
-        closeEnough(0.32801830, cumHazTwoFunction.evaluate(6.50).getY(), margin);
-        closeEnough(0.36505534, cumHazTwoFunction.evaluate(10.80).getY(), margin);
+        closeEnough(0.08946513, cumHazTwoFunction.evaluate(1.00), margin);
+        closeEnough(0.32801830, cumHazTwoFunction.evaluate(6.50), margin);
+        closeEnough(0.36505534, cumHazTwoFunction.evaluate(10.80), margin);
 
 
     }
@@ -162,18 +163,18 @@ public class TestCompetingRisk {
 
         final CompetingRiskFunctions functions = node.evaluate(newRow);
 
-        final MathFunction causeOneCIFFunction = functions.getCumulativeIncidenceFunction(1);
-        final MathFunction causeTwoCIFFunction = functions.getCumulativeIncidenceFunction(2);
-        final MathFunction cumHazOneFunction = functions.getCauseSpecificHazardFunction(1);
-        final MathFunction cumHazTwoFunction = functions.getCauseSpecificHazardFunction(2);
+        final StepFunction causeOneCIFFunction = functions.getCumulativeIncidenceFunction(1);
+        final StepFunction causeTwoCIFFunction = functions.getCumulativeIncidenceFunction(2);
+        final StepFunction cumHazOneFunction = functions.getCauseSpecificHazardFunction(1);
+        final StepFunction cumHazTwoFunction = functions.getCauseSpecificHazardFunction(2);
 
 
         final double margin = 0.0000001;
-        closeEnough(0, causeOneCIFFunction.evaluate(0.02).getY(), margin);
-        closeEnough(0.555555555, causeOneCIFFunction.evaluate(0.4).getY(), margin);
-        closeEnough(0.66666666666, causeOneCIFFunction.evaluate(0.8).getY(), margin);
-        closeEnough(0.88888888888, causeOneCIFFunction.evaluate(0.9).getY(), margin);
-        closeEnough(1.0, causeOneCIFFunction.evaluate(1.0).getY(), margin);
+        closeEnough(0, causeOneCIFFunction.evaluate(0.02), margin);
+        closeEnough(0.555555555, causeOneCIFFunction.evaluate(0.4), margin);
+        closeEnough(0.66666666666, causeOneCIFFunction.evaluate(0.8), margin);
+        closeEnough(0.88888888888, causeOneCIFFunction.evaluate(0.9), margin);
+        closeEnough(1.0, causeOneCIFFunction.evaluate(1.0), margin);
 
         /*
         closeEnough(0.08149211, causeTwoCIFFunction.evaluate(1.00).getY(), margin);
@@ -222,11 +223,11 @@ public class TestCompetingRisk {
         assertCumulativeFunction(functions.getCumulativeIncidenceFunction(2));
 
 
-        closeEnough(0.63, functions.getCumulativeIncidenceFunction(1).evaluate(4.0).getY(), 0.01);
-        closeEnough(0.765, functions.getCumulativeIncidenceFunction(1).evaluate(10.8).getY(), 0.01);
+        closeEnough(0.63, functions.getCumulativeIncidenceFunction(1).evaluate(4.0), 0.01);
+        closeEnough(0.765, functions.getCumulativeIncidenceFunction(1).evaluate(10.8), 0.01);
 
-        closeEnough(0.163, functions.getCumulativeIncidenceFunction(2).evaluate(4.0).getY(), 0.01);
-        closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8).getY(), 0.01);
+        closeEnough(0.163, functions.getCumulativeIncidenceFunction(2).evaluate(4.0), 0.01);
+        closeEnough(0.195, functions.getCumulativeIncidenceFunction(2).evaluate(10.8), 0.01);
 
         final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, true);
         final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});
@@ -289,7 +290,8 @@ public class TestCompetingRisk {
         settings.setNtree(300); // results are too variable at 100
 
         final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(),
+                settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();
 
@@ -305,10 +307,9 @@ public class TestCompetingRisk {
         assertCumulativeFunction(functions.getCumulativeIncidenceFunction(1));
         assertCumulativeFunction(functions.getCumulativeIncidenceFunction(2));
 
-        final List<Point> causeOneCIFPoints = functions.getCumulativeIncidenceFunction(1).getPoints();
-
         // We seem to consistently underestimate the results.
-        assertTrue(causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY() > 0.74, "Results should match randomForestSRC; had " + causeOneCIFPoints.get(causeOneCIFPoints.size()-1).getY()); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
+        final double endProbability = functions.getCumulativeIncidenceFunction(1).evaluate(10000000);
+        assertTrue(endProbability > 0.74, "Results should match randomForestSRC; had " + endProbability); // note; most observations from randomForestSRC hover around 0.78 but I've seen it as low as 0.72
 
         final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, true);
         final double[] errorRates = errorRateCalculator.calculateConcordance(new int[]{1,2});

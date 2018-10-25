@@ -44,7 +44,7 @@ public class TestLogRankSingleGroupDifferentiator {
         final List<CompetingRiskResponse> data1 = generateData1();
         final List<CompetingRiskResponse> data2 = generateData2();
 
-        final LogRankSingleGroupDifferentiator differentiator = new LogRankSingleGroupDifferentiator(1);
+        final LogRankSingleGroupDifferentiator differentiator = new LogRankSingleGroupDifferentiator(1, new int[]{1});
 
         final double score = differentiator.differentiate(data1, data2);
         final double margin = 0.000001;

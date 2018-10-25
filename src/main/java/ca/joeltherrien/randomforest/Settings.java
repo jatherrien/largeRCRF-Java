@@ -2,11 +2,10 @@ package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.CovariateSettings;
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskListCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.combiner.alternative.CompetingRiskResponseCombinerToList;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankMultipleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankSingleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
@@ -22,7 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +78,13 @@ public class Settings {
                 (objectNode) -> {
                     final int eventOfFocus = objectNode.get("eventOfFocus").asInt();
 
-                    return new LogRankSingleGroupDifferentiator(eventOfFocus);
+                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
+                    final List<JsonNode> elementList = new ArrayList<>();
+                    elements.forEachRemaining(node -> elementList.add(node));
+
+                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
+
+                    return new LogRankSingleGroupDifferentiator(eventOfFocus, eventArray);
                 }
         );
         registerGroupDifferentiatorConstructor("GrayLogRankMultipleGroupDifferentiator",
@@ -105,7 +113,14 @@ public class Settings {
                 (objectNode) -> {
                     final int eventOfFocus = objectNode.get("eventOfFocus").asInt();
 
-                    return new GrayLogRankSingleGroupDifferentiator(eventOfFocus);
+                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
+                    final List<JsonNode> elementList = new ArrayList<>();
+                    elements.forEachRemaining(node -> elementList.add(node));
+
+                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
+
+
+                    return new GrayLogRankSingleGroupDifferentiator(eventOfFocus, eventArray);
                 }
         );
     }
@@ -152,23 +167,6 @@ public class Settings {
                     return new CompetingRiskFunctionCombiner(events, times);
 
                 }
-        );
-
-        registerResponseCombinerConstructor("CompetingRiskListCombiner",
-                (node) -> {
-                    final List<Integer> eventList = new ArrayList<>();
-                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
-                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
-
-
-                    final CompetingRiskResponseCombiner responseCombiner = new CompetingRiskResponseCombiner(events);
-                    return new CompetingRiskListCombiner(responseCombiner);
-
-                }
-        );
-
-        registerResponseCombinerConstructor("CompetingRiskResponseCombinerToList",
-                (node) -> new CompetingRiskResponseCombinerToList()
         );
 
 
