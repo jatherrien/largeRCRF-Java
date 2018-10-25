@@ -79,6 +79,10 @@ public final class Utils {
             return endIndex - 1;
         }
 
+        if(x[startIndex] > time){
+            return -1;
+        }
+
         if(range < 200){
             for(int i = startIndex; i < endIndex; i++){
                 if(x[i] > time){
@@ -90,7 +94,7 @@ public final class Utils {
         // else
 
 
-        final int middle = range / 2;
+        final int middle = startIndex + range / 2;
         final double middleTime = x[middle];
         if(middleTime < time){
             // go right

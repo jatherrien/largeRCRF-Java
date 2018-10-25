@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.DoubleSupplier;
+import java.util.stream.DoubleStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -112,6 +114,42 @@ public class TestUtils {
             assertEquals(10, testList3.size()); // verify proper size
             assertEquals(10, new HashSet<>(testList3).size()); // verify the items are unique
 
+        }
+    }
+
+    @Test
+    public void testBinarySearchLessThan(){
+        /*
+        There was a bug where I didn't add startIndex to range/2 for middle; no other tests caught it!
+         */
+        final int n = 10000;
+
+        double[] x = DoubleStream.generate(new DoubleSequenceGenerator()).limit(n).toArray();
+
+
+        for(int i = 0; i < n; i=i+100){
+            final int index = Utils.binarySearchLessThan(0, n, x, i);
+            final int indexOff = Utils.binarySearchLessThan(0, n, x, ((double) i) + 1.5);
+
+            assertEquals(i, index);
+            assertEquals(i+1, indexOff);
+        }
+
+        final int indexTooFar = Utils.binarySearchLessThan(0, n, x, n + 100);
+        assertEquals(n-1, indexTooFar);
+
+        final int indexTooEarly = Utils.binarySearchLessThan(0, n, x, -100);
+        assertEquals(-1, indexTooEarly);
+
+
+    }
+
+    private static class DoubleSequenceGenerator implements DoubleSupplier {
+        private double previous = 0.0;
+
+        @Override
+        public double getAsDouble() {
+            return previous++;
         }
     }
 
