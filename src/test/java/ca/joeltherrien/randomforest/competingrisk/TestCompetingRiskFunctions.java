@@ -4,7 +4,6 @@ import ca.joeltherrien.randomforest.TestUtils;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.utils.Point;
 import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
-import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +13,7 @@ public class TestCompetingRiskFunctions {
 
     @Test
     public void testCalculateEventSpecificMortality(){
-        final StepFunction cif1 = RightContinuousStepFunction.constructFromPoints(
+        final RightContinuousStepFunction cif1 = RightContinuousStepFunction.constructFromPoints(
                 Utils.easyList(
                         new Point(1.0, 0.3),
                         new Point(1.5, 0.7),
@@ -23,10 +22,10 @@ public class TestCompetingRiskFunctions {
         );
 
         // not being used
-        final StepFunction chf1 = RightContinuousStepFunction.constructFromPoints(Collections.emptyList(), 0.0);
+        final RightContinuousStepFunction chf1 = RightContinuousStepFunction.constructFromPoints(Collections.emptyList(), 0.0);
 
         // not being used
-        final StepFunction km = RightContinuousStepFunction.constructFromPoints(Collections.emptyList(), 0.0);
+        final RightContinuousStepFunction km = RightContinuousStepFunction.constructFromPoints(Collections.emptyList(), 0.0);
 
         final CompetingRiskFunctions functions = CompetingRiskFunctions.builder()
                 .causeSpecificHazards(Collections.singletonList(chf1))

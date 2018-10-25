@@ -1,7 +1,13 @@
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.covariates.*;
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
@@ -12,7 +18,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 public class Main {

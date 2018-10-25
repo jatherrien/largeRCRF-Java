@@ -1,7 +1,6 @@
 package ca.joeltherrien.randomforest.utils;
 
 import java.io.*;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 

@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest.tree;
 
-import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.CovariateRow;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Builder;
 
 @Builder

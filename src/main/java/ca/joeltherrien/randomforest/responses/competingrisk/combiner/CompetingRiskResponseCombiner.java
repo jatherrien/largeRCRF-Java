@@ -5,9 +5,10 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskRespons
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.Point;
 import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
-import ca.joeltherrien.randomforest.utils.StepFunction;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class takes all of the observations in a terminal node and combines them to produce estimates of the cause-specific hazard function
@@ -38,8 +39,8 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
     @Override
     public CompetingRiskFunctions combine(List<CompetingRiskResponse> responses) {
 
-        final List<StepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
-        final List<StepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
+        final List<RightContinuousStepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
+        final List<RightContinuousStepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
 
         Collections.sort(responses, (y1, y2) -> {
             if(y1.getU() < y2.getU()){
@@ -97,7 +98,7 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
             }
 
         }
-        final StepFunction survivalCurve = RightContinuousStepFunction.constructFromPoints(survivalPoints, 1.0);
+        final RightContinuousStepFunction survivalCurve = RightContinuousStepFunction.constructFromPoints(survivalPoints, 1.0);
 
 
         for(final int event : events){
@@ -138,10 +139,10 @@ public class CompetingRiskResponseCombiner implements ResponseCombiner<Competing
 
             }
 
-            final StepFunction causeSpecificCumulativeHazardFunction = RightContinuousStepFunction.constructFromPoints(hazardFunctionPoints, 0.0);
+            final RightContinuousStepFunction causeSpecificCumulativeHazardFunction = RightContinuousStepFunction.constructFromPoints(hazardFunctionPoints, 0.0);
             causeSpecificCumulativeHazardFunctionList.add(event-1, causeSpecificCumulativeHazardFunction);
 
-            final StepFunction cifFunction = RightContinuousStepFunction.constructFromPoints(cifPoints, 0.0);
+            final RightContinuousStepFunction cifFunction = RightContinuousStepFunction.constructFromPoints(cifPoints, 0.0);
             cumulativeIncidenceFunctionList.add(event-1, cifFunction);
         }
 

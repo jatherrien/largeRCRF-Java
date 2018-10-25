@@ -3,7 +3,6 @@ package ca.joeltherrien.randomforest.responses.competingrisk.combiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
-import ca.joeltherrien.randomforest.utils.StepFunction;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
@@ -50,10 +49,10 @@ public class CompetingRiskFunctionCombiner implements ResponseCombiner<Competing
                     .sum();
         }
 
-        final StepFunction survivalFunction = new RightContinuousStepFunction(timesToUse, survivalY, 1.0);
+        final RightContinuousStepFunction survivalFunction = new RightContinuousStepFunction(timesToUse, survivalY, 1.0);
 
-        final List<StepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
-        final List<StepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
+        final List<RightContinuousStepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
+        final List<RightContinuousStepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
 
         for(final int event : events){
 

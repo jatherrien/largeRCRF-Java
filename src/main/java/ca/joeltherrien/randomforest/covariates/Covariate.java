@@ -5,7 +5,10 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.tree.Split;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public interface Covariate<V> extends Serializable {

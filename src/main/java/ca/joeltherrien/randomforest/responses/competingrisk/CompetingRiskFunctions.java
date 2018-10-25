@@ -1,6 +1,6 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.utils.StepFunction;
+import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,22 +10,22 @@ import java.util.List;
 @Builder
 public class CompetingRiskFunctions implements Serializable {
 
-    private final List<StepFunction> causeSpecificHazards;
-    private final List<StepFunction> cumulativeIncidenceCurves;
+    private final List<RightContinuousStepFunction> causeSpecificHazards;
+    private final List<RightContinuousStepFunction> cumulativeIncidenceCurves;
 
     @Getter
-    private final StepFunction survivalCurve;
+    private final RightContinuousStepFunction survivalCurve;
 
-    public StepFunction getCauseSpecificHazardFunction(int cause){
+    public RightContinuousStepFunction getCauseSpecificHazardFunction(int cause){
         return causeSpecificHazards.get(cause-1);
     }
 
-    public StepFunction getCumulativeIncidenceFunction(int cause) {
+    public RightContinuousStepFunction getCumulativeIncidenceFunction(int cause) {
         return cumulativeIncidenceCurves.get(cause-1);
     }
 
     public double calculateEventSpecificMortality(final int event, final double tau){
-        final StepFunction cif = getCumulativeIncidenceFunction(event);
+        final RightContinuousStepFunction cif = getCumulativeIncidenceFunction(event);
 
         double summation = 0.0;
 
