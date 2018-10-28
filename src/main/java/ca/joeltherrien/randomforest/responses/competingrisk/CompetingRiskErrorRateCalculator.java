@@ -31,54 +31,6 @@ public class CompetingRiskErrorRateCalculator {
 
     }
 
-    /**
-     * Idea for this error rate; go through every observation I have and calculate its mortality for the different events. If the event with the highest mortality is not the one that happened,
-     * then we add one to the error scale.
-     *
-     * Ignore censored observations.
-     *
-     * Possible extensions might involve counting how many other events had higher mortality, instead of just a single PASS / FAIL.
-     *
-     * My observation is that this error rate isn't very useful...
-     *
-     * @return
-     */
-    public double calculateNaiveMortalityError(final int[] events){
-        int failures = 0;
-        int attempts = 0;
-
-        response_loop:
-        for(int i=0; i<dataset.size(); i++){
-            final CompetingRiskResponse response = dataset.get(i).getResponse();
-
-            if(response.isCensored()){
-                continue;
-            }
-            attempts++;
-
-            final CompetingRiskFunctions functions = riskFunctions.get(i);
-            final int delta = response.getDelta();
-            final double time = response.getU();
-            final double shouldBeHighestMortality = functions.calculateEventSpecificMortality(delta, time);
-
-            for(final int event : events){
-                if(event != delta){
-                    final double otherEventMortality = functions.calculateEventSpecificMortality(event, time);
-
-                    if(shouldBeHighestMortality < otherEventMortality){
-                        failures++;
-                        continue response_loop;
-                    }
-
-                }
-            }
-        }
-
-        return (double) failures / (double) attempts;
-
-
-    }
-
 
     public double[] calculateConcordance(final int[] events){
         final double tau = dataset.stream().mapToDouble(row -> row.getResponse().getU()).max().orElse(0.0);

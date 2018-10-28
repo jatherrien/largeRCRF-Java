@@ -244,8 +244,6 @@ public class TestCompetingRisk {
 
         closeEnough(0.452, errorRates[0], 0.02);
         closeEnough(0.446, errorRates[1], 0.02);
-
-        System.out.println(errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2}));
     }
 
     @Test
@@ -325,8 +323,6 @@ public class TestCompetingRisk {
         // Consistency results
         closeEnough(0.395, errorRates[0], 0.02);
         closeEnough(0.345, errorRates[1], 0.02);
-
-        System.out.println(errorRateCalculator.calculateNaiveMortalityError(new int[]{1,2}));
 
     }
 

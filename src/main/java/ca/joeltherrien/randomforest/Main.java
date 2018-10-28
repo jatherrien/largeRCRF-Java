@@ -100,13 +100,6 @@ public class Main {
             final CompetingRiskErrorRateCalculator errorRateCalculator = new CompetingRiskErrorRateCalculator(dataset, forest, useBootstrapPredictions);
             final PrintWriter printWriter = new PrintWriter(settings.getSaveTreeLocation() + "/errors.txt");
 
-            System.out.println("Running Naive Mortality");
-
-            final double naiveMortality = errorRateCalculator.calculateNaiveMortalityError(events);
-            printWriter.write("Naive Mortality: ");
-            printWriter.write(Double.toString(naiveMortality));
-            printWriter.write('\n');
-
             System.out.println("Running Naive Concordance");
 
             final double[] naiveConcordance = errorRateCalculator.calculateConcordance(events);
