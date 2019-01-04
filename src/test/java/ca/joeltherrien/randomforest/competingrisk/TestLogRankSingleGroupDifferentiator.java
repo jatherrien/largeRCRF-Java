@@ -1,12 +1,17 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
+import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestLogRankSingleGroupDifferentiator {
@@ -53,6 +58,32 @@ public class TestLogRankSingleGroupDifferentiator {
         closeEnough(1.540139, score, margin);
 
 
+    }
+
+    @Test
+    public void testCorrectSplit() throws IOException {
+        final LogRankSingleGroupDifferentiator groupDifferentiator =
+                new LogRankSingleGroupDifferentiator(1, new int[]{1,2});
+
+        final List<Row<CompetingRiskResponse>> data = TestLogRankMultipleGroupDifferentiator.
+                loadData("src/test/resources/test_single_split.csv").getRows();
+
+        final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 221);
+        final List<Row<CompetingRiskResponse>> group2Good = data.subList(221, data.size());
+
+        final double scoreGood = groupDifferentiator.differentiate(
+                group1Good.stream().map(Row::getResponse).collect(Collectors.toList()),
+                group2Good.stream().map(Row::getResponse).collect(Collectors.toList()));
+
+        final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 222);
+        final List<Row<CompetingRiskResponse>> group2Bad = data.subList(222, data.size());
+
+        final double scoreBad = groupDifferentiator.differentiate(
+                group1Bad.stream().map(Row::getResponse).collect(Collectors.toList()),
+                group2Bad.stream().map(Row::getResponse).collect(Collectors.toList()));
+
+        // Apparently not all groups are unique when splitting
+        assertEquals(scoreGood, scoreBad);
     }
 
     private void closeEnough(double expected, double actual, double margin){

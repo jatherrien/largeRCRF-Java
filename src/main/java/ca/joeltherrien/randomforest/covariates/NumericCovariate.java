@@ -31,8 +31,7 @@ public final class NumericCovariate implements Covariate<Double>{
         // for this implementation we need to shuffle the data
         final List<Value<Double>> shuffledData;
         if(number >= data.size()){
-            shuffledData = new ArrayList<>(data);
-            Collections.shuffle(shuffledData, random);
+            shuffledData = data;
         }
         else{ // only need the top number entries
             shuffledData = new ArrayList<>(number);

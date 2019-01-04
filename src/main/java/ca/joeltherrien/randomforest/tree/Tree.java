@@ -29,4 +29,8 @@ public class Tree<Y> implements Node<Y> {
         return Arrays.binarySearch(this.bootstrapRowIds, id) >= 0;
     }
 
+    @Override
+    public String toString(){
+        return rootNode.toString();
+    }
 }

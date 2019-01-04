@@ -3,9 +3,7 @@ package ca.joeltherrien.randomforest.tree;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -108,6 +106,7 @@ public class TreeTrainer<Y, O> {
     }
 
     private SplitRuleAndSplit findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry){
+        final Random random = ThreadLocalRandom.current();
         SplitRuleAndSplit bestSplitRuleAndSplit = new SplitRuleAndSplit();
         double bestSplitScore = 0.0;
         boolean first = true;
@@ -134,7 +133,6 @@ public class TreeTrainer<Y, O> {
 
                 final double probabilityLeftHand = (double) possibleSplit.leftHand.size() / (double) (possibleSplit.leftHand.size() + possibleSplit.rightHand.size());
 
-                final Random random = ThreadLocalRandom.current();
                 for(final Row<Y> missingValueRow : possibleSplit.naHand){
                     final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
                     if(randomDecision){
