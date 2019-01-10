@@ -21,7 +21,7 @@ public final class BooleanCovariate implements Covariate<Boolean> {
 
     @Override
     public <Y> Iterator<Split<Y, Boolean>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
-        return new SingletonIterator<>(BooleanCovariate.this.splitRule.applyRule(data));
+        return new SingletonIterator<>(this.splitRule.applyRule(data));
     }
 
     @Override

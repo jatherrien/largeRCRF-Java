@@ -6,7 +6,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class FactorCovariate implements Covariate<String>{
 

@@ -66,7 +66,7 @@ public interface Covariate<V> extends Serializable {
 
 
             for(final Row<Y> row : rows) {
-                final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
+                final Value<V> value = row.getCovariateValue(getParent());
 
                 if(value.isNA()){
                     missingValueRows.add(row);
@@ -88,7 +88,7 @@ public interface Covariate<V> extends Serializable {
         }
 
         default boolean isLeftHand(CovariateRow row, final double probabilityNaLeftHand){
-            final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
+            final Value<V> value = row.getCovariateValue(getParent());
 
             if(value.isNA()){
                 return ThreadLocalRandom.current().nextDouble() <= probabilityNaLeftHand;

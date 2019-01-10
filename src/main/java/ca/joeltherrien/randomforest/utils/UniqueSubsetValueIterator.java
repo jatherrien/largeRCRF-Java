@@ -1,10 +1,6 @@
 package ca.joeltherrien.randomforest.utils;
 
 
-import lombok.Getter;
-
-import java.util.Iterator;
-
 /**
  * Iterator that wraps around a UniqueValueIterator. It continues to iterate until it gets to one of the prespecified indexes,
  * and then proceeds just past that to the end of the existing values it's at.

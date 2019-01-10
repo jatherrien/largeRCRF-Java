@@ -21,7 +21,7 @@ public class CompetingRiskGraySetsImpl implements CompetingRiskSets{
 
     @Override
     public MathFunction getRiskSet(int event){
-        return(riskSet[event-1]);
+        return riskSet[event-1];
     }
 
     @Override

@@ -132,7 +132,7 @@ public class ForestTrainer<Y, TO, FO> {
         }
 
 
-        final File[] treeFiles = folder.listFiles(((file, s) -> s.endsWith(".tree")));
+        final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
 
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished

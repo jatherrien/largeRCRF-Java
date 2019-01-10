@@ -2,12 +2,10 @@ package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.SimpleGroupDifferentiator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -59,10 +57,6 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
                 summation += deltaSummation;
                 variance += deltaVariance;
             }
-            else{
-                // Do nothing; else statement left for breakpoints.
-            }
-
         }
 
         return new LogRankValue(summation, variance);

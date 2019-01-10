@@ -134,10 +134,9 @@ public class TreeTrainer<Y, O> {
 
             final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericDifferentiator.differentiate(iterator);
 
-            if(candidateSplitAndScore != null) {
-                if (bestSplitAndScore == null || candidateSplitAndScore.getScore() > bestSplitAndScore.getScore()) {
-                    bestSplitAndScore = candidateSplitAndScore;
-                }
+            if(candidateSplitAndScore != null && (bestSplitAndScore == null ||
+                    candidateSplitAndScore.getScore() > bestSplitAndScore.getScore())) {
+                bestSplitAndScore = candidateSplitAndScore;
             }
 
         }
