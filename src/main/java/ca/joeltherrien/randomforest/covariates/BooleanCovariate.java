@@ -17,6 +17,8 @@ public final class BooleanCovariate implements Covariate<Boolean> {
     @Getter
     private final int index;
 
+    private boolean hasNAs = false;
+
     private final BooleanSplitRule splitRule = new BooleanSplitRule(); // there's only one possible rule for BooleanCovariates.
 
     @Override
@@ -32,6 +34,7 @@ public final class BooleanCovariate implements Covariate<Boolean> {
     @Override
     public Value<Boolean> createValue(String value) {
         if(value == null || value.equalsIgnoreCase("na")){
+            hasNAs = true;
             return createValue( (Boolean) null);
         }
 
@@ -44,6 +47,11 @@ public final class BooleanCovariate implements Covariate<Boolean> {
         else{
             throw new IllegalArgumentException("Require either true/false/na to create BooleanCovariate");
         }
+    }
+
+    @Override
+    public boolean hasNAs() {
+        return hasNAs;
     }
 
     @Override

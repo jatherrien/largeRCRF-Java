@@ -19,6 +19,8 @@ public final class FactorCovariate implements Covariate<String>{
     private final FactorValue naValue;
     private final int numberOfPossiblePairings;
 
+    private boolean hasNAs;
+
 
     public FactorCovariate(final String name, final int index, List<String> levels){
         this.name = name;
@@ -72,6 +74,7 @@ public final class FactorCovariate implements Covariate<String>{
     @Override
     public FactorValue createValue(String value) {
         if(value == null || value.equalsIgnoreCase("na")){
+            this.hasNAs = true;
             return this.naValue;
         }
 
@@ -82,6 +85,12 @@ public final class FactorCovariate implements Covariate<String>{
         }
 
         return factorValue;
+    }
+
+
+    @Override
+    public boolean hasNAs() {
+        return hasNAs;
     }
 
     @Override

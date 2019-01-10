@@ -26,6 +26,8 @@ public interface Covariate<V> extends Serializable {
      */
     Value<V> createValue(String value);
 
+    boolean hasNAs();
+
     interface Value<V> extends Serializable{
 
         Covariate<V> getParent();

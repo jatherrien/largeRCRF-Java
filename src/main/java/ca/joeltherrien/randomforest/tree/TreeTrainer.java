@@ -76,20 +76,23 @@ public class TreeTrainer<Y, O> {
             final double probabilityLeftHand = (double) bestSplit.leftHand.size() /
                     (double) (bestSplit.leftHand.size() + bestSplit.rightHand.size());
 
-            // Assign missing values to the split
-            for(Row<Y> row : data) {
-                if(row.getCovariateValue(bestSplit.getSplitRule().getParent()).isNA()) {
-                    final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
+            // Assign missing values to the split if necessary
+            if(bestSplit.getSplitRule().getParent().hasNAs()){
+                for(Row<Y> row : data) {
+                    if(row.getCovariateValue(bestSplit.getSplitRule().getParent()).isNA()) {
+                        final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
 
-                    if(randomDecision){
-                        bestSplit.getLeftHand().add(row);
-                    }
-                    else{
-                        bestSplit.getRightHand().add(row);
-                    }
+                        if(randomDecision){
+                            bestSplit.getLeftHand().add(row);
+                        }
+                        else{
+                            bestSplit.getRightHand().add(row);
+                        }
 
+                    }
                 }
             }
+
 
 
             final Node<O> leftNode = growNode(bestSplit.leftHand, depth+1, random);

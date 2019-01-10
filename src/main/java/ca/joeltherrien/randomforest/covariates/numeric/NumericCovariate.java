@@ -12,6 +12,7 @@ import lombok.ToString;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @ToString
@@ -23,10 +24,17 @@ public final class NumericCovariate implements Covariate<Double> {
     @Getter
     private final int index;
 
+    private boolean hasNAs = false;
+
     @Override
     public <Y> NumericSplitRuleUpdater<Y> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
-        data = data.stream()
-                .filter(row -> !row.getCovariateValue(this).isNA())
+        Stream<Row<Y>> stream = data.stream();
+
+        if(hasNAs()){
+            stream = stream.filter(row -> !row.getCovariateValue(this).isNA());
+        }
+
+        data = stream
                 .sorted((r1, r2) -> {
                     Double d1 = r1.getCovariateValue(this).getValue();
                     Double d2 = r2.getCovariateValue(this).getValue();
@@ -37,7 +45,6 @@ public final class NumericCovariate implements Covariate<Double> {
 
         Iterator<Double> sortedDataIterator = data.stream()
                 .map(row -> row.getCovariateValue(this).getValue())
-                .filter(v -> v != null)
                 .iterator();
 
 
@@ -56,7 +63,7 @@ public final class NumericCovariate implements Covariate<Double> {
 
             dataIterator = new UniqueSubsetValueIterator<>(
                     new UniqueValueIterator<>(sortedDataIterator),
-                    indexSet.toArray(new Integer[indexSet.size()]) // TODO verify this is ordered
+                    indexSet.toArray(new Integer[indexSet.size()])
             );
 
         }
@@ -73,10 +80,17 @@ public final class NumericCovariate implements Covariate<Double> {
     @Override
     public NumericValue createValue(String value) {
         if(value == null || value.equalsIgnoreCase("na")){
+            this.hasNAs = true;
             return createValue((Double) null);
         }
 
         return createValue(Double.parseDouble(value));
+    }
+
+
+    @Override
+    public boolean hasNAs() {
+        return hasNAs;
     }
 
     @EqualsAndHashCode
