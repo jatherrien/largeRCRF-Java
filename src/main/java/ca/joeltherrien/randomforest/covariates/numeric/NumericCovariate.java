@@ -1,17 +1,21 @@
-package ca.joeltherrien.randomforest.covariates;
+package ca.joeltherrien.randomforest.covariates.numeric;
 
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.utils.IndexedIterator;
+import ca.joeltherrien.randomforest.utils.UniqueSubsetValueIterator;
+import ca.joeltherrien.randomforest.utils.UniqueValueIterator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @ToString
-public final class NumericCovariate implements Covariate<Double>{
+public final class NumericCovariate implements Covariate<Double> {
 
     @Getter
     private final String name;
@@ -20,40 +24,44 @@ public final class NumericCovariate implements Covariate<Double>{
     private final int index;
 
     @Override
-    public Collection<NumericSplitRule> generateSplitRules(List<Value<Double>> data, int number) {
+    public <Y> NumericSplitRuleUpdater<Y> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
+        data = data.stream()
+                .filter(row -> !row.getCovariateValue(this).isNA())
+                .sorted((r1, r2) -> {
+                    Double d1 = r1.getCovariateValue(this).getValue();
+                    Double d2 = r2.getCovariateValue(this).getValue();
 
-        final Random random = ThreadLocalRandom.current();
+                    return d1.compareTo(d2);
+                })
+                .collect(Collectors.toList());
 
-        // only work with non-NA values
-        data = data.stream().filter(value -> !value.isNA()).collect(Collectors.toList());
-        //data = data.stream().filter(value -> !value.isNA()).distinct().collect(Collectors.toList()); // TODO which to use?
+        Iterator<Double> sortedDataIterator = data.stream()
+                .map(row -> row.getCovariateValue(this).getValue())
+                .filter(v -> v != null)
+                .iterator();
 
-        // for this implementation we need to shuffle the data
-        final List<Value<Double>> shuffledData;
-        if(number >= data.size()){
-            shuffledData = data;
+
+        final IndexedIterator<Double> dataIterator;
+        if(number == 0){
+            dataIterator = new UniqueValueIterator<>(sortedDataIterator);
         }
-        else{ // only need the top number entries
-            shuffledData = new ArrayList<>(number);
-            final Set<Integer> indexesToUse = new HashSet<>();
-            //final List<Integer> indexesToUse = new ArrayList<>(); // TODO which to use?
+        else{ // random splitting; we will not weight based on how many times a Row appears in the bootstrap sample
+            final TreeSet<Integer> indexSet = new TreeSet<>();
 
-            while(indexesToUse.size() < number){
-                final int index = random.nextInt(data.size());
+            final int maxIndex = data.size();
 
-                if(indexesToUse.add(index)){
-                    shuffledData.add(data.get(index));
-                }
+            for(int i=0; i<number; i++){
+                indexSet.add(random.nextInt(maxIndex));
             }
 
+            dataIterator = new UniqueSubsetValueIterator<>(
+                    new UniqueValueIterator<>(sortedDataIterator),
+                    indexSet.toArray(new Integer[indexSet.size()]) // TODO verify this is ordered
+            );
+
         }
 
-        return shuffledData.stream()
-                .mapToDouble(v -> v.getValue())
-                .mapToObj(threshold -> new NumericSplitRule(threshold))
-                .collect(Collectors.toSet());
-        // by returning a set we'll make everything far more efficient as a lot of rules can repeat due to bootstrapping
-
+        return new NumericSplitRuleUpdater<>(this, data, dataIterator);
 
     }
 
@@ -101,7 +109,7 @@ public final class NumericCovariate implements Covariate<Double>{
 
         private final double threshold;
 
-        private NumericSplitRule(final double threshold){
+        NumericSplitRule(final double threshold){
             this.threshold = threshold;
         }
 

@@ -4,7 +4,7 @@ package ca.joeltherrien.randomforest.workshop;
 import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.FactorCovariate;
-import ca.joeltherrien.randomforest.covariates.NumericCovariate;
+import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Node;
@@ -13,7 +13,6 @@ import ca.joeltherrien.randomforest.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -21,8 +20,6 @@ import java.util.stream.DoubleStream;
 public class TrainSingleTreeFactor {
 
 	public static void main(String[] args) {
-		System.out.println("Hello world!");
-
         final Random random = new Random(123);
 
         final int n = 10000;
@@ -84,7 +81,7 @@ public class TrainSingleTreeFactor {
 
 
         final long startTime = System.currentTimeMillis();
-        final Node<Double> baseNode = treeTrainer.growTree(trainingSet);
+        final Node<Double> baseNode = treeTrainer.growTree(trainingSet, random);
         final long endTime = System.currentTimeMillis();
 
         System.out.println(((double)(endTime - startTime))/1000.0);

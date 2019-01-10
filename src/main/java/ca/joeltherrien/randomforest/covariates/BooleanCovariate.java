@@ -1,14 +1,15 @@
 package ca.joeltherrien.randomforest.covariates;
 
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
-public final class BooleanCovariate implements Covariate<Boolean>{
+public final class BooleanCovariate implements Covariate<Boolean> {
 
     @Getter
     private final String name;
@@ -19,8 +20,8 @@ public final class BooleanCovariate implements Covariate<Boolean>{
     private final BooleanSplitRule splitRule = new BooleanSplitRule(); // there's only one possible rule for BooleanCovariates.
 
     @Override
-    public Collection<BooleanSplitRule> generateSplitRules(List<Value<Boolean>> data, int number) {
-        return Collections.singleton(splitRule);
+    public <Y> Iterator<Split<Y, Boolean>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
+        return new SingletonIterator<>(BooleanCovariate.this.splitRule.applyRule(data));
     }
 
     @Override
@@ -73,6 +74,7 @@ public final class BooleanCovariate implements Covariate<Boolean>{
             return value == null;
         }
     }
+
 
     public class BooleanSplitRule implements SplitRule<Boolean>{
 

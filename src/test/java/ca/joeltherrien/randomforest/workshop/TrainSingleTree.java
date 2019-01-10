@@ -3,7 +3,7 @@ package ca.joeltherrien.randomforest.workshop;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.covariates.NumericCovariate;
+import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
@@ -54,13 +54,14 @@ public class TrainSingleTree {
                 .covariates(covariateNames)
                 .responseCombiner(new MeanResponseCombiner())
                 .maxNodeDepth(30)
+                .mtry(2)
                 .nodeSize(5)
                 .numberOfSplits(0)
                 .build();
 
 
         final long startTime = System.currentTimeMillis();
-        final Node<Double> baseNode = treeTrainer.growTree(trainingSet);
+        final Node<Double> baseNode = treeTrainer.growTree(trainingSet, new Random());
         final long endTime = System.currentTimeMillis();
 
         System.out.println(((double)(endTime - startTime))/1000.0);

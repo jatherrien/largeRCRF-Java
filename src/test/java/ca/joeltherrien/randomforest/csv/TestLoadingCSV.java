@@ -3,10 +3,10 @@ package ca.joeltherrien.randomforest.csv;
 import ca.joeltherrien.randomforest.DataLoader;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
-import ca.joeltherrien.randomforest.covariates.BooleanCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.FactorCovariateSettings;
-import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.FactorCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

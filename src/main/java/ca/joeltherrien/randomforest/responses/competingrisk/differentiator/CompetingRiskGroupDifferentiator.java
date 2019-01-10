@@ -3,6 +3,7 @@ package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.SimpleGroupDifferentiator;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -14,11 +15,7 @@ import java.util.stream.Stream;
  * modifies the abstract method.
  *
  */
-public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskResponse> implements GroupDifferentiator<Y>{
-
-    @Override
-    public abstract Double differentiate(List<Y> leftHand, List<Y> rightHand);
-
+public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskResponse> extends SimpleGroupDifferentiator<Y> {
 
     /**
      * Calculates the log rank value (or the Gray's test value) for a *specific* event cause.

@@ -2,6 +2,8 @@ package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.*;
+import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.*;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 public class TestCompetingRisk {
 
@@ -104,7 +107,7 @@ public class TestCompetingRisk {
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
-        final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset);
+        final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
 
         final CovariateRow newRow = getPredictionRow(covariates);
 
@@ -157,7 +160,7 @@ public class TestCompetingRisk {
         final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
-        final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset);
+        final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
 
         final CovariateRow newRow = getPredictionRow(covariates);
 

@@ -1,13 +1,13 @@
 package ca.joeltherrien.randomforest.responses.regression;
 
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.SimpleGroupDifferentiator;
 
 import java.util.List;
 
-public class WeightedVarianceGroupDifferentiator implements GroupDifferentiator<Double> {
+public class WeightedVarianceGroupDifferentiator extends SimpleGroupDifferentiator<Double> {
 
     @Override
-    public Double differentiate(List<Double> leftHand, List<Double> rightHand) {
+    public Double getScore(List<Double> leftHand, List<Double> rightHand) {
 
         final double leftHandSize = leftHand.size();
         final double rightHandSize = rightHand.size();

@@ -1,8 +1,7 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +50,7 @@ public class TestLogRankSingleGroupDifferentiator {
 
         final LogRankSingleGroupDifferentiator differentiator = new LogRankSingleGroupDifferentiator(1, new int[]{1});
 
-        final double score = differentiator.differentiate(data1, data2);
+        final double score = differentiator.getScore(data1, data2);
         final double margin = 0.000001;
 
         // Tested using 855 method
@@ -71,14 +70,14 @@ public class TestLogRankSingleGroupDifferentiator {
         final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 221);
         final List<Row<CompetingRiskResponse>> group2Good = data.subList(221, data.size());
 
-        final double scoreGood = groupDifferentiator.differentiate(
+        final double scoreGood = groupDifferentiator.getScore(
                 group1Good.stream().map(Row::getResponse).collect(Collectors.toList()),
                 group2Good.stream().map(Row::getResponse).collect(Collectors.toList()));
 
         final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 222);
         final List<Row<CompetingRiskResponse>> group2Bad = data.subList(222, data.size());
 
-        final double scoreBad = groupDifferentiator.differentiate(
+        final double scoreBad = groupDifferentiator.getScore(
                 group1Bad.stream().map(Row::getResponse).collect(Collectors.toList()),
                 group2Bad.stream().map(Row::getResponse).collect(Collectors.toList()));
 

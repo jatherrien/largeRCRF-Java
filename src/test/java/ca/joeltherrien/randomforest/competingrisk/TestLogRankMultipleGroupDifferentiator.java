@@ -4,7 +4,7 @@ import ca.joeltherrien.randomforest.DataLoader;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
 import ca.joeltherrien.randomforest.utils.Utils;
@@ -53,14 +53,14 @@ public class TestLogRankMultipleGroupDifferentiator {
         final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 196);
         final List<Row<CompetingRiskResponse>> group2Bad = data.subList(196, data.size());
 
-        final double scoreBad = groupDifferentiator.differentiate(
+        final double scoreBad = groupDifferentiator.getScore(
                 group1Bad.stream().map(Row::getResponse).collect(Collectors.toList()),
                 group2Bad.stream().map(Row::getResponse).collect(Collectors.toList()));
 
         final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 199);
         final List<Row<CompetingRiskResponse>> group2Good= data.subList(199, data.size());
 
-        final double scoreGood = groupDifferentiator.differentiate(
+        final double scoreGood = groupDifferentiator.getScore(
                 group1Good.stream().map(Row::getResponse).collect(Collectors.toList()),
                 group2Good.stream().map(Row::getResponse).collect(Collectors.toList()));
 

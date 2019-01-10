@@ -1,5 +1,6 @@
-package ca.joeltherrien.randomforest.covariates;
+package ca.joeltherrien.randomforest.covariates.settings;
 
+import ca.joeltherrien.randomforest.covariates.BooleanCovariate;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
