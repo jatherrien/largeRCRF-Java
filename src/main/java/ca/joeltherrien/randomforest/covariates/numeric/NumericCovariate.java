@@ -52,7 +52,7 @@ public final class NumericCovariate implements Covariate<Double> {
         if(number == 0){
             dataIterator = new UniqueValueIterator<>(sortedDataIterator);
         }
-        else{ // random splitting; we will not weight based on how many times a Row appears in the bootstrap sample
+        else{
             final TreeSet<Integer> indexSet = new TreeSet<>();
 
             final int maxIndex = data.size();
