@@ -1,13 +1,13 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.utils.MathFunction;
+public interface CompetingRiskSets<T extends CompetingRiskResponse> {
 
-import java.util.List;
+    double[] getDistinctTimes();
+    int getRiskSetLeft(int timeIndex, int event);
+    int getRiskSetTotal(int timeIndex, int event);
+    int getNumberOfEventsLeft(int timeIndex, int event);
+    int getNumberOfEventsTotal(int timeIndex, int event);
 
-public interface CompetingRiskSets {
-
-    MathFunction getRiskSet(int event);
-    int getNumberOfEvents(Double time, int event);
-    List<Double> getEventTimes();
+    void update(T rowMovedToLeft);
 
 }

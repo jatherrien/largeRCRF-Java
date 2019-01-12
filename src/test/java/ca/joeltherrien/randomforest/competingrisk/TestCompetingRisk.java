@@ -1,10 +1,15 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.*;
-import ca.joeltherrien.randomforest.covariates.*;
+import ca.joeltherrien.randomforest.CovariateRow;
+import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.Settings;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.Node;
@@ -14,13 +19,14 @@ import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 
-import static ca.joeltherrien.randomforest.TestUtils.assertCumulativeFunction;
-import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Random;
+
+import static ca.joeltherrien.randomforest.TestUtils.assertCumulativeFunction;
+import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCompetingRisk {
 
@@ -282,6 +288,34 @@ public class TestCompetingRisk {
         assertEquals(126, countCensored);
         assertEquals(679, countEventOne);
         assertEquals(359, countEventTwo);
+    }
+
+    /**
+     * Used to time how long the algorithm takes
+     *
+     * @param args Not used.
+     * @throws IOException
+     */
+    public static void main(String[] args) throws IOException {
+        // timing
+        final TestCompetingRisk tcr = new TestCompetingRisk();
+
+        final Settings settings = tcr.getSettings();
+        settings.setNtree(300); // results are too variable at 100
+
+        final List<Covariate> covariates = settings.getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(),
+                settings.getTrainingDataLocation());
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+
+        final long startTime = System.currentTimeMillis();
+        for(int i=0; i<50; i++){
+            forestTrainer.trainSerial();
+        }
+        final long endTime = System.currentTimeMillis();
+
+        final double diffTime = endTime - startTime;
+        System.out.println(diffTime / 1000.0 / 50.0);
     }
 
     @Test

@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskGraySetsImpl;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -17,19 +17,17 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
     private final int[] events;
 
     @Override
-    public Double getScore(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand) {
-        if(leftHand.size() == 0 || rightHand.size() == 0){
-            return null;
-        }
+    protected CompetingRiskSets<CompetingRiskResponseWithCensorTime> createCompetingRiskSets(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand){
+        return CompetingRiskUtils.calculateGraySetsEfficiently(leftHand, rightHand, events);
+    }
 
-        final CompetingRiskGraySetsImpl competingRiskSetsLeft = CompetingRiskUtils.calculateGraySetsEfficiently(leftHand, events);
-        final CompetingRiskGraySetsImpl competingRiskSetsRight = CompetingRiskUtils.calculateGraySetsEfficiently(rightHand, events);
-
+    @Override
+    protected Double getScore(final CompetingRiskSets<CompetingRiskResponseWithCensorTime> competingRiskSets){
         double numerator = 0.0;
         double denominatorSquared = 0.0;
 
         for(final int eventOfFocus : events){
-            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSetsLeft, competingRiskSetsRight);
+            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSets);
 
             numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
             denominatorSquared += valueOfInterest.getVariance();
@@ -37,7 +35,6 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
         }
 
         return Math.abs(numerator / Math.sqrt(denominatorSquared));
-
     }
 
 

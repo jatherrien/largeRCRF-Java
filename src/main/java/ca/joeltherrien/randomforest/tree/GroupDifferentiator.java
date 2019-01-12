@@ -12,6 +12,6 @@ import java.util.Iterator;
  */
 public interface GroupDifferentiator<Y> {
 
-    <V> SplitAndScore<Y, V> differentiate(Iterator<Split<Y, V>> splitIterator);
+    SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator);
 
 }

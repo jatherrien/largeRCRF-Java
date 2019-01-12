@@ -7,6 +7,8 @@ import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,12 +17,19 @@ import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestLogRankMultipleGroupDifferentiator {
+
+    private Iterator<Split<CompetingRiskResponse, ?>> turnIntoSplitIterator(List<Row<CompetingRiskResponse>> leftList,
+                                                                                 List<Row<CompetingRiskResponse>> rightList){
+        return new SingletonIterator<Split<CompetingRiskResponse, ?>>(new Split(null, leftList, rightList, Collections.emptyList()));
+    }
 
     public static Data<CompetingRiskResponse> loadData(String filename) throws IOException {
         final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
@@ -53,16 +62,12 @@ public class TestLogRankMultipleGroupDifferentiator {
         final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 196);
         final List<Row<CompetingRiskResponse>> group2Bad = data.subList(196, data.size());
 
-        final double scoreBad = groupDifferentiator.getScore(
-                group1Bad.stream().map(Row::getResponse).collect(Collectors.toList()),
-                group2Bad.stream().map(Row::getResponse).collect(Collectors.toList()));
+        final double scoreBad = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
 
         final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 199);
         final List<Row<CompetingRiskResponse>> group2Good= data.subList(199, data.size());
 
-        final double scoreGood = groupDifferentiator.getScore(
-                group1Good.stream().map(Row::getResponse).collect(Collectors.toList()),
-                group2Good.stream().map(Row::getResponse).collect(Collectors.toList()));
+        final double scoreGood = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Good, group2Good)).getScore();
 
         // expected results calculated manually using survival::survdiff in R; see issue #10 in Gitea
         closeEnough(71.41135, scoreBad, 0.00001);

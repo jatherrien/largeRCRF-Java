@@ -38,6 +38,11 @@ public class NumericSplitRuleUpdater<Y> implements Covariate.SplitRuleUpdater<Y,
     }
 
     @Override
+    public boolean currentSplitValid() {
+        return currentSplit.getLeftHand().size() > 0 && currentSplit.getRightHand().size() > 0;
+    }
+
+    @Override
     public NumericSplitUpdate<Y> nextUpdate() {
         if(hasNext()){
             final int currentPosition = dataIterator.getIndex();
@@ -51,8 +56,8 @@ public class NumericSplitRuleUpdater<Y> implements Covariate.SplitRuleUpdater<Y,
             // Update current split
             this.currentSplit = new Split<>(
                     splitRule,
-                    orderedData.subList(0, newPosition),
-                    orderedData.subList(newPosition, orderedData.size()),
+                    Collections.unmodifiableList(orderedData.subList(0, newPosition)),
+                    Collections.unmodifiableList(orderedData.subList(newPosition, orderedData.size())),
                     Collections.emptyList());
 
 

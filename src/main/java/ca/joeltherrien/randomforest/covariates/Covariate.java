@@ -40,6 +40,7 @@ public interface Covariate<V> extends Serializable {
 
     interface SplitRuleUpdater<Y, V> extends Iterator<Split<Y, V>>{
         Split<Y, V> currentSplit();
+        boolean currentSplitValid();
         SplitUpdate<Y, V> nextUpdate();
     }
 

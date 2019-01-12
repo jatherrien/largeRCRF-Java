@@ -9,12 +9,12 @@ import java.util.stream.Collectors;
 public abstract class SimpleGroupDifferentiator<Y> implements GroupDifferentiator<Y> {
 
     @Override
-    public <V> SplitAndScore<Y, V> differentiate(Iterator<Split<Y, V>> splitIterator) {
+    public SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator) {
         Double bestScore = null;
-        Split<Y, V> bestSplit = null;
+        Split<Y, ?> bestSplit = null;
 
         while(splitIterator.hasNext()){
-            final Split<Y, V> candidateSplit = splitIterator.next();
+            final Split<Y, ?> candidateSplit = splitIterator.next();
 
             final List<Y> leftHand = candidateSplit.getLeftHand().stream().map(Row::getResponse).collect(Collectors.toList());
             final List<Y> rightHand = candidateSplit.getRightHand().stream().map(Row::getResponse).collect(Collectors.toList());
