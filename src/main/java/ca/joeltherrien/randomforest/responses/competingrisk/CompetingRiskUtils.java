@@ -1,11 +1,9 @@
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.utils.LeftContinuousStepFunction;
 import ca.joeltherrien.randomforest.utils.StepFunction;
-import ca.joeltherrien.randomforest.utils.VeryDiscontinuousStepFunction;
 
 import java.util.*;
-import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 public class CompetingRiskUtils {
 
@@ -102,18 +100,30 @@ public class CompetingRiskUtils {
 
     }
 
-    public static CompetingRiskSetsImpl calculateSetsEfficiently(final List<CompetingRiskResponse> responses, int[] eventsOfFocus){
-        final int n = responses.size();
-        int[] numberOfCurrentEvents = new int[eventsOfFocus.length+1];
 
-        final Map<Double, int[]> numberOfEvents = new HashMap<>();
+    public static CompetingRiskSetsImpl calculateSetsEfficiently(final List<CompetingRiskResponse> initialLeftHand,
+                                                                 final List<CompetingRiskResponse> initialRightHand,
+                                                                 int[] eventsOfFocus,
+                                                                 boolean calculateRiskSets){
 
-        final List<Double> eventTimes = new ArrayList<>(n);
-        final List<Double> eventAndCensorTimes = new ArrayList<>(n);
-        final List<Integer> riskSetNumberList = new ArrayList<>(n);
+        final double[] distinctEventTimes = Stream.concat(
+                initialLeftHand.stream(),
+                initialRightHand.stream())
+                //.filter(y -> !y.isCensored())
+                .map(CompetingRiskResponse::getU)
+                .mapToDouble(Double::doubleValue)
+                .sorted()
+                .distinct()
+                .toArray();
+
+
+        final int m = distinctEventTimes.length;
+        final int[][] numberOfCurrentEventsTotal = new int[eventsOfFocus.length+1][m];
+
+        // Left Hand First
 
         // need to first sort responses
-        Collections.sort(responses, (y1, y2) -> {
+        Collections.sort(initialLeftHand, (y1, y2) -> {
             if(y1.getU() < y2.getU()){
                 return -1;
             }
@@ -125,127 +135,191 @@ public class CompetingRiskUtils {
             }
         });
 
+        final int nLeft = initialLeftHand.size();
+        final int nRight = initialRightHand.size();
+
+        final int[][] numberOfCurrentEventsLeft = new int[eventsOfFocus.length+1][m];
+        final int[] riskSetArrayLeft = new int[m];
+        final int[] riskSetArrayTotal = new int[m];
 
 
-        for(int i=0; i<n; i++){
-            final CompetingRiskResponse currentResponse = responses.get(i);
-            final boolean lastOfTime = (i+1)==n || responses.get(i+1).getU() > currentResponse.getU();
 
-            numberOfCurrentEvents[currentResponse.getDelta()]++;
+        for(int k=0; k<m; k++){
+            riskSetArrayLeft[k] = nLeft;
+            riskSetArrayTotal[k] = nLeft + nRight;
+        }
+
+        // Left Hand
+        for(int i=0; i<nLeft; i++){
+            final CompetingRiskResponse currentResponse = initialLeftHand.get(i);
+            final boolean lastOfTime = (i+1)==nLeft || initialLeftHand.get(i+1).getU() > currentResponse.getU();
+
+            final int k = Arrays.binarySearch(distinctEventTimes, currentResponse.getU());
+
+            numberOfCurrentEventsLeft[currentResponse.getDelta()][k]++;
+            numberOfCurrentEventsTotal[currentResponse.getDelta()][k]++;
 
             if(lastOfTime){
                 int totalNumberOfCurrentEvents = 0;
-                for(int e = 1; e < numberOfCurrentEvents.length; e++){ // exclude censored events
-                    totalNumberOfCurrentEvents += numberOfCurrentEvents[e];
+                for(int e = 1; e < eventsOfFocus.length+1; e++){ // exclude censored events
+                    totalNumberOfCurrentEvents += numberOfCurrentEventsLeft[e][k];
                 }
 
-                final double currentTime = currentResponse.getU();
+                // Calculate risk set values
+                // Note that we only decrease values in the *future*
+                if(calculateRiskSets){
+                    final int decreaseBy = totalNumberOfCurrentEvents + numberOfCurrentEventsLeft[0][k];
+                    for(int j=k+1; j<m; j++){
+                        riskSetArrayLeft[j] = riskSetArrayLeft[j] - decreaseBy;
+                        riskSetArrayTotal[j] = riskSetArrayTotal[j] - decreaseBy;
 
-                if(totalNumberOfCurrentEvents > 0){ // add numberOfCurrentEvents
-                    // Add point
-                    eventTimes.add(currentTime);
-                    numberOfEvents.put(currentTime, numberOfCurrentEvents);
+                    }
                 }
 
-                // Always do risk set
-                // remember that the LeftContinuousFunction takes into account that at this currentTime the risk value is the previous value
-                final int riskSet = n - (i+1);
-                riskSetNumberList.add(riskSet);
-                eventAndCensorTimes.add(currentTime);
-
-                // reset counters
-                numberOfCurrentEvents = new int[eventsOfFocus.length+1];
 
             }
 
         }
 
-        final double[] riskSetArray = new double[eventAndCensorTimes.size()];
-        final double[] timesArray = new double[eventAndCensorTimes.size()];
-        for(int i=0; i<riskSetArray.length; i++){
-            timesArray[i] = eventAndCensorTimes.get(i);
-            riskSetArray[i] = riskSetNumberList.get(i);
+
+        // Right Hand Next. Note that we only need to keep track of the Left Hand and the Total
+
+        // need to first sort responses
+        Collections.sort(initialRightHand, (y1, y2) -> {
+            if(y1.getU() < y2.getU()){
+                return -1;
+            }
+            else if(y1.getU() > y2.getU()){
+                return 1;
+            }
+            else{
+                return 0;
+            }
+        });
+
+        // Right Hand
+        int[] currentEventsRight = new int[eventsOfFocus.length+1];
+        for(int i=0; i<nRight; i++){
+            final CompetingRiskResponse currentResponse = initialRightHand.get(i);
+            final boolean lastOfTime = (i+1)==nRight || initialRightHand.get(i+1).getU() > currentResponse.getU();
+
+            final int k = Arrays.binarySearch(distinctEventTimes, currentResponse.getU());
+
+            currentEventsRight[currentResponse.getDelta()]++;
+            numberOfCurrentEventsTotal[currentResponse.getDelta()][k]++;
+
+            if(lastOfTime){
+                int totalNumberOfCurrentEvents = 0;
+                for(int e = 1; e < eventsOfFocus.length+1; e++){ // exclude censored events
+                    totalNumberOfCurrentEvents += currentEventsRight[e];
+                }
+
+                // Calculate risk set values
+                // Note that we only decrease values in the *future*
+                if(calculateRiskSets){
+                    final int decreaseBy = totalNumberOfCurrentEvents + currentEventsRight[0];
+                    for(int j=k+1; j<m; j++){
+                        riskSetArrayTotal[j] = riskSetArrayTotal[j] - decreaseBy;
+                    }
+                }
+
+                // Reset
+                currentEventsRight = new int[eventsOfFocus.length+1];
+
+            }
+
         }
 
-        final LeftContinuousStepFunction riskSetFunction = new LeftContinuousStepFunction(timesArray, riskSetArray, n);
-
-        return CompetingRiskSetsImpl.builder()
-                .numberOfEvents(numberOfEvents)
-                .riskSet(riskSetFunction)
-                .eventTimes(eventTimes)
-                .build();
+        return new CompetingRiskSetsImpl(distinctEventTimes, riskSetArrayLeft, riskSetArrayTotal, numberOfCurrentEventsLeft, numberOfCurrentEventsTotal);
 
     }
 
-    public static CompetingRiskGraySetsImpl calculateGraySetsEfficiently(final List<CompetingRiskResponseWithCensorTime> responses, int[] eventsOfFocus){
-        final List sillyList = responses; // annoying Java generic work-around
-        final CompetingRiskSetsImpl originalSets = calculateSetsEfficiently(sillyList, eventsOfFocus);
 
-        final double[] allTimes = DoubleStream.concat(
-                responses.stream()
-                        .mapToDouble(CompetingRiskResponseWithCensorTime::getC),
-                responses.stream()
-                        .mapToDouble(CompetingRiskResponseWithCensorTime::getU)
-        ).sorted().distinct().toArray();
+    public static CompetingRiskGraySetsImpl calculateGraySetsEfficiently(final List<CompetingRiskResponseWithCensorTime> initialLeftHand,
+                                                                         final List<CompetingRiskResponseWithCensorTime> initialRightHand,
+                                                                         int[] eventsOfFocus){
 
+        final List leftHandGenericsSuck = initialLeftHand;
+        final List rightHandGenericsSuck = initialRightHand;
 
+        final CompetingRiskSetsImpl normalSets = calculateSetsEfficiently(
+                leftHandGenericsSuck,
+                rightHandGenericsSuck,
+                eventsOfFocus, false);
 
-        final VeryDiscontinuousStepFunction[] riskSets = new VeryDiscontinuousStepFunction[eventsOfFocus.length];
+        final double[] times = normalSets.times;
+        final int[][] numberOfEventsLeft = normalSets.numberOfEventsLeft;
+        final int[][] numberOfEventsTotal = normalSets.numberOfEventsTotal;
 
-        for(final int event : eventsOfFocus){
-            final double[] yAt = new double[allTimes.length];
-            final double[] yRight = new double[allTimes.length];
+        // FYI; initialLeftHand and initialRightHand have both now been sorted
+        // Time to calculate the Gray modified risk sets
+        final int[][] riskSetsLeft = new int[eventsOfFocus.length][times.length];
+        final int[][] riskSetsTotal = new int[eventsOfFocus.length][times.length];
 
-            for(final CompetingRiskResponseWithCensorTime response : responses){
-                if(response.getDelta() == event){
-                    // traditional case only; increment on time t when I(t <= Ui)
-                    final double time = response.getU();
-                    final int index = Arrays.binarySearch(allTimes, time);
+        // Left hand first
+        for(final CompetingRiskResponseWithCensorTime response : initialLeftHand){
+            final double time = response.getU();
+            final int k = Arrays.binarySearch(times, time);
+            final int delta_m_1 = response.getDelta() - 1;
+            final double censorTime = response.getC();
 
-                    if(index < 0){ // TODO remove once code is stable
-                        throw new IllegalStateException("Index shouldn't be negative!");
-                    }
+            for(int j=0; j<eventsOfFocus.length; j++){
+                final int[] riskSetLeftJ = riskSetsLeft[j];
+                final int[] riskSetTotalJ = riskSetsTotal[j];
 
-                    // All yAts up to and including index are incremented;
-                    // All yRights up to index are incremented
-                    yAt[index]++;
-                    for(int i=0; i<index; i++){
-                        yAt[i]++;
-                        yRight[i]++;
+                // first iteration; perform normal increment as if Y is normal
+                // corresponds to the first part, U_i >= t, in I(...)
+                for(int i=0; i<=k; i++){
+                    riskSetLeftJ[i]++;
+                    riskSetTotalJ[i]++;
+                }
+
+                // second iteration; only if delta-1 != j
+                // corresponds to the second part, U_i < t & delta_i != j & C_i > t
+                if(delta_m_1 != j && !response.isCensored()){
+                    int i = k+1;
+                    while(i < times.length && times[i] < censorTime){
+                        riskSetLeftJ[i]++;
+                        riskSetTotalJ[i]++;
+                        i++;
                     }
                 }
-                else{
-                    // need to increment on time t on following conditions; I(t <= Ui | t < Ci)
-                    // Fact: Ci >= Ui.
 
-                    // increment yAt up to Ci. If Ui==Ci, increment yAt at Ci.
-                    final double time = response.getC();
-                    final int index = Arrays.binarySearch(allTimes, time);
-
-                    if(index < 0){ // TODO remove once code is stable
-                        throw new IllegalStateException("Index shouldn't be negative!");
-                    }
-
-                    for(int i=0; i<index; i++){
-                        yAt[i]++;
-                        yRight[i]++;
-                    }
-                    if(response.getU() == response.getC()){
-                        yAt[index]++;
-                    }
-
-                }
             }
-
-            riskSets[event-1] = new VeryDiscontinuousStepFunction(allTimes, yAt, yRight, responses.size());
 
         }
 
-        return CompetingRiskGraySetsImpl.builder()
-                .numberOfEvents(originalSets.getNumberOfEvents())
-                .eventTimes(originalSets.getEventTimes())
-                .riskSet(riskSets)
-                .build();
+        // Repeat for right hand
+        for(final CompetingRiskResponseWithCensorTime response : initialRightHand){
+            final double time = response.getU();
+            final int k = Arrays.binarySearch(times, time);
+            final int delta_m_1 = response.getDelta() - 1;
+            final double censorTime = response.getC();
+
+            for(int j=0; j<eventsOfFocus.length; j++){
+                final int[] riskSetTotalJ = riskSetsTotal[j];
+
+                // first iteration; perform normal increment as if Y is normal
+                // corresponds to the first part, U_i >= t, in I(...)
+                for(int i=0; i<=k; i++){
+                    riskSetTotalJ[i]++;
+                }
+
+                // second iteration; only if delta-1 != j
+                // corresponds to the second part, U_i < t & delta_i != j & C_i > t
+                if(delta_m_1 != j && !response.isCensored()){
+                    int i = k+1;
+                    while(i < times.length && times[i] < censorTime){
+                        riskSetTotalJ[i]++;
+                        i++;
+                    }
+                }
+
+            }
+
+        }
+
+        return new CompetingRiskGraySetsImpl(times, riskSetsLeft, riskSetsTotal, numberOfEventsLeft, numberOfEventsTotal);
 
     }
 

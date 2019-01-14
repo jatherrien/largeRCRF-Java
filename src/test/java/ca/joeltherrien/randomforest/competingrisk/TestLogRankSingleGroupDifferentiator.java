@@ -1,58 +1,102 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestLogRankSingleGroupDifferentiator {
 
-    private List<CompetingRiskResponse> generateData1(){
-        final List<CompetingRiskResponse> data = new ArrayList<>();
+    private double getScore(final GroupDifferentiator<CompetingRiskResponse> groupDifferentiator, List<Row<CompetingRiskResponse>> left, List<Row<CompetingRiskResponse>> right){
+        final Iterator<Split<CompetingRiskResponse, ?>> iterator = new SingletonIterator<>(
+                new Split<>(null, left, right, Collections.emptyList()));
 
-        data.add(new CompetingRiskResponse(1, 1.0));
-        data.add(new CompetingRiskResponse(1, 1.0));
-        data.add(new CompetingRiskResponse(1, 2.0));
-        data.add(new CompetingRiskResponse(1, 1.5));
-        data.add(new CompetingRiskResponse(0, 2.0));
-        data.add(new CompetingRiskResponse(0, 1.5));
-        data.add(new CompetingRiskResponse(0, 2.5));
+        return groupDifferentiator.differentiate(iterator).getScore();
+
+    }
+
+    int count = 1;
+    private <Y> Row<Y> createRow(Y response){
+        return new Row<>(null, count++, response);
+    }
+
+    private List<Row<CompetingRiskResponse>> generateData1(){
+        final List<Row<CompetingRiskResponse>> data = new ArrayList<>();
+
+        data.add(createRow(new CompetingRiskResponse(1, 1.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 1.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 2.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 1.5)));
+        data.add(createRow(new CompetingRiskResponse(0, 2.0)));
+        data.add(createRow(new CompetingRiskResponse(0, 1.5)));
+        data.add(createRow(new CompetingRiskResponse(0, 2.5)));
 
         return data;
     }
 
-    private List<CompetingRiskResponse> generateData2(){
-        final List<CompetingRiskResponse> data = new ArrayList<>();
+    private List<Row<CompetingRiskResponse>> generateData2(){
+        final List<Row<CompetingRiskResponse>> data = new ArrayList<>();
 
-        data.add(new CompetingRiskResponse(1, 2.0));
-        data.add(new CompetingRiskResponse(1, 2.0));
-        data.add(new CompetingRiskResponse(1, 4.0));
-        data.add(new CompetingRiskResponse(1, 3.0));
-        data.add(new CompetingRiskResponse(0, 4.0));
-        data.add(new CompetingRiskResponse(0, 3.0));
-        data.add(new CompetingRiskResponse(0, 5.0));
+        data.add(createRow(new CompetingRiskResponse(1, 2.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 2.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 4.0)));
+        data.add(createRow(new CompetingRiskResponse(1, 3.0)));
+        data.add(createRow(new CompetingRiskResponse(0, 4.0)));
+        data.add(createRow(new CompetingRiskResponse(0, 3.0)));
+        data.add(createRow(new CompetingRiskResponse(0, 5.0)));
 
         return data;
     }
 
     @Test
     public void testCompetingRiskResponseCombiner(){
-        final List<CompetingRiskResponse> data1 = generateData1();
-        final List<CompetingRiskResponse> data2 = generateData2();
+        final List<Row<CompetingRiskResponse>> data1 = generateData1();
+        final List<Row<CompetingRiskResponse>> data2 = generateData2();
 
         final LogRankSingleGroupDifferentiator differentiator = new LogRankSingleGroupDifferentiator(1, new int[]{1});
 
-        final double score = differentiator.differentiate(data1, data2);
+        final double score = getScore(differentiator, data1, data2);
         final double margin = 0.000001;
 
         // Tested using 855 method
         closeEnough(1.540139, score, margin);
 
 
+    }
+
+    @Test
+    public void testCorrectSplit() throws IOException {
+        final LogRankSingleGroupDifferentiator groupDifferentiator =
+                new LogRankSingleGroupDifferentiator(1, new int[]{1,2});
+
+        final List<Row<CompetingRiskResponse>> data = TestLogRankMultipleGroupDifferentiator.
+                loadData("src/test/resources/test_single_split.csv").getRows();
+
+        final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 221);
+        final List<Row<CompetingRiskResponse>> group2Good = data.subList(221, data.size());
+
+        final double scoreGood = getScore(groupDifferentiator, group1Good, group2Good);
+
+        final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 222);
+        final List<Row<CompetingRiskResponse>> group2Bad = data.subList(222, data.size());
+
+        final double scoreBad = getScore(groupDifferentiator, group1Bad, group2Bad);
+
+        // Apparently not all groups are unique when splitting
+        assertEquals(scoreGood, scoreBad);
     }
 
     private void closeEnough(double expected, double actual, double margin){

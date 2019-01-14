@@ -58,7 +58,7 @@ public class DataLoader {
             throw new IllegalArgumentException("Tree directory must be a directory!");
         }
 
-        final File[] treeFiles = folder.listFiles(((file, s) -> s.endsWith(".tree")));
+        final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
         final List<File> treeFileList = Arrays.asList(treeFiles);
 
         Collections.sort(treeFileList, Comparator.comparing(File::getName));

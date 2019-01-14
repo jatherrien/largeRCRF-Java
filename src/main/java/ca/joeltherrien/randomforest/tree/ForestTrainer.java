@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,17 +47,17 @@ public class ForestTrainer<Y, TO, FO> {
         this.covariates = covariates;
         this.treeResponseCombiner = settings.getTreeCombiner();
         this.treeTrainer = new TreeTrainer<>(settings, covariates);
-
     }
 
     public Forest<TO, FO> trainSerial(){
 
         final List<Tree<TO>> trees = new ArrayList<>(ntree);
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
+        final Random random = new Random();
 
         for(int j=0; j<ntree; j++){
 
-            trees.add(trainTree(bootstrapper));
+            trees.add(trainTree(bootstrapper, random));
 
             if(displayProgress){
                 if(j==0) {
@@ -130,7 +132,7 @@ public class ForestTrainer<Y, TO, FO> {
         }
 
 
-        final File[] treeFiles = folder.listFiles(((file, s) -> s.endsWith(".tree")));
+        final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
 
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
@@ -162,9 +164,9 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
-    private Tree<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper){
-        final List<Row<Y>> bootstrappedData = bootstrapper.bootstrap();
-        return treeTrainer.growTree(bootstrappedData);
+    private Tree<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper, Random random){
+        final List<Row<Y>> bootstrappedData = bootstrapper.bootstrap(random);
+        return treeTrainer.growTree(bootstrappedData, random);
     }
 
     public void saveTree(final Tree<TO> tree, String name) throws IOException {
@@ -193,7 +195,8 @@ public class ForestTrainer<Y, TO, FO> {
         @Override
         public void run() {
 
-            final Tree<TO> tree = trainTree(bootstrapper);
+            // ThreadLocalRandom should make sure we don't duplicate seeds
+            final Tree<TO> tree = trainTree(bootstrapper, ThreadLocalRandom.current());
 
             // should be okay as the list structure isn't changing
             treeList.set(treeIndex, tree);
@@ -216,7 +219,8 @@ public class ForestTrainer<Y, TO, FO> {
         @Override
         public void run() {
 
-            final Tree<TO> tree = trainTree(bootstrapper);
+            // ThreadLocalRandom should make sure we don't duplicate seeds
+            final Tree<TO> tree = trainTree(bootstrapper, ThreadLocalRandom.current());
 
             try {
                 saveTree(tree, filename);

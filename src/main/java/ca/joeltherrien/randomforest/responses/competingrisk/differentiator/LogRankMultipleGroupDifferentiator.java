@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSetsImpl;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -17,19 +17,17 @@ public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDiffer
     private final int[] events;
 
     @Override
-    public Double differentiate(List<CompetingRiskResponse> leftHand, List<CompetingRiskResponse> rightHand) {
-        if(leftHand.size() == 0 || rightHand.size() == 0){
-            return null;
-        }
+    protected CompetingRiskSets<CompetingRiskResponse> createCompetingRiskSets(List<CompetingRiskResponse> leftHand, List<CompetingRiskResponse> rightHand){
+        return CompetingRiskUtils.calculateSetsEfficiently(leftHand, rightHand, events, true);
+    }
 
-        final CompetingRiskSetsImpl competingRiskSetsLeft = CompetingRiskUtils.calculateSetsEfficiently(leftHand, events);
-        final CompetingRiskSetsImpl competingRiskSetsRight = CompetingRiskUtils.calculateSetsEfficiently(rightHand, events);
-
+    @Override
+    protected Double getScore(final CompetingRiskSets<CompetingRiskResponse> competingRiskSets){
         double numerator = 0.0;
         double denominatorSquared = 0.0;
 
         for(final int eventOfFocus : events){
-            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSetsLeft, competingRiskSetsRight);
+            final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSets);
 
             numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
             denominatorSquared += valueOfInterest.getVariance();
@@ -37,7 +35,7 @@ public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDiffer
         }
 
         return Math.abs(numerator / Math.sqrt(denominatorSquared));
-
     }
+
 
 }

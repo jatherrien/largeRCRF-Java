@@ -3,7 +3,9 @@ package ca.joeltherrien.randomforest.settings;
 import ca.joeltherrien.randomforest.Settings;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import ca.joeltherrien.randomforest.covariates.*;
+import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.FactorCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;

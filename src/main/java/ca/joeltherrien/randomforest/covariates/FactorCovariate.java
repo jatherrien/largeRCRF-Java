@@ -1,10 +1,11 @@
 package ca.joeltherrien.randomforest.covariates;
 
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.tree.Split;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class FactorCovariate implements Covariate<String>{
 
@@ -17,6 +18,8 @@ public final class FactorCovariate implements Covariate<String>{
     private final Map<String, FactorValue> factorLevels;
     private final FactorValue naValue;
     private final int numberOfPossiblePairings;
+
+    private boolean hasNAs;
 
 
     public FactorCovariate(final String name, final int index, List<String> levels){
@@ -42,17 +45,14 @@ public final class FactorCovariate implements Covariate<String>{
 
 
     @Override
-    public Set<FactorSplitRule> generateSplitRules(List<Value<String>> data, int number) {
-        final Set<FactorSplitRule> splitRules = new HashSet<>();
+    public <Y> Iterator<Split<Y, String>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
+        final Set<Split<Y, String>> splits = new HashSet<>();
 
         // This is to ensure we don't get stuck in an infinite loop for small factors
         number = Math.min(number, numberOfPossiblePairings);
-        final Random random = ThreadLocalRandom.current();
         final List<FactorValue> levels = new ArrayList<>(factorLevels.values());
 
-
-
-        while(splitRules.size() < number){
+        while(splits.size() < number){
             Collections.shuffle(levels, random);
             final Set<FactorValue> leftSideValues = new HashSet<>();
             leftSideValues.add(levels.get(0));
@@ -63,16 +63,18 @@ public final class FactorCovariate implements Covariate<String>{
                 }
             }
 
-            splitRules.add(new FactorSplitRule(leftSideValues));
+            splits.add(new FactorSplitRule(leftSideValues).applyRule(data));
         }
 
-        return splitRules;
+        return splits.iterator();
 
     }
+
 
     @Override
     public FactorValue createValue(String value) {
         if(value == null || value.equalsIgnoreCase("na")){
+            this.hasNAs = true;
             return this.naValue;
         }
 
@@ -83,6 +85,12 @@ public final class FactorCovariate implements Covariate<String>{
         }
 
         return factorValue;
+    }
+
+
+    @Override
+    public boolean hasNAs() {
+        return hasNAs;
     }
 
     @Override

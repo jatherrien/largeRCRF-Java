@@ -5,10 +5,7 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.tree.Split;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public interface Covariate<V> extends Serializable {
@@ -17,7 +14,7 @@ public interface Covariate<V> extends Serializable {
 
     int getIndex();
 
-    Collection<? extends SplitRule<V>> generateSplitRules(final List<Value<V>> data, final int number);
+    <Y> Iterator<Split<Y, V>> generateSplitRuleUpdater(final List<Row<Y>> data, final int number, final Random random);
 
     Value<V> createValue(V value);
 
@@ -29,6 +26,8 @@ public interface Covariate<V> extends Serializable {
      */
     Value<V> createValue(String value);
 
+    boolean hasNAs();
+
     interface Value<V> extends Serializable{
 
         Covariate<V> getParent();
@@ -37,6 +36,17 @@ public interface Covariate<V> extends Serializable {
 
         boolean isNA();
 
+    }
+
+    interface SplitRuleUpdater<Y, V> extends Iterator<Split<Y, V>>{
+        Split<Y, V> currentSplit();
+        boolean currentSplitValid();
+        SplitUpdate<Y, V> nextUpdate();
+    }
+
+    interface SplitUpdate<Y, V> {
+        SplitRule<V> getSplitRule();
+        Collection<Row<Y>> rowsMovedToLeftHand();
     }
 
     interface SplitRule<V> extends Serializable{
@@ -51,7 +61,7 @@ public interface Covariate<V> extends Serializable {
          * @param <Y>
          * @return
          */
-        default <Y> Split<Y> applyRule(List<Row<Y>> rows) {
+        default <Y> Split<Y, V> applyRule(List<Row<Y>> rows) {
             final List<Row<Y>> leftHand = new LinkedList<>();
             final List<Row<Y>> rightHand = new LinkedList<>();
 
@@ -59,7 +69,7 @@ public interface Covariate<V> extends Serializable {
 
 
             for(final Row<Y> row : rows) {
-                final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
+                final Value<V> value = row.getCovariateValue(getParent());
 
                 if(value.isNA()){
                     missingValueRows.add(row);
@@ -77,11 +87,11 @@ public interface Covariate<V> extends Serializable {
             }
 
 
-            return new Split<>(leftHand, rightHand, missingValueRows);
+            return new Split<>(this, leftHand, rightHand, missingValueRows);
         }
 
         default boolean isLeftHand(CovariateRow row, final double probabilityNaLeftHand){
-            final Value<V> value = (Value<V>) row.getCovariateValue(getParent());
+            final Value<V> value = row.getCovariateValue(getParent());
 
             if(value.isNA()){
                 return ThreadLocalRandom.current().nextDouble() <= probabilityNaLeftHand;

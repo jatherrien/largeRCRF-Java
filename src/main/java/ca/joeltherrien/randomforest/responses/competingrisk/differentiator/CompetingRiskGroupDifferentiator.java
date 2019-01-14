@@ -1,60 +1,132 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
+import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.tree.SplitAndScore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 /**
  * See page 761 of Random survival forests for competing risks by Ishwaran et al. The class is abstract as Gray's test
  * modifies the abstract method.
  *
  */
-public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskResponse> implements GroupDifferentiator<Y>{
+public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskResponse> implements GroupDifferentiator<Y> {
+
+    abstract protected CompetingRiskSets<Y> createCompetingRiskSets(List<Y> leftHand, List<Y> rightHand);
+
+    abstract protected Double getScore(final CompetingRiskSets<Y> competingRiskSets);
 
     @Override
-    public abstract Double differentiate(List<Y> leftHand, List<Y> rightHand);
+    public SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator) {
 
+        if(splitIterator instanceof Covariate.SplitRuleUpdater){
+            return differentiateWithSplitUpdater((Covariate.SplitRuleUpdater) splitIterator);
+        }
+        else{
+            return differentiateWithBasicIterator(splitIterator);
+        }
+    }
+
+    private SplitAndScore<Y, ?> differentiateWithBasicIterator(Iterator<Split<Y, ?>> splitIterator){
+        Double bestScore = null;
+        Split<Y, ?> bestSplit = null;
+
+        while(splitIterator.hasNext()){
+            final Split<Y, ?> candidateSplit = splitIterator.next();
+
+            final List<Y> leftHand = candidateSplit.getLeftHand().stream().map(Row::getResponse).collect(Collectors.toList());
+            final List<Y> rightHand = candidateSplit.getRightHand().stream().map(Row::getResponse).collect(Collectors.toList());
+
+            if(leftHand.isEmpty() || rightHand.isEmpty()){
+                continue;
+            }
+
+            final CompetingRiskSets<Y> competingRiskSets = createCompetingRiskSets(leftHand, rightHand);
+
+            final Double score = getScore(competingRiskSets);
+
+            if(Double.isFinite(score) && (bestScore == null || score > bestScore)){
+                bestScore = score;
+                bestSplit = candidateSplit;
+            }
+        }
+
+        if(bestSplit == null){
+            return null;
+        }
+
+        return new SplitAndScore<>(bestSplit, bestScore);
+    }
+
+    private SplitAndScore<Y, ?> differentiateWithSplitUpdater(Covariate.SplitRuleUpdater<Y, ?> splitRuleUpdater) {
+
+        final List<Y> leftInitialSplit = splitRuleUpdater.currentSplit().getLeftHand()
+                .stream().map(Row::getResponse).collect(Collectors.toList());
+        final List<Y> rightInitialSplit = splitRuleUpdater.currentSplit().getRightHand()
+                .stream().map(Row::getResponse).collect(Collectors.toList());
+
+        final CompetingRiskSets<Y> competingRiskSets = createCompetingRiskSets(leftInitialSplit, rightInitialSplit);
+
+        Double bestScore = null;
+        Split<Y, ?> bestSplit = null;
+
+        while(splitRuleUpdater.hasNext()){
+            for(Row<Y> rowMoved : splitRuleUpdater.nextUpdate().rowsMovedToLeftHand()){
+                competingRiskSets.update(rowMoved.getResponse());
+            }
+
+            final Double score = getScore(competingRiskSets);
+
+            if(Double.isFinite(score) && (bestScore == null || score > bestScore)){
+                bestScore = score;
+                bestSplit = splitRuleUpdater.currentSplit();
+            }
+        }
+
+        if(bestSplit == null){
+            return null;
+        }
+
+        return new SplitAndScore<>(bestSplit, bestScore);
+
+    }
 
     /**
      * Calculates the log rank value (or the Gray's test value) for a *specific* event cause.
      *
      * @param eventOfFocus
-     * @param competingRiskSetsLeft A summary of the different sets used in the calculation for the left side
-     * @param competingRiskSetsRight A summary of the different sets used in the calculation for the right side
+     * @param competingRiskSets A summary of the different sets used in the calculation
      * @return
      */
-    LogRankValue specificLogRankValue(final int eventOfFocus, final CompetingRiskSets competingRiskSetsLeft, final CompetingRiskSets competingRiskSetsRight){
-
-        final double[] distinctEventTimes = Stream.concat(
-                competingRiskSetsLeft.getEventTimes().stream(),
-                competingRiskSetsRight.getEventTimes().stream())
-                .mapToDouble(Double::doubleValue)
-                .sorted()
-                .distinct()
-                .toArray();
+    LogRankValue specificLogRankValue(final int eventOfFocus, final CompetingRiskSets<Y> competingRiskSets){
 
         double summation = 0.0;
         double variance = 0.0;
 
-        for(final double time_k : distinctEventTimes){
+        final double[] distinctTimes = competingRiskSets.getDistinctTimes();
+
+        for(int k = 0; k<distinctTimes.length; k++){
+            final double time_k = distinctTimes[k];
             final double weight = weight(time_k); // W_j(t_k)
-            final double numberEventsAtTimeDaughterLeft = competingRiskSetsLeft.getNumberOfEvents(time_k, eventOfFocus); // // d_{j,l}(t_k)
-            final double numberEventsAtTimeDaughterRight = competingRiskSetsRight.getNumberOfEvents(time_k, eventOfFocus); // d_{j,r}(t_k)
-            final double numberOfEventsAtTime = numberEventsAtTimeDaughterLeft + numberEventsAtTimeDaughterRight; // d_j(t_k)
+            final double numberEventsAtTimeDaughterLeft = competingRiskSets.getNumberOfEventsLeft(k, eventOfFocus); // // d_{j,l}(t_k)
+            final double numberEventsAtTimeDaughterTotal = competingRiskSets.getNumberOfEventsTotal(k, eventOfFocus); // d_j(t_k)
 
-            final double individualsAtRiskDaughterLeft = competingRiskSetsLeft.getRiskSet(eventOfFocus).evaluate(time_k); // Y_l(t_k)
-            final double individualsAtRiskDaughterRight = competingRiskSetsRight.getRiskSet(eventOfFocus).evaluate(time_k); // Y_r(t_k)
-            final double individualsAtRisk = individualsAtRiskDaughterLeft + individualsAtRiskDaughterRight; // Y(t_k)
+            final double individualsAtRiskDaughterLeft = competingRiskSets.getRiskSetLeft(k, eventOfFocus); // Y_l(t_k)
+            final double individualsAtRiskDaughterTotal = competingRiskSets.getRiskSetTotal(k, eventOfFocus); // Y(t_k)
 
-            final double deltaSummation = weight*(numberEventsAtTimeDaughterLeft - numberOfEventsAtTime*individualsAtRiskDaughterLeft/individualsAtRisk);
-            final double deltaVariance = weight*weight*numberOfEventsAtTime*individualsAtRiskDaughterLeft/individualsAtRisk
-                    * (1.0 - individualsAtRiskDaughterLeft / individualsAtRisk)
-                    * ((individualsAtRisk - numberOfEventsAtTime) / (individualsAtRisk - 1.0));
+            final double deltaSummation = weight*(numberEventsAtTimeDaughterLeft - numberEventsAtTimeDaughterTotal*individualsAtRiskDaughterLeft/individualsAtRiskDaughterTotal);
+            final double deltaVariance = weight*weight*numberEventsAtTimeDaughterTotal*individualsAtRiskDaughterLeft/individualsAtRiskDaughterTotal
+                    * (1.0 - individualsAtRiskDaughterLeft / individualsAtRiskDaughterTotal)
+                    * ((individualsAtRiskDaughterTotal - numberEventsAtTimeDaughterTotal) / (individualsAtRiskDaughterTotal - 1.0));
 
             // Note - notation differs slightly with what is found in STAT 855 notes, but they are equivalent.
             // Note - if individualsAtRisk == 1 then variance will be NaN.
@@ -62,10 +134,6 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
                 summation += deltaSummation;
                 variance += deltaVariance;
             }
-            else{
-                // Do nothing; else statement left for breakpoints.
-            }
-
         }
 
         return new LogRankValue(summation, variance);

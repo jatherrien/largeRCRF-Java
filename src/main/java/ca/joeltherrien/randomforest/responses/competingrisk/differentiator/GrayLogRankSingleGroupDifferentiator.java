@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskGraySetsImpl;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -18,18 +18,14 @@ public class GrayLogRankSingleGroupDifferentiator extends CompetingRiskGroupDiff
     private final int[] events;
 
     @Override
-    public Double differentiate(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand) {
-        if(leftHand.size() == 0 || rightHand.size() == 0){
-            return null;
-        }
+    protected CompetingRiskSets<CompetingRiskResponseWithCensorTime> createCompetingRiskSets(List<CompetingRiskResponseWithCensorTime> leftHand, List<CompetingRiskResponseWithCensorTime> rightHand){
+        return CompetingRiskUtils.calculateGraySetsEfficiently(leftHand, rightHand, events);
+    }
 
-        final CompetingRiskGraySetsImpl competingRiskSetsLeft = CompetingRiskUtils.calculateGraySetsEfficiently(leftHand, events);
-        final CompetingRiskGraySetsImpl competingRiskSetsRight = CompetingRiskUtils.calculateGraySetsEfficiently(rightHand, events);
-
-        final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSetsLeft, competingRiskSetsRight);
-
+    @Override
+    protected Double getScore(final CompetingRiskSets<CompetingRiskResponseWithCensorTime> competingRiskSets){
+        final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSets);
         return Math.abs(valueOfInterest.getNumerator() / valueOfInterest.getVarianceSqrt());
-
     }
 
 }

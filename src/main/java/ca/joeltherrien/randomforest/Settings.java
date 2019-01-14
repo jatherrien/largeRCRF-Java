@@ -1,7 +1,7 @@
 package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.CovariateSettings;
+import ca.joeltherrien.randomforest.covariates.settings.CovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
@@ -10,7 +10,6 @@ import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayL
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankSingleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
-import ca.joeltherrien.randomforest.responses.regression.MeanGroupDifferentiator;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
@@ -68,9 +67,6 @@ public class Settings {
         GROUP_DIFFERENTIATOR_MAP.put(name.toLowerCase(), groupDifferentiatorConstructor);
     }
     static{
-        registerGroupDifferentiatorConstructor("MeanGroupDifferentiator",
-                (node) -> new MeanGroupDifferentiator()
-        );
         registerGroupDifferentiatorConstructor("WeightedVarianceGroupDifferentiator",
                 (node) -> new WeightedVarianceGroupDifferentiator()
         );

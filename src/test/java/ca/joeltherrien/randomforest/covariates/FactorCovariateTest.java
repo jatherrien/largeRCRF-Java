@@ -5,8 +5,9 @@ import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,7 +47,10 @@ public class FactorCovariateTest {
     void testAllSubsets(){
         final FactorCovariate petCovariate = createTestCovariate();
 
-        final Collection<FactorCovariate.FactorSplitRule> splitRules = petCovariate.generateSplitRules(null, 100);
+        final List<Covariate.SplitRule<String>> splitRules = new ArrayList<>();
+
+        petCovariate.generateSplitRuleUpdater(null, 100, new Random())
+                .forEachRemaining(split -> splitRules.add(split.getSplitRule()));
 
         assertEquals(splitRules.size(), 3);
 

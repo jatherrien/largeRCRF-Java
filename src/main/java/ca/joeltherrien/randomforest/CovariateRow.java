@@ -17,7 +17,7 @@ public class CovariateRow implements Serializable {
     @Getter
     private final int id;
 
-    public Covariate.Value<?> getCovariateValue(Covariate covariate){
+    public <V> Covariate.Value<V> getCovariateValue(Covariate<V> covariate){
         return valueArray[covariate.getIndex()];
     }
 

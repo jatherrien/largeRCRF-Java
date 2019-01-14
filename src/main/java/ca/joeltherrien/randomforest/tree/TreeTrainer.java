@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Builder
@@ -47,20 +46,21 @@ public class TreeTrainer<Y, O> {
         this.covariates = covariates;
     }
 
-    public Tree<O> growTree(List<Row<Y>> data){
+    public Tree<O> growTree(List<Row<Y>> data, Random random){
 
-        final Node<O> rootNode = growNode(data, 0);
+        final Node<O> rootNode = growNode(data, 0, random);
         return new Tree<>(rootNode, data.stream().mapToInt(Row::getId).toArray());
 
     }
 
-    private Node<O> growNode(List<Row<Y>> data, int depth){
+    private Node<O> growNode(List<Row<Y>> data, int depth, Random random){
         // See https://kogalur.github.io/randomForestSRC/theory.html#section3.1 (near bottom)
         if(data.size() >= 2*nodeSize && depth < maxNodeDepth && !nodeIsPure(data)){
-            final List<Covariate> covariatesToTry = selectCovariates(this.mtry);
-            final SplitRuleAndSplit bestSplitRuleAndSplit = findBestSplitRule(data, covariatesToTry);
+            final List<Covariate> covariatesToTry = selectCovariates(this.mtry, random);
+            final Split<Y,?> bestSplit = findBestSplitRule(data, covariatesToTry, random);
 
-            if(bestSplitRuleAndSplit.splitRule == null){
+
+            if(bestSplit == null){
 
                 return new TerminalNode<>(
                         responseCombiner.combine(
@@ -71,14 +71,34 @@ public class TreeTrainer<Y, O> {
 
             }
 
-            final Split<Y> split = bestSplitRuleAndSplit.split;
-            // Note that NAs have already been handled
+
+            // Now that we have the best split; we need to handle any NAs that were dropped off
+            final double probabilityLeftHand = (double) bestSplit.leftHand.size() /
+                    (double) (bestSplit.leftHand.size() + bestSplit.rightHand.size());
+
+            // Assign missing values to the split if necessary
+            if(bestSplit.getSplitRule().getParent().hasNAs()){
+                for(Row<Y> row : data) {
+                    if(row.getCovariateValue(bestSplit.getSplitRule().getParent()).isNA()) {
+                        final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
+
+                        if(randomDecision){
+                            bestSplit.getLeftHand().add(row);
+                        }
+                        else{
+                            bestSplit.getRightHand().add(row);
+                        }
+
+                    }
+                }
+            }
 
 
-            final Node<O> leftNode = growNode(split.leftHand, depth+1);
-            final Node<O> rightNode = growNode(split.rightHand, depth+1);
 
-            return new SplitNode<>(leftNode, rightNode, bestSplitRuleAndSplit.splitRule, bestSplitRuleAndSplit.probabilityLeftHand);
+            final Node<O> leftNode = growNode(bestSplit.leftHand, depth+1, random);
+            final Node<O> rightNode = growNode(bestSplit.rightHand, depth+1, random);
+
+            return new SplitNode<>(leftNode, rightNode, bestSplit.getSplitRule(), probabilityLeftHand);
 
         }
         else{
@@ -92,13 +112,13 @@ public class TreeTrainer<Y, O> {
 
     }
 
-    private List<Covariate> selectCovariates(int mtry){
+    private List<Covariate> selectCovariates(int mtry, Random random){
         if(mtry >= covariates.size()){
             return covariates;
         }
 
         final List<Covariate> splitCovariates = new ArrayList<>(covariates);
-        Collections.shuffle(splitCovariates, ThreadLocalRandom.current());
+        Collections.shuffle(splitCovariates, random);
 
         if (splitCovariates.size() > mtry) {
             splitCovariates.subList(mtry, splitCovariates.size()).clear();
@@ -107,63 +127,28 @@ public class TreeTrainer<Y, O> {
         return splitCovariates;
     }
 
-    private SplitRuleAndSplit findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry){
-        SplitRuleAndSplit bestSplitRuleAndSplit = new SplitRuleAndSplit();
-        double bestSplitScore = 0.0;
-        boolean first = true;
+    private Split<Y, ?> findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry, Random random){
 
-        for(final Covariate covariate : covariatesToTry){
+        SplitAndScore<Y, ?> bestSplitAndScore = null;
+        final GroupDifferentiator noGenericDifferentiator = groupDifferentiator; // cause Java generics suck
 
-            final int numberToTry = numberOfSplits==0 ? data.size() : numberOfSplits;
+        for(final Covariate covariate : covariatesToTry) {
+            final Iterator<Split> iterator = covariate.generateSplitRuleUpdater(data, this.numberOfSplits, random);
 
-            final Collection<Covariate.SplitRule> splitRulesToTry = covariate
-                    .generateSplitRules(
-                            data
-                                    .stream()
-                                    .map(row -> row.getCovariateValue(covariate))
-                                    .collect(Collectors.toList())
-                            , numberToTry);
+            final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericDifferentiator.differentiate(iterator);
 
-            for(final Covariate.SplitRule possibleRule : splitRulesToTry){
-                final Split<Y> possibleSplit = possibleRule.applyRule(data);
-
-                // We have to handle any NAs
-                if(possibleSplit.leftHand.size() == 0 && possibleSplit.rightHand.size() == 0 && possibleSplit.naHand.size() > 0){
-                    throw new IllegalArgumentException("Can't apply " + this + " when there are rows with missing data and no non-missing value rows");
-                }
-
-                final double probabilityLeftHand = (double) possibleSplit.leftHand.size() / (double) (possibleSplit.leftHand.size() + possibleSplit.rightHand.size());
-
-                final Random random = ThreadLocalRandom.current();
-                for(final Row<Y> missingValueRow : possibleSplit.naHand){
-                    final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
-                    if(randomDecision){
-                        possibleSplit.leftHand.add(missingValueRow);
-                    }
-                    else{
-                        possibleSplit.rightHand.add(missingValueRow);
-                    }
-                }
-
-                final Double score = groupDifferentiator.differentiate(
-                        possibleSplit.leftHand.stream().map(row -> row.getResponse()).collect(Collectors.toList()),
-                        possibleSplit.rightHand.stream().map(row -> row.getResponse()).collect(Collectors.toList())
-                );
-
-
-                if(score != null && !Double.isNaN(score) && (score > bestSplitScore || first)){
-                    bestSplitRuleAndSplit.splitRule = possibleRule;
-                    bestSplitRuleAndSplit.split = possibleSplit;
-                    bestSplitRuleAndSplit.probabilityLeftHand = probabilityLeftHand;
-
-                    bestSplitScore = score;
-                    first = false;
-                }
+            if(candidateSplitAndScore != null && (bestSplitAndScore == null ||
+                    candidateSplitAndScore.getScore() > bestSplitAndScore.getScore())) {
+                bestSplitAndScore = candidateSplitAndScore;
             }
 
         }
 
-        return bestSplitRuleAndSplit;
+        if(bestSplitAndScore == null){
+            return null;
+        }
+
+        return bestSplitAndScore.getSplit();
 
     }
 
@@ -184,12 +169,6 @@ public class TreeTrainer<Y, O> {
         }
 
         return true;
-    }
-
-    private class SplitRuleAndSplit{
-        private Covariate.SplitRule splitRule = null;
-        private Split<Y> split = null;
-        private double probabilityLeftHand;
     }
 
 }
