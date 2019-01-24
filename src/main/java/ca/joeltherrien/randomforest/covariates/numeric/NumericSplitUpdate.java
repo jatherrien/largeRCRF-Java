@@ -20,13 +20,13 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.AllArgsConstructor;
 
-import java.util.Collection;
+import java.util.List;
 
 @AllArgsConstructor
 public class NumericSplitUpdate<Y> implements Covariate.SplitUpdate<Y, Double> {
 
     private final NumericCovariate.NumericSplitRule numericSplitRule;
-    private final Collection<Row<Y>> rowsMoved;
+    private final List<Row<Y>> rowsMoved;
 
     @Override
     public NumericCovariate.NumericSplitRule getSplitRule() {
@@ -34,7 +34,7 @@ public class NumericSplitUpdate<Y> implements Covariate.SplitUpdate<Y, Double> {
     }
 
     @Override
-    public Collection<Row<Y>> rowsMovedToLeftHand() {
+    public List<Row<Y>> rowsMovedToLeftHand() {
         return rowsMoved;
     }
 }

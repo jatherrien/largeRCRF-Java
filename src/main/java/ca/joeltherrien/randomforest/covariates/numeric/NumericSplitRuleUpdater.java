@@ -41,7 +41,7 @@ public class NumericSplitRuleUpdater<Y> implements Covariate.SplitRuleUpdater<Y,
         final List<Row<Y>> rightHandList = orderedData;
 
         this.currentSplit = new Split<>(
-                covariate.new NumericSplitRule(Double.MIN_VALUE),
+                covariate.new NumericSplitRule(Double.NEGATIVE_INFINITY),
                 leftHandList,
                 rightHandList,
                 Collections.emptyList());
