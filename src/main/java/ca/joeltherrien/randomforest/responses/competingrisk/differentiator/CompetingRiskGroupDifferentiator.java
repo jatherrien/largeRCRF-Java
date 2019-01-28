@@ -70,7 +70,7 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
 
             final Double score = getScore(competingRiskSets);
 
-            if(Double.isFinite(score) && (bestScore == null || score > bestScore)){
+            if(score != null && !Double.isNaN(score) && Double.isFinite(score) && (bestScore == null || score > bestScore)){
                 bestScore = score;
                 bestSplit = candidateSplit;
             }
@@ -102,7 +102,7 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
 
             final Double score = getScore(competingRiskSets);
 
-            if(Double.isFinite(score) && (bestScore == null || score > bestScore)){
+            if(score != null && !Double.isNaN(score) && Double.isFinite(score) && (bestScore == null || score > bestScore)){
                 bestScore = score;
                 bestSplit = splitRuleUpdater.currentSplit();
             }
