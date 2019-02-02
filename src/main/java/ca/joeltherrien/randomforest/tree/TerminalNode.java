@@ -17,8 +17,12 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+
+import java.util.Collections;
+import java.util.List;
 
 @RequiredArgsConstructor
 @ToString
@@ -26,9 +30,22 @@ public class TerminalNode<Y> implements Node<Y> {
 
     private final Y responseValue;
 
+    @Getter
+    private final int size;
+
     @Override
     public Y evaluate(CovariateRow row){
         return responseValue;
+    }
+
+    @Override
+    public <C extends Node<Y>> List<C> getNodesOfType(Class<C> nodeType) {
+
+        if(nodeType.isInstance(this)){
+            return Collections.singletonList((C) this);
+        }
+
+        return Collections.emptyList();
     }
 
 

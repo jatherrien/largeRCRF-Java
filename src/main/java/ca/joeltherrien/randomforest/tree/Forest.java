@@ -17,11 +17,10 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Builder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Builder
@@ -65,6 +64,56 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
 
     public Collection<Tree<O>> getTrees(){
         return Collections.unmodifiableCollection(trees);
+    }
+
+    public Map<Covariate, Integer> findSplitsByCovariate(){
+        final Map<Covariate, Integer> countMap = new HashMap<>();
+
+        for(final Tree<O> tree : getTrees()){
+            final Node<O> rootNode = tree.getRootNode();
+            final List<SplitNode> splitNodeList = rootNode.getNodesOfType(SplitNode.class);
+
+            for(final SplitNode splitNode : splitNodeList){
+                final Covariate covariate = splitNode.getSplitRule().getParent();
+
+                final Integer currentCount = countMap.getOrDefault(covariate, 0);
+                countMap.put(covariate, currentCount+1);
+            }
+
+        }
+
+        return countMap;
+    }
+
+    public double averageTerminalNodeSize(){
+        long numberTerminalNodes = 0;
+        long totalSizeTerminalNodes = 0;
+
+        for(final Tree<O> tree : getTrees()){
+            final Node<O> rootNode = tree.getRootNode();
+            final List<TerminalNode> terminalNodeList = rootNode.getNodesOfType(TerminalNode.class);
+
+            for(final TerminalNode terminalNode : terminalNodeList){
+                numberTerminalNodes++;
+                totalSizeTerminalNodes += terminalNode.getSize();
+            }
+
+        }
+
+        return (double) totalSizeTerminalNodes / (double) numberTerminalNodes;
+    }
+
+    public int numberOfTerminalNodes(){
+        int countTerminalNodes = 0;
+
+        for(final Tree<O> tree : getTrees()){
+            final Node<O> rootNode = tree.getRootNode();
+            final List<TerminalNode> terminalNodeList = rootNode.getNodesOfType(TerminalNode.class);
+
+            countTerminalNodes += terminalNodeList.size();
+        }
+
+        return countTerminalNodes;
     }
 
 }

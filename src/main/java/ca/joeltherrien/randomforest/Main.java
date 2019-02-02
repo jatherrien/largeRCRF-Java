@@ -16,8 +16,8 @@
 
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.settings.FactorCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Random;
 
 public class Main {
 
@@ -98,7 +99,7 @@ public class Main {
 
             // Let's reduce this down to n
             final int n = Integer.parseInt(args[2]);
-            Utils.reduceListToSize(dataset, n);
+            Utils.reduceListToSize(dataset, n, new Random());
 
             final File folder = new File(settings.getSaveTreeLocation());
             final Forest<?, CompetingRiskFunctions> forest = DataLoader.loadForest(folder, responseCombiner);

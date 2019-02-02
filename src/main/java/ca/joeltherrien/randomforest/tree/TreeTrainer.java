@@ -77,11 +77,10 @@ public class TreeTrainer<Y, O> {
 
 
             if(bestSplit == null){
-
                 return new TerminalNode<>(
                         responseCombiner.combine(
                                 data.stream().map(row -> row.getResponse()).collect(Collectors.toList())
-                        )
+                        ), data.size()
                 );
 
 
@@ -121,7 +120,7 @@ public class TreeTrainer<Y, O> {
             return new TerminalNode<>(
                     responseCombiner.combine(
                             data.stream().map(row -> row.getResponse()).collect(Collectors.toList())
-                    )
+                    ), data.size()
             );
         }
 

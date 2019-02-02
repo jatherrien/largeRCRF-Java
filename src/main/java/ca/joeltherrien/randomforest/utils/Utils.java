@@ -17,7 +17,6 @@
 package ca.joeltherrien.randomforest.utils;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class Utils {
 
@@ -52,12 +51,11 @@ public final class Utils {
 
     }
 
-    public static <T> void reduceListToSize(List<T> list, int n){
+    public static <T> void reduceListToSize(List<T> list, int n, final Random random){
         if(list.size() <= n){
             return;
         }
 
-        final Random random = ThreadLocalRandom.current();
         if(n > list.size()/2){
             // faster to randomly remove items
             while(list.size() > n){

@@ -17,11 +17,14 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
+import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class Tree<Y> implements Node<Y> {
 
+    @Getter
     private final Node<Y> rootNode;
     private final int[] bootstrapRowIds;
 
@@ -35,6 +38,11 @@ public class Tree<Y> implements Node<Y> {
     @Override
     public Y evaluate(CovariateRow row) {
         return rootNode.evaluate(row);
+    }
+
+    @Override
+    public <C extends Node<Y>> List<C> getNodesOfType(Class<C> nodeType) {
+        return rootNode.getNodesOfType(nodeType);
     }
 
     public int[] getBootstrapRowIds(){

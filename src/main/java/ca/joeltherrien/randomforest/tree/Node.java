@@ -19,9 +19,12 @@ package ca.joeltherrien.randomforest.tree;
 import ca.joeltherrien.randomforest.CovariateRow;
 
 import java.io.Serializable;
+import java.util.List;
 
 public interface Node<Y> extends Serializable {
 
     Y evaluate(CovariateRow row);
+
+    <C extends Node<Y>> List<C> getNodesOfType(Class<C> nodeType);
 
 }

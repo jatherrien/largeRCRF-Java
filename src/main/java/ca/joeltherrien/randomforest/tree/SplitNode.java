@@ -19,10 +19,15 @@ package ca.joeltherrien.randomforest.tree;
 import ca.joeltherrien.randomforest.CovariateRow;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.ToString;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @ToString
+@Getter
 public class SplitNode<Y> implements Node<Y> {
 
     private final Node<Y> leftHand;
@@ -41,4 +46,18 @@ public class SplitNode<Y> implements Node<Y> {
         }
 
     }
+
+    @Override
+    public <C extends Node<Y>> List<C> getNodesOfType(Class<C> nodeType) {
+        final List<C> nodeList = new ArrayList<>();
+        if(nodeType.isInstance(this)){
+            nodeList.add((C) this);
+        }
+
+        nodeList.addAll(leftHand.getNodesOfType(nodeType));
+        nodeList.addAll(rightHand.getNodesOfType(nodeType));
+
+        return nodeList;
+    }
+
 }
