@@ -45,6 +45,7 @@ public class GrayLogRankMultipleGroupDifferentiator extends CompetingRiskGroupDi
         for(final int eventOfFocus : events){
             final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSets);
 
+            // we use varianceSqrt instead of variance because numerator is not the same as the individual score
             numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
             denominatorSquared += valueOfInterest.getVariance();
 

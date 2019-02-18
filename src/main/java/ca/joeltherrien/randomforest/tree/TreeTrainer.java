@@ -63,7 +63,6 @@ public class TreeTrainer<Y, O> {
     }
 
     public Tree<O> growTree(List<Row<Y>> data, Random random){
-
         final Node<O> rootNode = growNode(data, 0, random);
         return new Tree<>(rootNode, data.stream().mapToInt(Row::getId).toArray());
 

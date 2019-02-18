@@ -91,6 +91,28 @@ public class TestLogRankMultipleGroupDifferentiator {
 
     }
 
+    @Test
+    public void testSplitRuleV2() throws IOException {
+        final LogRankMultipleGroupDifferentiator groupDifferentiator = new LogRankMultipleGroupDifferentiator(new int[]{1,2});
+
+        final List<Row<CompetingRiskResponse>> data = loadData("src/test/resources/new_data_that_triggers_difference_composite.csv").getRows();
+
+        final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 196);
+        final List<Row<CompetingRiskResponse>> group2Bad = data.subList(196, data.size());
+
+        final double scoreBad = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
+
+        final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 199);
+        final List<Row<CompetingRiskResponse>> group2Good= data.subList(199, data.size());
+
+        final double scoreGood = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Good, group2Good)).getScore();
+
+        // expected results calculated manually using survival::survdiff in R; see issue #10 in Gitea
+        closeEnough(71.41135, scoreBad, 0.00001);
+        closeEnough(71.5354, scoreGood, 0.00001);
+
+    }
+
     private void closeEnough(double expected, double actual, double margin){
         assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);
     }

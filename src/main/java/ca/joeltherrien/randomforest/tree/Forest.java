@@ -67,7 +67,7 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
     }
 
     public Map<Covariate, Integer> findSplitsByCovariate(){
-        final Map<Covariate, Integer> countMap = new HashMap<>();
+        final Map<Covariate, Integer> countMap = new TreeMap<>();
 
         for(final Tree<O> tree : getTrees()){
             final Node<O> rootNode = tree.getRootNode();

@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public interface Covariate<V> extends Serializable {
+public interface Covariate<V> extends Serializable, Comparable<Covariate> {
 
     String getName();
 
@@ -43,6 +43,10 @@ public interface Covariate<V> extends Serializable {
     Value<V> createValue(String value);
 
     boolean hasNAs();
+
+    default int compareTo(Covariate other){
+        return getIndex() - other.getIndex();
+    }
 
     interface Value<V> extends Serializable{
 
