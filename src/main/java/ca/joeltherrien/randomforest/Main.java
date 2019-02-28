@@ -47,8 +47,16 @@ public class Main {
             System.out.println("Must provide two arguments - the path to the settings.yaml file and instructions to either train or analyze.");
             System.out.println("Note that analyzing only supports competing risk data, and that you must then specify a sample size for testing errors.");
             if(args.length == 0){
-                System.out.println("Generating template file.");
-                defaultTemplate().save(new File("template.yaml"));
+                final File templateFile = new File("template.yaml");
+                if(templateFile.exists()){
+                    System.out.println("Template file exists; not creating a new one");
+                }
+                else{
+                    System.out.println("Generating template file.");
+                    defaultTemplate().save(templateFile);
+                }
+
+
             }
             return;
         }
