@@ -20,6 +20,7 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,5 +36,12 @@ public final class Split<Y, V> {
 	public final List<Row<Y>> leftHand;
 	public final List<Row<Y>> rightHand;
 	public final List<Row<Y>> naHand;
+
+	public Split<Y, V> modifiableClone(){
+		return new Split<>(splitRule,
+				new ArrayList<>(leftHand),
+				new ArrayList<>(rightHand),
+				new ArrayList<>(naHand));
+	}
 
 }

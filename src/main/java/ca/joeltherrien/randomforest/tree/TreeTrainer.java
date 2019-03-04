@@ -72,7 +72,7 @@ public class TreeTrainer<Y, O> {
         // See https://kogalur.github.io/randomForestSRC/theory.html#section3.1 (near bottom)
         if(data.size() >= 2*nodeSize && depth < maxNodeDepth && !nodeIsPure(data)){
             final List<Covariate> covariatesToTry = selectCovariates(this.mtry, random);
-            final Split<Y,?> bestSplit = findBestSplitRule(data, covariatesToTry, random);
+            Split<Y,?> bestSplit = findBestSplitRule(data, covariatesToTry, random);
 
 
             if(bestSplit == null){
@@ -92,8 +92,12 @@ public class TreeTrainer<Y, O> {
 
             // Assign missing values to the split if necessary
             if(bestSplit.getSplitRule().getParent().hasNAs()){
+                bestSplit = bestSplit.modifiableClone(); // the lists in bestSplit are otherwise usually unmodifiable lists
+
                 for(Row<Y> row : data) {
-                    if(row.getCovariateValue(bestSplit.getSplitRule().getParent()).isNA()) {
+                    final Covariate<?> covariate = bestSplit.getSplitRule().getParent();
+
+                    if(row.getCovariateValue(covariate).isNA()) {
                         final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
 
                         if(randomDecision){
