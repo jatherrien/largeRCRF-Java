@@ -111,10 +111,22 @@ public class TreeTrainer<Y, O> {
                 }
             }
 
+            final Node<O> leftNode;
+            final Node<O> rightNode;
+
+            // let's train the smaller hand first; I've seen some behaviour where a split takes only a very narrow slice
+            // off of the main body, and this repeats over and over again. I'd prefer to train those small nodes first so that
+            // we can get terminal nodes and save some memory in the heap
+            if(bestSplit.leftHand.size() < bestSplit.rightHand.size()){
+                leftNode = growNode(bestSplit.leftHand, depth+1, random);
+                rightNode = growNode(bestSplit.rightHand, depth+1, random);
+            }
+            else{
+                rightNode = growNode(bestSplit.rightHand, depth+1, random);
+                leftNode = growNode(bestSplit.leftHand, depth+1, random);
+            }
 
 
-            final Node<O> leftNode = growNode(bestSplit.leftHand, depth+1, random);
-            final Node<O> rightNode = growNode(bestSplit.rightHand, depth+1, random);
 
             return new SplitNode<>(leftNode, rightNode, bestSplit.getSplitRule(), probabilityLeftHand);
 

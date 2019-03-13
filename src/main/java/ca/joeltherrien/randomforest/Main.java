@@ -71,10 +71,18 @@ public class Main {
             final ForestTrainer forestTrainer = new ForestTrainer(settings, dataset, covariates);
 
             if(settings.isSaveProgress()){
-                forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
+                if(settings.getNumberOfThreads() > 1){
+                    forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
+                } else{
+                    forestTrainer.trainSerialOnDisk();
+                }
             }
             else{
-                forestTrainer.trainParallelInMemory(settings.getNumberOfThreads());
+                if(settings.getNumberOfThreads() > 1){
+                    forestTrainer.trainParallelInMemory(settings.getNumberOfThreads());
+                } else{
+                    forestTrainer.trainSerial();
+                }
             }
         }
         else if(args[1].equalsIgnoreCase("analyze")){

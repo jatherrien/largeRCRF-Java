@@ -93,6 +93,35 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
+    public void trainSerialOnDisk(){
+        // First we need to see how many trees there currently are
+        final File folder = new File(saveTreeLocation);
+        if(!folder.isDirectory()){
+            throw new IllegalArgumentException("Tree directory must be a directory!");
+        }
+
+
+        final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
+
+        final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
+        // Using an AtomicInteger is overkill for serial code, but this lets use reuse TreeSavedWorker
+
+        for(int j=treeCount.get(); j<ntree; j++){
+            if(displayProgress) {
+                System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
+            }
+
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1) + ".tree", treeCount);
+            worker.run();
+
+        }
+
+        if(displayProgress){
+            System.out.println("\nFinished");
+        }
+
+    }
+
     public Forest<TO, FO> trainParallelInMemory(int threads){
 
         // create a list that is prespecified in size (I can call the .set method at any index < ntree without

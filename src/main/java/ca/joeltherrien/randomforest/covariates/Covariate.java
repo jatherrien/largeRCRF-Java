@@ -82,8 +82,8 @@ public interface Covariate<V> extends Serializable, Comparable<Covariate> {
          * @return
          */
         default <Y> Split<Y, V> applyRule(List<Row<Y>> rows) {
-            final List<Row<Y>> leftHand = new LinkedList<>();
-            final List<Row<Y>> rightHand = new LinkedList<>();
+            final List<Row<Y>> leftHand = new ArrayList<>(rows.size()*3/4);
+            final List<Row<Y>> rightHand = new ArrayList<>(rows.size()*3/4);
 
             final List<Row<Y>> missingValueRows = new ArrayList<>();
 
