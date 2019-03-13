@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -111,7 +112,7 @@ public class ForestTrainer<Y, TO, FO> {
                 System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
             }
 
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + formatNumber(j+1) + ".tree", treeCount);
             worker.run();
 
         }
@@ -183,7 +184,7 @@ public class ForestTrainer<Y, TO, FO> {
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
 
         for(int j=treeCount.get(); j<ntree; j++){
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + (j+1) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + formatNumber(j+1) + ".tree", treeCount);
             executorService.execute(worker);
         }
 
@@ -247,6 +248,28 @@ public class ForestTrainer<Y, TO, FO> {
             treeList.set(treeIndex, tree);
 
         }
+    }
+
+    /**
+     * When saving trees we typically save them as tree-1.tree, tree-2.tree. This is fine until we get tree-10.tree, which
+     * when sorted alphabetically goes before tree-2.tree. We should instead save tree-01.tree, ... tree-10.tree.
+     *
+     * We need to set the number of 0s though based on ntree.
+     *
+     * @return
+     */
+    private String formatNumber(int currentTreeNumber){
+        final int numDigits = (int) Math.log10(ntree) + 1;
+
+        String currentTreeNumberString = Integer.toString(currentTreeNumber);
+        final StringBuilder builder = new StringBuilder();
+
+        for(int i=0; i<numDigits-currentTreeNumberString.length(); i++){
+            builder.append('0');
+        }
+        builder.append(currentTreeNumberString);
+
+        return builder.toString();
     }
 
     private class TreeSavedWorker implements Runnable {
