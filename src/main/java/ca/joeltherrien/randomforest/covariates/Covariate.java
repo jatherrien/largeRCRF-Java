@@ -82,30 +82,63 @@ public interface Covariate<V> extends Serializable, Comparable<Covariate> {
          * @return
          */
         default <Y> Split<Y, V> applyRule(List<Row<Y>> rows) {
-            final List<Row<Y>> leftHand = new ArrayList<>(rows.size()*3/4);
-            final List<Row<Y>> rightHand = new ArrayList<>(rows.size()*3/4);
 
-            final List<Row<Y>> missingValueRows = new ArrayList<>();
+             /*
+                When working with really large List<Row<Y>> we need to be careful about memory.
+                If the lefthand and righthand lists are too small they grow, but for a moment copies exist
+                and memory issues arise.
+
+                If they're too large, we waste memory yet again
+             */
+
+             // value of 0 = rightHand, value of 1 = leftHand, value of 2 = missingValueHand
+            final byte[] whichHand = new byte[rows.size()];
+            int countLeftHand = 0;
+            int countRightHand = 0;
+            int countMissingHand = 0;
 
 
-            for(final Row<Y> row : rows) {
+
+            for(int i=0; i<whichHand.length; i++){
+                final Row<Y> row = rows.get(i);
+
                 final Value<V> value = row.getCovariateValue(getParent());
 
                 if(value.isNA()){
-                    missingValueRows.add(row);
-                    continue;
+                    countMissingHand++;
+                    whichHand[i] = 2;
                 }
 
-                final boolean isLeftHand = isLeftHand(value);
-                if(isLeftHand){
-                    leftHand.add(row);
+                if(isLeftHand(value)){
+                    countLeftHand++;
+                    whichHand[i] = 1;
                 }
                 else{
-                    rightHand.add(row);
+                    countRightHand++;
+                    whichHand[i] = 0;
                 }
 
             }
 
+
+            final List<Row<Y>> missingValueRows = new ArrayList<>(countMissingHand);
+            final List<Row<Y>> leftHand = new ArrayList<>(countLeftHand);
+            final List<Row<Y>> rightHand = new ArrayList<>(countRightHand);
+
+            for(int i=0; i<whichHand.length; i++){
+                final Row<Y> row = rows.get(i);
+
+                if(whichHand[i] == 0){
+                    rightHand.add(row);
+                }
+                else if(whichHand[i] == 1){
+                    leftHand.add(row);
+                }
+                else{
+                    missingValueRows.add(row);
+                }
+
+            }
 
             return new Split<>(this, leftHand, rightHand, missingValueRows);
         }

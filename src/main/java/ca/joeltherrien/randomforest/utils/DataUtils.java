@@ -29,8 +29,9 @@ import org.apache.commons.csv.CSVRecord;
 import java.io.*;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
-public class DataLoader {
+public class DataUtils {
 
     public static <Y> List<Row<Y>> loadData(final List<Covariate> covariates, final ResponseLoader<Y> responseLoader, String filename) throws IOException {
 
@@ -95,6 +96,12 @@ public class DataLoader {
                 .treeResponseCombiner(treeResponseCombiner)
                 .build();
 
+    }
+
+    public static void saveObject(Serializable object, String filename) throws IOException {
+        final ObjectOutputStream outputStream = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(filename)));
+        outputStream.writeObject(object);
+        outputStream.close();
     }
 
     @FunctionalInterface
