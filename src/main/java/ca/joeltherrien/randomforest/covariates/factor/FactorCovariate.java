@@ -14,16 +14,17 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest.covariates;
+package ca.joeltherrien.randomforest.covariates.factor;
 
 import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.tree.Split;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.*;
 
-public final class FactorCovariate implements Covariate<String>{
+public final class FactorCovariate implements Covariate<String> {
 
     @Getter
     private final String name;
@@ -44,6 +45,10 @@ public final class FactorCovariate implements Covariate<String>{
         this.factorLevels = new HashMap<>();
 
         for(final String level : levels){
+            if(level.equalsIgnoreCase("na")){
+                throw new IllegalArgumentException("Cannot use NA (case-insensitive) as a level in factor covariate " + name);
+            }
+
             final FactorValue newValue = new FactorValue(level);
 
             factorLevels.put(level, newValue);
@@ -70,16 +75,16 @@ public final class FactorCovariate implements Covariate<String>{
 
         while(splits.size() < number){
             Collections.shuffle(levels, random);
-            final Set<FactorValue> leftSideValues = new HashSet<>();
-            leftSideValues.add(levels.get(0));
+            final Set<String> leftSideValues = new HashSet<>();
+            leftSideValues.add(levels.get(0).getValue());
 
             for(int i=1; i<levels.size()/2; i++){
                 if(random.nextBoolean()){
-                    leftSideValues.add(levels.get(i));
+                    leftSideValues.add(levels.get(i).getValue());
                 }
             }
 
-            splits.add(new FactorSplitRule(leftSideValues).applyRule(data));
+            splits.add(new FactorSplitRule(this, leftSideValues).applyRule(data));
         }
 
         return splits.iterator();
@@ -110,8 +115,8 @@ public final class FactorCovariate implements Covariate<String>{
     }
 
     @Override
-    public String toString(){
-        return "FactorCovariate(name=" + name + ")";
+    public String toString() {
+        return "FactorCovariate(name=" + this.name + ", index=" + this.index + ", hasNAs=" + this.hasNAs + ")";
     }
 
     @EqualsAndHashCode
@@ -139,27 +144,4 @@ public final class FactorCovariate implements Covariate<String>{
         }
     }
 
-    @EqualsAndHashCode
-    public final class FactorSplitRule implements Covariate.SplitRule<String>{
-
-        private final Set<FactorValue> leftSideValues;
-
-        private FactorSplitRule(final Set<FactorValue> leftSideValues){
-            this.leftSideValues = leftSideValues;
-        }
-
-        @Override
-        public FactorCovariate getParent() {
-            return FactorCovariate.this;
-        }
-
-        @Override
-        public boolean isLeftHand(final Value<String> value) {
-            if(value.isNA()){
-                throw new IllegalArgumentException("Trying to determine split on missing value");
-            }
-
-            return leftSideValues.contains(value);
-        }
-    }
 }

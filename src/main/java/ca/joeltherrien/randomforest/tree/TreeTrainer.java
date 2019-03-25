@@ -91,13 +91,13 @@ public class TreeTrainer<Y, O> {
                     (double) (bestSplit.leftHand.size() + bestSplit.rightHand.size());
 
             // Assign missing values to the split if necessary
-            if(bestSplit.getSplitRule().getParent().hasNAs()){
+            if(covariates.get(bestSplit.getSplitRule().getParentCovariateIndex()).hasNAs()){
                 bestSplit = bestSplit.modifiableClone(); // the lists in bestSplit are otherwise usually unmodifiable lists
 
                 for(Row<Y> row : data) {
-                    final Covariate<?> covariate = bestSplit.getSplitRule().getParent();
+                    final int covariateIndex = bestSplit.getSplitRule().getParentCovariateIndex();
 
-                    if(row.getCovariateValue(covariate).isNA()) {
+                    if(row.getValueByIndex(covariateIndex).isNA()) {
                         final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
 
                         if(randomDecision){

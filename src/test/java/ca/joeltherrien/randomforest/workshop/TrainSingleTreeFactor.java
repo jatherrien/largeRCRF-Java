@@ -19,7 +19,7 @@ package ca.joeltherrien.randomforest.workshop;
 
 import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.FactorCovariate;
+import ca.joeltherrien.randomforest.covariates.factor.FactorCovariate;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;

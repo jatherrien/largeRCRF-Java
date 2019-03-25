@@ -14,17 +14,18 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest.covariates;
+package ca.joeltherrien.randomforest.covariates.bool;
 
 import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
-@RequiredArgsConstructor
 public final class BooleanCovariate implements Covariate<Boolean> {
 
     @Getter
@@ -35,7 +36,13 @@ public final class BooleanCovariate implements Covariate<Boolean> {
 
     private boolean hasNAs = false;
 
-    private final BooleanSplitRule splitRule = new BooleanSplitRule(); // there's only one possible rule for BooleanCovariates.
+    private final BooleanSplitRule splitRule; // there's only one possible rule for BooleanCovariates.
+
+    public BooleanCovariate(String name, int index){
+        this.name = name;
+        this.index = index;
+        splitRule = new BooleanSplitRule(this);
+    }
 
     @Override
     public <Y> Iterator<Split<Y, Boolean>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
@@ -72,7 +79,7 @@ public final class BooleanCovariate implements Covariate<Boolean> {
 
     @Override
     public String toString(){
-        return "BooleanCovariate(name=" + name + ")";
+        return "BooleanCovariate(name=" + this.name + ", index=" + this.index + ", hasNAs=" + this.hasNAs + ")";
     }
 
     public class BooleanValue implements Value<Boolean>{
@@ -100,25 +107,4 @@ public final class BooleanCovariate implements Covariate<Boolean> {
     }
 
 
-    public class BooleanSplitRule implements SplitRule<Boolean>{
-
-        @Override
-        public final String toString() {
-            return "BooleanSplitRule";
-        }
-
-        @Override
-        public BooleanCovariate getParent() {
-            return BooleanCovariate.this;
-        }
-
-        @Override
-        public boolean isLeftHand(final Value<Boolean> value) {
-            if(value.isNA()) {
-                throw new IllegalArgumentException("Trying to determine split on missing value");
-            }
-
-            return !value.getValue();
-        }
-    }
 }

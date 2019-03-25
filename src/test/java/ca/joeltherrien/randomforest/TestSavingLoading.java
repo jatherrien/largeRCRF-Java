@@ -113,12 +113,15 @@ public class TestSavingLoading {
         final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final File directory = new File(settings.getSaveTreeLocation());
+        if(directory.exists()){
+            directory.delete();
+        }
         assertFalse(directory.exists());
         directory.mkdir();
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
-        forestTrainer.trainParallelOnDisk(1);
+        forestTrainer.trainSerialOnDisk();
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());

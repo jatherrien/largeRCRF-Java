@@ -17,6 +17,7 @@
 package ca.joeltherrien.randomforest.covariates;
 
 
+import ca.joeltherrien.randomforest.covariates.factor.FactorCovariate;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -63,7 +64,7 @@ public class FactorCovariateTest {
     void testAllSubsets(){
         final FactorCovariate petCovariate = createTestCovariate();
 
-        final List<Covariate.SplitRule<String>> splitRules = new ArrayList<>();
+        final List<SplitRule<String>> splitRules = new ArrayList<>();
 
         petCovariate.generateSplitRuleUpdater(null, 100, new Random())
                 .forEachRemaining(split -> splitRules.add(split.getSplitRule()));

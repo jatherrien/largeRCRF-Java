@@ -37,6 +37,10 @@ public class CovariateRow implements Serializable {
         return valueArray[covariate.getIndex()];
     }
 
+    public <V> Covariate.Value<V> getValueByIndex(int index){
+        return valueArray[index];
+    }
+
     @Override
     public String toString(){
         return "CovariateRow " + this.id;

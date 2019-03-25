@@ -25,11 +25,11 @@ import java.util.List;
 @AllArgsConstructor
 public class NumericSplitUpdate<Y> implements Covariate.SplitUpdate<Y, Double> {
 
-    private final NumericCovariate.NumericSplitRule numericSplitRule;
+    private final NumericSplitRule numericSplitRule;
     private final List<Row<Y>> rowsMoved;
 
     @Override
-    public NumericCovariate.NumericSplitRule getSplitRule() {
+    public NumericSplitRule getSplitRule() {
         return numericSplitRule;
     }
 

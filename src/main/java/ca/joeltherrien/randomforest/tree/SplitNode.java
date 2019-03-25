@@ -17,7 +17,7 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.covariates.SplitRule;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
@@ -32,7 +32,7 @@ public class SplitNode<Y> implements Node<Y> {
 
     private final Node<Y> leftHand;
     private final Node<Y> rightHand;
-    private final Covariate.SplitRule splitRule;
+    private final SplitRule splitRule;
     private final double probabilityNaLeftHand; // used when assigning NA values
 
     @Override

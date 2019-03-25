@@ -26,7 +26,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -141,34 +144,4 @@ public final class NumericCovariate implements Covariate<Double> {
         }
     }
 
-    @EqualsAndHashCode
-    public class NumericSplitRule implements Covariate.SplitRule<Double>{
-
-        private final double threshold;
-
-        NumericSplitRule(final double threshold){
-            this.threshold = threshold;
-        }
-
-        @Override
-        public final String toString() {
-            return "NumericSplitRule on " + getParent().getName() + " at " + threshold;
-        }
-
-        @Override
-        public NumericCovariate getParent() {
-            return NumericCovariate.this;
-        }
-
-        @Override
-        public boolean isLeftHand(final Value<Double> x) {
-            if(x.isNA()) {
-                throw new IllegalArgumentException("Trying to determine split on missing value");
-            }
-
-            final double xNum = x.getValue();
-
-            return xNum <= threshold;
-        }
-    }
 }

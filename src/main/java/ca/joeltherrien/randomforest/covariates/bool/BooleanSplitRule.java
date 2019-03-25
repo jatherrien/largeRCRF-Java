@@ -14,34 +14,35 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest.tree;
+package ca.joeltherrien.randomforest.covariates.bool;
 
-import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.SplitRule;
-import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+public class BooleanSplitRule implements SplitRule<Boolean> {
 
-/**
- * Very simple class that contains three lists and a SplitRule.
- * 
- * @author joel
- *
- */
-@Data
-public final class Split<Y, V> {
+    private final int parentCovariateIndex;
 
-	public final SplitRule<V> splitRule;
-	public final List<Row<Y>> leftHand;
-	public final List<Row<Y>> rightHand;
-	public final List<Row<Y>> naHand;
+    public BooleanSplitRule(BooleanCovariate parent){
+        this.parentCovariateIndex = parent.getIndex();
+    }
 
-	public Split<Y, V> modifiableClone(){
-		return new Split<>(splitRule,
-				new ArrayList<>(leftHand),
-				new ArrayList<>(rightHand),
-				new ArrayList<>(naHand));
-	}
+    @Override
+    public final String toString() {
+        return "BooleanSplitRule";
+    }
 
+    @Override
+    public int getParentCovariateIndex() {
+        return parentCovariateIndex;
+    }
+
+    @Override
+    public boolean isLeftHand(final Covariate.Value<Boolean> value) {
+        if(value.isNA()) {
+            throw new IllegalArgumentException("Trying to determine split on missing value");
+        }
+
+        return !value.getValue();
+    }
 }

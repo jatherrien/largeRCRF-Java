@@ -16,7 +16,7 @@
 
 package ca.joeltherrien.randomforest.covariates.settings;
 
-import ca.joeltherrien.randomforest.covariates.BooleanCovariate;
+import ca.joeltherrien.randomforest.covariates.bool.BooleanCovariate;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

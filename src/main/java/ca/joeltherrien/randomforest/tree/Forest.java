@@ -67,18 +67,18 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
         return Collections.unmodifiableCollection(trees);
     }
 
-    public Map<Covariate, Integer> findSplitsByCovariate(){
-        final Map<Covariate, Integer> countMap = new TreeMap<>();
+    public Map<Integer, Integer> findSplitsByCovariate(){
+        final Map<Integer, Integer> countMap = new TreeMap<>();
 
         for(final Tree<O> tree : getTrees()){
             final Node<O> rootNode = tree.getRootNode();
             final List<SplitNode> splitNodeList = rootNode.getNodesOfType(SplitNode.class);
 
             for(final SplitNode splitNode : splitNodeList){
-                final Covariate covariate = splitNode.getSplitRule().getParent();
+                final Integer covariateIndex = splitNode.getSplitRule().getParentCovariateIndex();
 
-                final Integer currentCount = countMap.getOrDefault(covariate, 0);
-                countMap.put(covariate, currentCount+1);
+                final Integer currentCount = countMap.getOrDefault(covariateIndex, 0);
+                countMap.put(covariateIndex, currentCount+1);
             }
 
         }

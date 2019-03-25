@@ -41,7 +41,7 @@ public class NumericSplitRuleUpdater<Y> implements Covariate.SplitRuleUpdater<Y,
         final List<Row<Y>> rightHandList = orderedData;
 
         this.currentSplit = new Split<>(
-                covariate.new NumericSplitRule(Double.NEGATIVE_INFINITY),
+                new NumericSplitRule(covariate, Double.NEGATIVE_INFINITY),
                 leftHandList,
                 rightHandList,
                 Collections.emptyList());
@@ -67,7 +67,7 @@ public class NumericSplitRuleUpdater<Y> implements Covariate.SplitRuleUpdater<Y,
 
             final List<Row<Y>> rowsMoved = orderedData.subList(currentPosition, newPosition);
 
-            final NumericCovariate.NumericSplitRule splitRule = covariate.new NumericSplitRule(splitValue);
+            final NumericSplitRule splitRule = new NumericSplitRule(covariate, splitValue);
 
             // Update current split
             this.currentSplit = new Split<>(
