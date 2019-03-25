@@ -16,6 +16,7 @@
 
 package ca.joeltherrien.randomforest.tree;
 
+import java.io.Serializable;
 import java.util.Iterator;
 
 /**
@@ -26,7 +27,7 @@ import java.util.Iterator;
  *  If you want to implement a very trivial GroupDifferentiator that just takes two Lists as arguments, try extending
  *  SimpleGroupDifferentiator.
  */
-public interface GroupDifferentiator<Y> {
+public interface GroupDifferentiator<Y> extends Serializable {
 
     SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator);
 

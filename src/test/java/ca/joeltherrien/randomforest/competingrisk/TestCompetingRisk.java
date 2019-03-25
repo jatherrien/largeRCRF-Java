@@ -17,7 +17,7 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
@@ -126,7 +126,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = settings.getCovariates();
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
@@ -179,7 +179,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = settings.getCovariates();
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
@@ -229,7 +229,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = settings.getCovariates();
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
@@ -277,7 +277,7 @@ public class TestCompetingRisk {
 
         final List<Covariate> covariates = settings.getCovariates();
 
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         // Let's count the events and make sure the data was correctly read.
         int countCensored = 0;
@@ -320,7 +320,7 @@ public class TestCompetingRisk {
         settings.setNtree(300); // results are too variable at 100
 
         final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(),
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
                 settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
@@ -341,7 +341,7 @@ public class TestCompetingRisk {
         settings.setNtree(300); // results are too variable at 100
 
         final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(),
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
                 settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();

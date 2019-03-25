@@ -30,6 +30,7 @@ import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,17 +56,17 @@ import java.util.function.Function;
 @EqualsAndHashCode
 public class Settings {
 
-    private static Map<String, Function<ObjectNode, DataLoader.ResponseLoader>> RESPONSE_LOADER_MAP = new HashMap<>();
-    public static Function<ObjectNode, DataLoader.ResponseLoader> getResponseLoaderConstructor(final String name){
+    private static Map<String, Function<ObjectNode, DataUtils.ResponseLoader>> RESPONSE_LOADER_MAP = new HashMap<>();
+    public static Function<ObjectNode, DataUtils.ResponseLoader> getResponseLoaderConstructor(final String name){
         return RESPONSE_LOADER_MAP.get(name.toLowerCase());
     }
-    public static void registerResponseLoaderConstructor(final String name, final Function<ObjectNode, DataLoader.ResponseLoader> responseLoaderConstructor){
+    public static void registerResponseLoaderConstructor(final String name, final Function<ObjectNode, DataUtils.ResponseLoader> responseLoaderConstructor){
         RESPONSE_LOADER_MAP.put(name.toLowerCase(), responseLoaderConstructor);
     }
 
     static{
         registerResponseLoaderConstructor("double",
-                node -> new DataLoader.DoubleLoader(node)
+                node -> new DataUtils.DoubleLoader(node)
         );
         registerResponseLoaderConstructor("CompetingRiskResponse",
                 node -> new CompetingRiskResponse.CompetingResponseLoader(node)
@@ -238,7 +239,7 @@ public class Settings {
     }
 
     @JsonIgnore
-    public DataLoader.ResponseLoader getResponseLoader(){
+    public DataUtils.ResponseLoader getResponseLoader(){
         final String type = yVarSettings.get("type").asText();
 
         return getResponseLoaderConstructor(type).apply(yVarSettings);

@@ -16,7 +16,7 @@
 
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class CompetingRiskResponse implements Serializable {
 
 
     @RequiredArgsConstructor
-    public static class CompetingResponseLoader implements DataLoader.ResponseLoader<CompetingRiskResponse>{
+    public static class CompetingResponseLoader implements DataUtils.ResponseLoader<CompetingRiskResponse>{
 
         private final String deltaName;
         private final String uName;

@@ -14,8 +14,9 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest;
+package ca.joeltherrien.randomforest.utils;
 
+import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
@@ -98,10 +99,24 @@ public class DataUtils {
 
     }
 
+    public static <O, FO> Forest<O, FO> loadForest(String folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
+        final File directory = new File(folder);
+        return loadForest(directory, treeResponseCombiner);
+    }
+
     public static void saveObject(Serializable object, String filename) throws IOException {
         final ObjectOutputStream outputStream = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(filename)));
         outputStream.writeObject(object);
         outputStream.close();
+    }
+
+    public static Object loadObject(String filename) throws IOException, ClassNotFoundException {
+        final ObjectInputStream inputStream = new ObjectInputStream(new GZIPInputStream(new FileInputStream(filename)));
+        final Object object = inputStream.readObject();
+        inputStream.close();
+
+        return object;
+
     }
 
     @FunctionalInterface

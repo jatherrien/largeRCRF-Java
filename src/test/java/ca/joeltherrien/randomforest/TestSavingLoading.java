@@ -24,6 +24,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctio
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
@@ -109,7 +110,7 @@ public class TestSavingLoading {
     public void testSavingLoading() throws IOException, ClassNotFoundException {
         final Settings settings = getSettings();
         final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
         final File directory = new File(settings.getSaveTreeLocation());
         assertFalse(directory.exists());
@@ -125,7 +126,7 @@ public class TestSavingLoading {
 
 
 
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataLoader.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataUtils.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
 
         final CovariateRow predictionRow = getPredictionRow(covariates);
 

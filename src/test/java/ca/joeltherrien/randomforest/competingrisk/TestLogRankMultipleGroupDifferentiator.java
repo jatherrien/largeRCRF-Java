@@ -16,7 +16,7 @@
 
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -63,8 +62,8 @@ public class TestLogRankMultipleGroupDifferentiator {
 
         final List<Covariate> covariates = settings.getCovariates();
 
-        final DataLoader.ResponseLoader loader = settings.getResponseLoader();
-        final List<Row<CompetingRiskResponse>> rows = DataLoader.loadData(covariates, loader, settings.getTrainingDataLocation());
+        final DataUtils.ResponseLoader loader = settings.getResponseLoader();
+        final List<Row<CompetingRiskResponse>> rows = DataUtils.loadData(covariates, loader, settings.getTrainingDataLocation());
 
         return new Data<>(rows, covariates);
     }

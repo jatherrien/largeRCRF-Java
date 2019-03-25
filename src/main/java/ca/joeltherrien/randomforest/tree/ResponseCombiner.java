@@ -16,9 +16,10 @@
 
 package ca.joeltherrien.randomforest.tree;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface ResponseCombiner<I, O> {
+public interface ResponseCombiner<I, O> extends Serializable {
 
     O combine(List<I> responses);
 

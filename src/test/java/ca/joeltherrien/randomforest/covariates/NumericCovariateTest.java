@@ -35,6 +35,23 @@ public class NumericCovariateTest {
         return rowList;
     }
 
+    private List<Row<Double>> createTestDatasetMissingValues(NumericCovariate covariate){
+        final List<Row<Double>> rowList = new ArrayList<>();
+        final List<Covariate> covariateList = Collections.singletonList(covariate);
+
+        final String naString = "NA";
+
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 1, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 2, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 3, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 4, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 5, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 6, 1.0));
+        rowList.add(Row.createSimple(Utils.easyMap("x", naString), covariateList, 7, 1.0));
+
+        return rowList;
+    }
+
     @Test
     public void testNumericCovariateDeterministic(){
         final NumericCovariate covariate = new NumericCovariate("x", 0);
@@ -183,6 +200,21 @@ public class NumericCovariateTest {
         assertFalse(splitRuleUpdater.hasNext());
 
     }
+
+    /**
+     * If all the values are missing on a covariate then we shouldn't return an iterator.
+     *
+     */
+    @Test
+    public void testNumericSplitRuleUpdaterWithIndexesAllMissingData(){
+        final NumericCovariate covariate = new NumericCovariate("x", 0);
+        final List<Row<Double>> dataset = createTestDatasetMissingValues(covariate);
+        final NumericSplitRuleUpdater<Double> updater = covariate.generateSplitRuleUpdater(dataset, 5, new Random());
+
+        assertNull(updater);
+    }
+
+
 
     private <T> void assertContains(List<T> subList, List<T> greaterList){
         boolean allContained = true;

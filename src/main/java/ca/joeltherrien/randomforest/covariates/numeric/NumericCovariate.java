@@ -59,6 +59,13 @@ public final class NumericCovariate implements Covariate<Double> {
                 })
                 .collect(Collectors.toList());
 
+        // It's technically possible for data to be empty now due to NAs which will cause a crash
+        // when we use random.nextInt(maxIndex).
+        if(data.size() == 0){
+            return null;
+        }
+
+
         Iterator<Double> sortedDataIterator = data.stream()
                 .map(row -> row.getCovariateValue(this).getValue())
                 .iterator();

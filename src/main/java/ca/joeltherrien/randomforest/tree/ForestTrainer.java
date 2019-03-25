@@ -17,18 +17,17 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.utils.Utils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -38,7 +37,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 @Builder
 @AllArgsConstructor(access=AccessLevel.PRIVATE)
@@ -90,6 +88,7 @@ public class ForestTrainer<Y, TO, FO> {
         return Forest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
                 .trees(trees)
+                .covariateList(covariates)
                 .build();
 
     }
@@ -112,7 +111,7 @@ public class ForestTrainer<Y, TO, FO> {
                 System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
             }
 
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + formatNumber(j+1) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + Utils.formatNumber(j+1, ntree) + ".tree", treeCount);
             worker.run();
 
         }
@@ -184,7 +183,7 @@ public class ForestTrainer<Y, TO, FO> {
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
 
         for(int j=treeCount.get(); j<ntree; j++){
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + formatNumber(j+1) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + Utils.formatNumber(j+1, ntree) + ".tree", treeCount);
             executorService.execute(worker);
         }
 
@@ -215,16 +214,6 @@ public class ForestTrainer<Y, TO, FO> {
         return treeTrainer.growTree(bootstrappedData, random);
     }
 
-    public void saveTree(final Tree<TO> tree, String name) throws IOException {
-        final String filename = saveTreeLocation + "/" + name;
-
-        final ObjectOutputStream outputStream = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(filename)));
-
-        outputStream.writeObject(tree);
-
-        outputStream.close();
-
-    }
 
     private class TreeInMemoryWorker implements Runnable {
 
@@ -250,27 +239,6 @@ public class ForestTrainer<Y, TO, FO> {
         }
     }
 
-    /**
-     * When saving trees we typically save them as tree-1.tree, tree-2.tree. This is fine until we get tree-10.tree, which
-     * when sorted alphabetically goes before tree-2.tree. We should instead save tree-01.tree, ... tree-10.tree.
-     *
-     * We need to set the number of 0s though based on ntree.
-     *
-     * @return
-     */
-    private String formatNumber(int currentTreeNumber){
-        final int numDigits = (int) Math.log10(ntree) + 1;
-
-        String currentTreeNumberString = Integer.toString(currentTreeNumber);
-        final StringBuilder builder = new StringBuilder();
-
-        for(int i=0; i<numDigits-currentTreeNumberString.length(); i++){
-            builder.append('0');
-        }
-        builder.append(currentTreeNumberString);
-
-        return builder.toString();
-    }
 
     private class TreeSavedWorker implements Runnable {
 
@@ -291,7 +259,7 @@ public class ForestTrainer<Y, TO, FO> {
             final Tree<TO> tree = trainTree(bootstrapper, ThreadLocalRandom.current());
 
             try {
-                saveTree(tree, filename);
+                DataUtils.saveObject(tree, saveTreeLocation + "/" + filename);
             } catch (IOException e) {
                 System.err.println("IOException while saving " + filename);
                 e.printStackTrace();

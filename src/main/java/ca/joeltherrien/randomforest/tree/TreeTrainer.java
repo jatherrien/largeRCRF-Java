@@ -165,6 +165,11 @@ public class TreeTrainer<Y, O> {
         for(final Covariate covariate : covariatesToTry) {
             final Iterator<Split> iterator = covariate.generateSplitRuleUpdater(data, this.numberOfSplits, random);
 
+            // this happens if there were only NA values in data for this covariate. Rare, but I've seen it.
+            if(iterator == null){
+                continue;
+            }
+
             final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericDifferentiator.differentiate(iterator);
 
             if(candidateSplitAndScore != null && (bestSplitAndScore == null ||

@@ -28,6 +28,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRi
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -66,7 +67,7 @@ public class Main {
         final List<Covariate> covariates = settings.getCovariates();
 
         if(args[1].equalsIgnoreCase("train")){
-            final List<Row> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+            final List<Row> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
 
             final ForestTrainer forestTrainer = new ForestTrainer(settings, dataset, covariates);
 
@@ -111,14 +112,14 @@ public class Main {
                 return;
             }
 
-            final List<Row<CompetingRiskResponse>> dataset = DataLoader.loadData(covariates, settings.getResponseLoader(), settings.getValidationDataLocation());
+            final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getValidationDataLocation());
 
             // Let's reduce this down to n
             final int n = Integer.parseInt(args[2]);
             Utils.reduceListToSize(dataset, n, new Random());
 
             final File folder = new File(settings.getSaveTreeLocation());
-            final Forest<?, CompetingRiskFunctions> forest = DataLoader.loadForest(folder, responseCombiner);
+            final Forest<?, CompetingRiskFunctions> forest = DataUtils.loadForest(folder, responseCombiner);
 
             final boolean useBootstrapPredictions = settings.getTrainingDataLocation().equals(settings.getValidationDataLocation());
 

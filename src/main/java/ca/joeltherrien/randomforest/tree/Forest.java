@@ -28,6 +28,7 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
 
     private final Collection<Tree<O>> trees;
     private final ResponseCombiner<O, FO> treeResponseCombiner;
+    private final List<Covariate> covariateList;
 
     public FO evaluate(CovariateRow row){
 

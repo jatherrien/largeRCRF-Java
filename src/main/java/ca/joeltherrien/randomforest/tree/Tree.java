@@ -57,4 +57,5 @@ public class Tree<Y> implements Node<Y> {
     public String toString(){
         return rootNode.toString();
     }
+
 }

@@ -16,7 +16,7 @@
 
 package ca.joeltherrien.randomforest.csv;
 
-import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
@@ -64,9 +64,9 @@ public class TestLoadingCSV {
         final List<Covariate> covariates = settings.getCovariates();
 
 
-        final DataLoader.ResponseLoader loader = settings.getResponseLoader();
+        final DataUtils.ResponseLoader loader = settings.getResponseLoader();
 
-        return DataLoader.loadData(covariates, loader, settings.getTrainingDataLocation());
+        return DataUtils.loadData(covariates, loader, settings.getTrainingDataLocation());
     }
 
     @Test

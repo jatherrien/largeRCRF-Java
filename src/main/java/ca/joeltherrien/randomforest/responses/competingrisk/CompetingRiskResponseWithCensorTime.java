@@ -16,7 +16,7 @@
 
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
-import ca.joeltherrien.randomforest.DataLoader;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +38,7 @@ public final class CompetingRiskResponseWithCensorTime extends CompetingRiskResp
     }
 
     @RequiredArgsConstructor
-    public static class CompetingResponseWithCensorTimeLoader implements DataLoader.ResponseLoader<CompetingRiskResponseWithCensorTime>{
+    public static class CompetingResponseWithCensorTimeLoader implements DataUtils.ResponseLoader<CompetingRiskResponseWithCensorTime>{
 
         private final String deltaName;
         private final String uName;
