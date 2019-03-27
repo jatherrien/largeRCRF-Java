@@ -20,13 +20,16 @@ import ca.joeltherrien.randomforest.CovariateRow;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.Builder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Builder
 public class Forest<O, FO> { // O = output of trees, FO = forest output. In practice O == FO, even in competing risk & survival settings
 
-    private final Collection<Tree<O>> trees;
+    private final List<Tree<O>> trees;
     private final ResponseCombiner<O, FO> treeResponseCombiner;
     private final List<Covariate> covariateList;
 
@@ -63,8 +66,8 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
 
     }
 
-    public Collection<Tree<O>> getTrees(){
-        return Collections.unmodifiableCollection(trees);
+    public List<Tree<O>> getTrees(){
+        return Collections.unmodifiableList(trees);
     }
 
     public Map<Integer, Integer> findSplitsByCovariate(){
