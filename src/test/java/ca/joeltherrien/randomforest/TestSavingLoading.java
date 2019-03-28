@@ -114,7 +114,7 @@ public class TestSavingLoading {
 
         final File directory = new File(settings.getSaveTreeLocation());
         if(directory.exists()){
-            directory.delete();
+            cleanup(directory);
         }
         assertFalse(directory.exists());
         directory.mkdir();
