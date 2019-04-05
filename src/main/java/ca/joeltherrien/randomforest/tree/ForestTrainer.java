@@ -71,19 +71,18 @@ public class ForestTrainer<Y, TO, FO> {
         final Random random = new Random();
 
         for(int j=0; j<ntree; j++){
+            if(displayProgress){
+                System.out.print("\rFinished tree " + j + "/" + ntree + " trees");
+            }
 
             trees.add(trainTree(bootstrapper, random));
-
-            if(displayProgress){
-                if(j==0) {
-                    System.out.println();
-                }
-                System.out.print("\rFinished tree " + (j+1) + "/" + ntree);
-                if(j==ntree-1){
-                    System.out.println();
-                }
-            }
         }
+
+        if(displayProgress){
+            System.out.println("\rFinished tree " + ntree + "/" + ntree + " trees");
+            System.out.println("Finished");
+        }
+
 
         return Forest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
@@ -117,7 +116,8 @@ public class ForestTrainer<Y, TO, FO> {
         }
 
         if(displayProgress){
-            System.out.println("\nFinished");
+            System.out.println("\rFinished tree " + ntree + "/" + ntree + " trees");
+            System.out.println("Finished");
         }
 
     }
@@ -136,10 +136,12 @@ public class ForestTrainer<Y, TO, FO> {
         }
 
         executorService.shutdown();
+
+        int prevNumberTreesSet = -1;
         while(!executorService.isTerminated()){
 
             try{
-                Thread.sleep(100);
+                Thread.sleep(500);
             } catch (InterruptedException e) {
                 // do nothing; who cares?
             }
@@ -152,7 +154,13 @@ public class ForestTrainer<Y, TO, FO> {
                     }
                 }
 
-                System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
+                // Only output trees set on screen if there was a change
+                // In some environments where standard output is streamed to a file this method below causes frequent writes to output
+                if(numberTreesSet != prevNumberTreesSet){
+                    System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
+                    prevNumberTreesSet = numberTreesSet;
+                }
+
             }
 
         }
@@ -188,6 +196,8 @@ public class ForestTrainer<Y, TO, FO> {
         }
 
         executorService.shutdown();
+
+        int prevNumberTreesSet = -1;
         while(!executorService.isTerminated()){
 
             try{
@@ -197,8 +207,15 @@ public class ForestTrainer<Y, TO, FO> {
             }
 
             if(displayProgress) {
+                int numberTreesSet = treeCount.get();
 
-                System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
+                // Only output trees set on screen if there was a change
+                // In some environments where standard output is streamed to a file this method below causes frequent writes to output
+                if(numberTreesSet != prevNumberTreesSet){
+                    System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
+                    prevNumberTreesSet = numberTreesSet;
+                }
+
             }
 
         }
