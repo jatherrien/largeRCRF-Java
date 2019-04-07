@@ -68,6 +68,31 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Used primarily in the R package interface to avoid R loops; and for easier parallelization.
+     *
+     * @param rowList List of CovariateRows to evaluate OOB
+     * @return A List of predictions.
+     */
+    public List<FO> evaluateOOB(List<? extends CovariateRow> rowList){
+        return rowList.parallelStream()
+                .map(this::evaluateOOB)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Used primarily in the R package interface to avoid R loops without parallelization.
+     * I suspect that on some cluster systems using a parallelStream can cause serious crashes.
+     *
+     * @param rowList List of CovariateRows to evaluate OOB
+     * @return A List of predictions.
+     */
+    public List<FO> evaluateSerialOOB(List<? extends CovariateRow> rowList){
+        return rowList.stream()
+                .map(this::evaluateOOB)
+                .collect(Collectors.toList());
+    }
+
     public FO evaluateOOB(CovariateRow row){
 
         return treeResponseCombiner.combine(
