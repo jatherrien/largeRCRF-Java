@@ -17,11 +17,10 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
-import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.utils.Utils;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -110,7 +110,7 @@ public class ForestTrainer<Y, TO, FO> {
                 System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
             }
 
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + Utils.formatNumber(j+1, ntree) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + UUID.randomUUID() + ".tree", treeCount);
             worker.run();
 
         }
@@ -191,7 +191,7 @@ public class ForestTrainer<Y, TO, FO> {
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
 
         for(int j=treeCount.get(); j<ntree; j++){
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + Utils.formatNumber(j+1, ntree) + ".tree", treeCount);
+            final Runnable worker = new TreeSavedWorker(data, "tree-" + UUID.randomUUID() + ".tree", treeCount);
             executorService.execute(worker);
         }
 

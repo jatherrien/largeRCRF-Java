@@ -208,26 +208,4 @@ public final class Utils {
         return map;
     }
 
-    /**
-     * When saving trees we typically save them as tree-1.tree, tree-2.tree. This is fine until we get tree-10.tree, which
-     * when sorted alphabetically goes before tree-2.tree. We should instead save tree-01.tree, ... tree-10.tree.
-     *
-     * We need to set the number of 0s though based on ntree.
-     *
-     * @return
-     */
-    public static String formatNumber(int currentTreeNumber, int maxNumberOfTrees){
-        final int numDigits = (int) Math.log10(maxNumberOfTrees) + 1;
-
-        String currentTreeNumberString = Integer.toString(currentTreeNumber);
-        final StringBuilder builder = new StringBuilder();
-
-        for(int i=0; i<numDigits-currentTreeNumberString.length(); i++){
-            builder.append('0');
-        }
-        builder.append(currentTreeNumberString);
-
-        return builder.toString();
-    }
-
 }
