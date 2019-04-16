@@ -79,6 +79,17 @@ public final class RUtils {
         final int p = covariates.size();
         final List<Row<Y>> rowList = new ArrayList<>(n);
 
+        // Let's verify the size first
+        for(int j=0; j<p; j++){
+            if(rawCovariateData.get(j).length != n){
+                final String covariateWithBadLength = covariates.get(j).getName();
+                throw new IllegalArgumentException(
+                        "Length of covariate " + covariateWithBadLength +
+                                "(" + rawCovariateData.get(j).length +
+                                ") does not match length of responses (" + n + ").");
+            }
+        }
+
         for(int i=0; i<n; i++){
 
             final Covariate.Value[] valueArray = new Covariate.Value[p];
