@@ -45,8 +45,10 @@ public class TestSavingLoading {
      */
     public Settings getSettings(){
         final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-        groupDifferentiatorSettings.set("type", new TextNode("LogRankSingleGroupDifferentiator"));
-        groupDifferentiatorSettings.set("eventOfFocus", new IntNode(1));
+        groupDifferentiatorSettings.set("type", new TextNode("LogRankDifferentiator"));
+        groupDifferentiatorSettings.set("eventsOfFocus",
+                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1)))
+        );
         groupDifferentiatorSettings.set("events",
                 new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );

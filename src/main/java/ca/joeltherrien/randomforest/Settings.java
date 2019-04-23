@@ -22,17 +22,15 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskRespons
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankMultipleGroupDifferentiator;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankSingleGroupDifferentiator;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankDifferentiator;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.DataUtils;
+import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,7 +42,10 @@ import lombok.EqualsAndHashCode;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -87,56 +88,25 @@ public class Settings {
         registerGroupDifferentiatorConstructor("WeightedVarianceGroupDifferentiator",
                 (node) -> new WeightedVarianceGroupDifferentiator()
         );
-        registerGroupDifferentiatorConstructor("LogRankSingleGroupDifferentiator",
+        registerGroupDifferentiatorConstructor("GrayLogRankDifferentiator",
                 (objectNode) -> {
-                    final int eventOfFocus = objectNode.get("eventOfFocus").asInt();
+                    final int[] eventsOfFocusArray = Utils.jsonToIntArray(objectNode.get("eventsOfFocus"));
+                    final int[] eventArray = Utils.jsonToIntArray(objectNode.get("events"));
 
-                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
-                    final List<JsonNode> elementList = new ArrayList<>();
-                    elements.forEachRemaining(node -> elementList.add(node));
-
-                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
-
-                    return new LogRankSingleGroupDifferentiator(eventOfFocus, eventArray);
+                    return new GrayLogRankDifferentiator(eventsOfFocusArray, eventArray);
                 }
         );
-        registerGroupDifferentiatorConstructor("GrayLogRankMultipleGroupDifferentiator",
+        registerGroupDifferentiatorConstructor("LogRankDifferentiator",
                 (objectNode) -> {
-                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
-                    final List<JsonNode> elementList = new ArrayList<>();
-                    elements.forEachRemaining(node -> elementList.add(node));
+                    final int[] eventsOfFocusArray = Utils.jsonToIntArray(objectNode.get("eventsOfFocus"));
+                    final int[] eventArray = Utils.jsonToIntArray(objectNode.get("events"));
 
-                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
-
-                    return new GrayLogRankMultipleGroupDifferentiator(eventArray);
-                }
-        );
-        registerGroupDifferentiatorConstructor("LogRankMultipleGroupDifferentiator",
-                (objectNode) -> {
-                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
-                    final List<JsonNode> elementList = new ArrayList<>();
-                    elements.forEachRemaining(node -> elementList.add(node));
-
-                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
-
-                    return new LogRankMultipleGroupDifferentiator(eventArray);
-                }
-        );
-        registerGroupDifferentiatorConstructor("GrayLogRankSingleGroupDifferentiator",
-                (objectNode) -> {
-                    final int eventOfFocus = objectNode.get("eventOfFocus").asInt();
-
-                    final Iterator<JsonNode> elements = objectNode.get("events").elements();
-                    final List<JsonNode> elementList = new ArrayList<>();
-                    elements.forEachRemaining(node -> elementList.add(node));
-
-                    final int[] eventArray = elementList.stream().mapToInt(node -> node.asInt()).toArray();
-
-
-                    return new GrayLogRankSingleGroupDifferentiator(eventOfFocus, eventArray);
+                    return new LogRankDifferentiator(eventsOfFocusArray, eventArray);
                 }
         );
     }
+
+
 
     private static Map<String, Function<ObjectNode, ResponseCombiner>> RESPONSE_COMBINER_MAP = new HashMap<>();
     public static Function<ObjectNode, ResponseCombiner> getResponseCombinerConstructor(final String name){
@@ -153,10 +123,7 @@ public class Settings {
         );
         registerResponseCombinerConstructor("CompetingRiskResponseCombiner",
                 (node) -> {
-                    final List<Integer> eventList = new ArrayList<>();
-                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
-                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
-
+                    final int[] events = Utils.jsonToIntArray(node.get("events"));
 
                     return new CompetingRiskResponseCombiner(events);
 
@@ -165,16 +132,11 @@ public class Settings {
 
         registerResponseCombinerConstructor("CompetingRiskFunctionCombiner",
                 (node) -> {
-                    final List<Integer> eventList = new ArrayList<>();
-                    node.get("events").elements().forEachRemaining(event -> eventList.add(event.asInt()));
-                    final int[] events = eventList.stream().mapToInt(i -> i).toArray();
+                    final int[] events = Utils.jsonToIntArray(node.get("events"));
 
                     double[] times = null;
-                    // note that times may be null
                     if(node.hasNonNull("times")){
-                        final List<Double> timeList = new ArrayList<>();
-                        node.get("times").elements().forEachRemaining(time -> timeList.add(time.asDouble()));
-                        times = timeList.stream().mapToDouble(db -> db).toArray();
+                        times = Utils.jsonToDoubleArray(node.get("times"));
                     }
 
                     return new CompetingRiskFunctionCombiner(events, times);

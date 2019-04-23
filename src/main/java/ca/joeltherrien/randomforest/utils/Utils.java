@@ -16,6 +16,8 @@
 
 package ca.joeltherrien.randomforest.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.*;
 
 public final class Utils {
@@ -206,6 +208,24 @@ public final class Utils {
         map.put(k4, v4);
 
         return map;
+    }
+
+    public static int[] jsonToIntArray(final JsonNode node){
+        final Iterator<JsonNode> elements = node.elements();
+        final List<JsonNode> elementList = new ArrayList<>();
+        elements.forEachRemaining(n -> elementList.add(n));
+
+        final int[] array = elementList.stream().mapToInt(n -> n.asInt()).toArray();
+        return array;
+    }
+
+    public static double[] jsonToDoubleArray(final JsonNode node){
+        final Iterator<JsonNode> elements = node.elements();
+        final List<JsonNode> elementList = new ArrayList<>();
+        elements.forEachRemaining(n -> elementList.add(n));
+
+        final double[] array = elementList.stream().mapToDouble(n -> n.asDouble()).toArray();
+        return array;
     }
 
 }

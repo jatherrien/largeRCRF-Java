@@ -19,18 +19,33 @@ package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
-import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * See page 761 of Random survival forests for competing risks by Ishwaran et al.
  *
  */
-@RequiredArgsConstructor
-public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponse> {
+public class LogRankDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponse> {
 
+    private final int[] eventsOfFocus;
     private final int[] events;
+
+    public LogRankDifferentiator(int[] eventsOfFocus, int[] events){
+        this.eventsOfFocus = eventsOfFocus;
+        this.events = events;
+
+        if(eventsOfFocus.length == 0){
+            throw new IllegalArgumentException("eventsOfFocus must have length greater than 0");
+        }
+
+        for(final int eventOfFocus : eventsOfFocus){
+            if(Arrays.binarySearch(events, eventOfFocus) == -1){ // i.e. eventOfFocus is not in events
+                throw new IllegalArgumentException("Array events must contain every eventOfFocus. Event " + eventOfFocus + " not found.");
+            }
+        }
+    }
 
     @Override
     protected CompetingRiskSets<CompetingRiskResponse> createCompetingRiskSets(List<CompetingRiskResponse> leftHand, List<CompetingRiskResponse> rightHand){
@@ -42,11 +57,12 @@ public class LogRankMultipleGroupDifferentiator extends CompetingRiskGroupDiffer
         double numerator = 0.0;
         double denominatorSquared = 0.0;
 
-        for(final int eventOfFocus : events){
+        for(final int eventOfFocus : eventsOfFocus){
             final LogRankValue valueOfInterest = specificLogRankValue(eventOfFocus, competingRiskSets);
 
-            // we use varianceSqrt instead of variance because numerator is not the same as the individual score
-            numerator += valueOfInterest.getNumerator()*valueOfInterest.getVarianceSqrt();
+            // Important note - we follow what randomForestSRC does in its code; not in its documentation.
+            // See https://github.com/kogalur/randomForestSRC/issues/27#issuecomment-486017647
+            numerator += valueOfInterest.getNumerator();
             denominatorSquared += valueOfInterest.getVariance();
 
         }

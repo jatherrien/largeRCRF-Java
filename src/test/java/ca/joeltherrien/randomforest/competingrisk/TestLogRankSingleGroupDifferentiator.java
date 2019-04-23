@@ -18,7 +18,7 @@ package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankSingleGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankDifferentiator;
 import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -82,7 +81,7 @@ public class TestLogRankSingleGroupDifferentiator {
         final List<Row<CompetingRiskResponse>> data1 = generateData1();
         final List<Row<CompetingRiskResponse>> data2 = generateData2();
 
-        final LogRankSingleGroupDifferentiator differentiator = new LogRankSingleGroupDifferentiator(1, new int[]{1});
+        final LogRankDifferentiator differentiator = new LogRankDifferentiator(new int[]{1}, new int[]{1});
 
         final double score = getScore(differentiator, data1, data2);
         final double margin = 0.000001;
@@ -95,10 +94,10 @@ public class TestLogRankSingleGroupDifferentiator {
 
     @Test
     public void testCorrectSplit() throws IOException {
-        final LogRankSingleGroupDifferentiator groupDifferentiator =
-                new LogRankSingleGroupDifferentiator(1, new int[]{1,2});
+        final LogRankDifferentiator groupDifferentiator =
+                new LogRankDifferentiator(new int[]{1}, new int[]{1,2});
 
-        final List<Row<CompetingRiskResponse>> data = TestLogRankMultipleGroupDifferentiator.
+        final List<Row<CompetingRiskResponse>> data = TestLogRankDifferentiator.
                 loadData("src/test/resources/test_single_split.csv").getRows();
 
         final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 221);

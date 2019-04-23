@@ -16,14 +16,14 @@
 
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankMultipleGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankDifferentiator;
 import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import ca.joeltherrien.randomforest.utils.Utils;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -39,7 +39,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestLogRankMultipleGroupDifferentiator {
+public class TestLogRankDifferentiator {
 
     private Iterator<Split<CompetingRiskResponse, ?>> turnIntoSplitIterator(List<Row<CompetingRiskResponse>> leftList,
                                                                                  List<Row<CompetingRiskResponse>> rightList){
@@ -70,7 +70,7 @@ public class TestLogRankMultipleGroupDifferentiator {
 
     @Test
     public void testSplitRule() throws IOException {
-        final LogRankMultipleGroupDifferentiator groupDifferentiator = new LogRankMultipleGroupDifferentiator(new int[]{1,2});
+        final LogRankDifferentiator groupDifferentiator = new LogRankDifferentiator(new int[]{1,2}, new int[]{1,2});
 
         final List<Row<CompetingRiskResponse>> data = loadData("src/test/resources/test_split_data.csv").getRows();
 
@@ -79,38 +79,11 @@ public class TestLogRankMultipleGroupDifferentiator {
 
         final double scoreBad = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
 
-        final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 199);
-        final List<Row<CompetingRiskResponse>> group2Good= data.subList(199, data.size());
-
-        final double scoreGood = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Good, group2Good)).getScore();
-
         // expected results calculated manually using survival::survdiff in R; see issue #10 in Gitea
-        closeEnough(71.41135, scoreBad, 0.00001);
-        closeEnough(71.5354, scoreGood, 0.00001);
+        closeEnough(9.413002, scoreBad, 0.00001);
 
     }
 
-    @Test
-    public void testSplitRuleV2() throws IOException {
-        final LogRankMultipleGroupDifferentiator groupDifferentiator = new LogRankMultipleGroupDifferentiator(new int[]{1,2});
-
-        final List<Row<CompetingRiskResponse>> data = loadData("src/test/resources/new_data_that_triggers_difference_composite.csv").getRows();
-
-        final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 196);
-        final List<Row<CompetingRiskResponse>> group2Bad = data.subList(196, data.size());
-
-        final double scoreBad = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
-
-        final List<Row<CompetingRiskResponse>> group1Good = data.subList(0, 199);
-        final List<Row<CompetingRiskResponse>> group2Good= data.subList(199, data.size());
-
-        final double scoreGood = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Good, group2Good)).getScore();
-
-        // expected results calculated manually using survival::survdiff in R; see issue #10 in Gitea
-        closeEnough(71.41135, scoreBad, 0.00001);
-        closeEnough(71.5354, scoreGood, 0.00001);
-
-    }
 
     private void closeEnough(double expected, double actual, double margin){
         assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);
