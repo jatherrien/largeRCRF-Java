@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -135,15 +136,15 @@ public class ForestTrainer<Y, TO, FO> {
             executorService.execute(worker);
         }
 
-        executorService.shutdown();
-
         int prevNumberTreesSet = -1;
-        while(!executorService.isTerminated()){
-
-            try{
-                Thread.sleep(500);
+        while(true){
+            try {
+                if (executorService.awaitTermination(5, TimeUnit.SECONDS)) break;
             } catch (InterruptedException e) {
-                // do nothing; who cares?
+                System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
+                System.err.println("Please send a bug report about it to joelt@sfu.ca");
+                e.printStackTrace();
+                // do nothing; this shouldn't be an issue
             }
 
             if(displayProgress) {
@@ -195,15 +196,15 @@ public class ForestTrainer<Y, TO, FO> {
             executorService.execute(worker);
         }
 
-        executorService.shutdown();
-
         int prevNumberTreesSet = -1;
-        while(!executorService.isTerminated()){
-
-            try{
-                Thread.sleep(100);
+        while(true){
+            try {
+                if (executorService.awaitTermination(5, TimeUnit.SECONDS)) break;
             } catch (InterruptedException e) {
-                // do nothing; who cares?
+                System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
+                System.err.println("Please send a bug report about it to joelt@sfu.ca");
+                e.printStackTrace();
+                // do nothing; this shouldn't be an issue
             }
 
             if(displayProgress) {
