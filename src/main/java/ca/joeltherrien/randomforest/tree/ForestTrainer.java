@@ -139,7 +139,7 @@ public class ForestTrainer<Y, TO, FO> {
         int prevNumberTreesSet = -1;
         while(true){
             try {
-                if (executorService.awaitTermination(5, TimeUnit.SECONDS)) break;
+                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) break;
             } catch (InterruptedException e) {
                 System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
                 System.err.println("Please send a bug report about it to joelt@sfu.ca");
@@ -147,21 +147,22 @@ public class ForestTrainer<Y, TO, FO> {
                 // do nothing; this shouldn't be an issue
             }
 
-            if(displayProgress) {
-                int numberTreesSet = 0;
-                for (final Tree<TO> tree : trees) {
-                    if (tree != null) {
-                        numberTreesSet++;
-                    }
+            int numberTreesSet = 0;
+            for (final Tree<TO> tree : trees) {
+                if (tree != null) {
+                    numberTreesSet++;
                 }
+            }
 
+            if(displayProgress && numberTreesSet != prevNumberTreesSet) {
                 // Only output trees set on screen if there was a change
                 // In some environments where standard output is streamed to a file this method below causes frequent writes to output
-                if(numberTreesSet != prevNumberTreesSet){
-                    System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
-                    prevNumberTreesSet = numberTreesSet;
-                }
+                System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
+                prevNumberTreesSet = numberTreesSet;
+            }
 
+            if(numberTreesSet == ntree){
+                executorService.shutdown();
             }
 
         }
@@ -199,24 +200,25 @@ public class ForestTrainer<Y, TO, FO> {
         int prevNumberTreesSet = -1;
         while(true){
             try {
-                if (executorService.awaitTermination(5, TimeUnit.SECONDS)) break;
+                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) break;
             } catch (InterruptedException e) {
                 System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
                 System.err.println("Please send a bug report about it to joelt@sfu.ca");
                 e.printStackTrace();
                 // do nothing; this shouldn't be an issue
             }
+            int numberTreesSet = treeCount.get();
 
-            if(displayProgress) {
-                int numberTreesSet = treeCount.get();
-
+            if(displayProgress && numberTreesSet != prevNumberTreesSet) {
                 // Only output trees set on screen if there was a change
                 // In some environments where standard output is streamed to a file this method below causes frequent writes to output
-                if(numberTreesSet != prevNumberTreesSet){
-                    System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
-                    prevNumberTreesSet = numberTreesSet;
-                }
+                System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
+                prevNumberTreesSet = numberTreesSet;
 
+            }
+
+            if(numberTreesSet == ntree){
+                executorService.shutdown();
             }
 
         }

@@ -109,7 +109,7 @@ public class TestSavingLoading {
     }
 
     @Test
-    public void testSavingLoading() throws IOException, ClassNotFoundException {
+    public void testSavingLoadingSerial() throws IOException, ClassNotFoundException {
         final Settings settings = getSettings();
         final List<Covariate> covariates = settings.getCovariates();
         final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
@@ -124,6 +124,47 @@ public class TestSavingLoading {
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
         forestTrainer.trainSerialOnDisk();
+
+        assertTrue(directory.exists());
+        assertTrue(directory.isDirectory());
+        assertEquals(NTREE, directory.listFiles().length);
+
+
+
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataUtils.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
+
+        final CovariateRow predictionRow = getPredictionRow(covariates);
+
+        final CompetingRiskFunctions functions = forest.evaluate(predictionRow);
+        assertNotNull(functions);
+        assertTrue(functions.getCumulativeIncidenceFunction(1).getX().length > 2);
+
+
+        assertEquals(NTREE, forest.getTrees().size());
+
+        cleanup(directory);
+
+        assertFalse(directory.exists());
+
+    }
+
+
+    @Test
+    public void testSavingLoadingParallel() throws IOException, ClassNotFoundException {
+        final Settings settings = getSettings();
+        final List<Covariate> covariates = settings.getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+
+        final File directory = new File(settings.getSaveTreeLocation());
+        if(directory.exists()){
+            cleanup(directory);
+        }
+        assertFalse(directory.exists());
+        directory.mkdir();
+
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+
+        forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());
