@@ -20,7 +20,7 @@ import ca.joeltherrien.randomforest.*;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 
@@ -72,7 +72,7 @@ public class TrainForest {
                 .nodeSize(5)
                 .mtry(4)
                 .maxNodeDepth(100000000)
-                .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
+                .splitFinder(new WeightedVarianceSplitFinder())
                 .responseCombiner(new MeanResponseCombiner())
                 .build();
 

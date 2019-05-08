@@ -18,7 +18,7 @@ package ca.joeltherrien.randomforest.responses.regression;
 
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.SplitFinder;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.tree.SplitAndScore;
 
@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class WeightedVarianceGroupDifferentiator implements GroupDifferentiator<Double> {
+public class WeightedVarianceSplitFinder implements SplitFinder<Double> {
 
     private Double getScore(Set leftHand, Set rightHand) {
 
@@ -44,17 +44,17 @@ public class WeightedVarianceGroupDifferentiator implements GroupDifferentiator<
     }
 
     @Override
-    public SplitAndScore<Double, ?> differentiate(Iterator<Split<Double, ?>> splitIterator) {
+    public SplitAndScore<Double, ?> findBestSplit(Iterator<Split<Double, ?>> splitIterator) {
 
         if(splitIterator instanceof Covariate.SplitRuleUpdater){
-            return differentiateWithSplitUpdater((Covariate.SplitRuleUpdater) splitIterator);
+            return findBestSplitWithSplitUpdater((Covariate.SplitRuleUpdater) splitIterator);
         }
         else{
-            return differentiateWithBasicIterator(splitIterator);
+            return findBestSplitWithBasicIterator(splitIterator);
         }
     }
 
-    private SplitAndScore<Double, ?> differentiateWithBasicIterator(Iterator<Split<Double, ?>> splitIterator){
+    private SplitAndScore<Double, ?> findBestSplitWithBasicIterator(Iterator<Split<Double, ?>> splitIterator){
         Double bestScore = null;
         Split<Double, ?> bestSplit = null;
 
@@ -86,7 +86,7 @@ public class WeightedVarianceGroupDifferentiator implements GroupDifferentiator<
         return new SplitAndScore<>(bestSplit, bestScore);
     }
 
-    private SplitAndScore<Double, ?> differentiateWithSplitUpdater(Covariate.SplitRuleUpdater<Double, ?> splitRuleUpdater) {
+    private SplitAndScore<Double, ?> findBestSplitWithSplitUpdater(Covariate.SplitRuleUpdater<Double, ?> splitRuleUpdater) {
 
         final List<Double> leftInitialSplit = splitRuleUpdater.currentSplit().getLeftHand()
                 .stream().map(Row::getResponse).collect(Collectors.toList());

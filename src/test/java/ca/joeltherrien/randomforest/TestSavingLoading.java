@@ -44,12 +44,12 @@ public class TestSavingLoading {
      * @return
      */
     public Settings getSettings(){
-        final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-        groupDifferentiatorSettings.set("type", new TextNode("LogRankDifferentiator"));
-        groupDifferentiatorSettings.set("eventsOfFocus",
+        final ObjectNode splitRuleSettings = new ObjectNode(JsonNodeFactory.instance);
+        splitRuleSettings.set("type", new TextNode("LogRankSplitFinder"));
+        splitRuleSettings.set("eventsOfFocus",
                 new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1)))
         );
-        groupDifferentiatorSettings.set("events",
+        splitRuleSettings.set("events",
                 new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
 
@@ -85,7 +85,7 @@ public class TestSavingLoading {
                 .validationDataLocation("src/test/resources/wihs.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
-                .groupDifferentiatorSettings(groupDifferentiatorSettings)
+                .splitFinderSettings(splitRuleSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)
                 // TODO fill in these settings

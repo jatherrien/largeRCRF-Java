@@ -35,8 +35,8 @@ public class TestPersistence {
 
     @Test
     public void testSaving() throws IOException {
-        final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-        groupDifferentiatorSettings.set("type", new TextNode("WeightedVarianceGroupDifferentiator"));
+        final ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);
+        splitFinderSettings.set("type", new TextNode("WeightedVarianceSplitFinder"));
 
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
@@ -59,7 +59,7 @@ public class TestPersistence {
                 .validationDataLocation("validation_data.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
-                .groupDifferentiatorSettings(groupDifferentiatorSettings)
+                .splitFinderSettings(splitFinderSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)
                 .mtry(2)

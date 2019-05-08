@@ -22,7 +22,7 @@ import ca.joeltherrien.randomforest.CovariateRow;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.Utils;
@@ -66,7 +66,7 @@ public class TrainSingleTree {
         final List<Covariate> covariateNames = Utils.easyList(x1Covariate, x2Covariate);
 
         final TreeTrainer<Double, Double> treeTrainer = TreeTrainer.<Double, Double>builder()
-                .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
+                .splitFinder(new WeightedVarianceSplitFinder())
                 .covariates(covariateNames)
                 .responseCombiner(new MeanResponseCombiner())
                 .maxNodeDepth(30)

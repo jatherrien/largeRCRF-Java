@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class TreeTrainer<Y, O> {
 
     private final ResponseCombiner<Y, O> responseCombiner;
-    private final GroupDifferentiator<Y> groupDifferentiator;
+    private final SplitFinder<Y> splitFinder;
 
     /**
      * The number of splits to perform on each covariate. A value of 0 means all possible splits are tried.
@@ -58,7 +58,7 @@ public class TreeTrainer<Y, O> {
         this.checkNodePurity = settings.isCheckNodePurity();
 
         this.responseCombiner = settings.getResponseCombiner();
-        this.groupDifferentiator = settings.getGroupDifferentiator();
+        this.splitFinder = settings.getSplitFinder();
         this.covariates = covariates;
     }
 
@@ -160,7 +160,7 @@ public class TreeTrainer<Y, O> {
     private Split<Y, ?> findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry, Random random){
 
         SplitAndScore<Y, ?> bestSplitAndScore = null;
-        final GroupDifferentiator noGenericDifferentiator = groupDifferentiator; // cause Java generics suck
+        final SplitFinder noGenericSplitFinder = splitFinder; // cause Java generics are sometimes too frustrating
 
         for(final Covariate covariate : covariatesToTry) {
             final Iterator<Split> iterator = covariate.generateSplitRuleUpdater(data, this.numberOfSplits, random);
@@ -170,7 +170,7 @@ public class TreeTrainer<Y, O> {
                 continue;
             }
 
-            final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericDifferentiator.differentiate(iterator);
+            final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericSplitFinder.findBestSplit(iterator);
 
             if(candidateSplitAndScore != null && (bestSplitAndScore == null ||
                     candidateSplitAndScore.getScore() > bestSplitAndScore.getScore())) {

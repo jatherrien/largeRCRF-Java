@@ -180,8 +180,8 @@ public class Main {
 
     private static Settings defaultTemplate(){
 
-        final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-        groupDifferentiatorSettings.set("type", new TextNode("WeightedVarianceGroupDifferentiator"));
+        final ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);
+        splitFinderSettings.set("type", new TextNode("WeightedVarianceSplitFinder"));
 
         final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
         responseCombinerSettings.set("type", new TextNode("MeanResponseCombiner"));
@@ -204,7 +204,7 @@ public class Main {
                 .validationDataLocation("validation_data.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
-                .groupDifferentiatorSettings(groupDifferentiatorSettings)
+                .splitFinderSettings(splitFinderSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)
                 .mtry(2)

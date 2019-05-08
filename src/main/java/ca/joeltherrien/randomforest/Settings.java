@@ -22,11 +22,11 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskRespons
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponseWithCensorTime;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.GrayLogRankDifferentiator;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.GrayLogRankSplitFinder;
+import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
+import ca.joeltherrien.randomforest.tree.SplitFinder;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.Utils;
@@ -77,31 +77,31 @@ public class Settings {
         );
     }
 
-    private static Map<String, Function<ObjectNode, GroupDifferentiator>> GROUP_DIFFERENTIATOR_MAP = new HashMap<>();
-    public static Function<ObjectNode, GroupDifferentiator> getGroupDifferentiatorConstructor(final String name){
-        return GROUP_DIFFERENTIATOR_MAP.get(name.toLowerCase());
+    private static Map<String, Function<ObjectNode, SplitFinder>> SPLIT_FINDER_MAP = new HashMap<>();
+    public static Function<ObjectNode, SplitFinder> getSplitFinderConstructor(final String name){
+        return SPLIT_FINDER_MAP.get(name.toLowerCase());
     }
-    public static void registerGroupDifferentiatorConstructor(final String name, final Function<ObjectNode, GroupDifferentiator> groupDifferentiatorConstructor){
-        GROUP_DIFFERENTIATOR_MAP.put(name.toLowerCase(), groupDifferentiatorConstructor);
+    public static void registerSplitFinderConstructor(final String name, final Function<ObjectNode, SplitFinder> splitFinderConstructor){
+        SPLIT_FINDER_MAP.put(name.toLowerCase(), splitFinderConstructor);
     }
     static{
-        registerGroupDifferentiatorConstructor("WeightedVarianceGroupDifferentiator",
-                (node) -> new WeightedVarianceGroupDifferentiator()
+        registerSplitFinderConstructor("WeightedVarianceSplitFinder",
+                (node) -> new WeightedVarianceSplitFinder()
         );
-        registerGroupDifferentiatorConstructor("GrayLogRankDifferentiator",
+        registerSplitFinderConstructor("GrayLogRankSplitFinder",
                 (objectNode) -> {
                     final int[] eventsOfFocusArray = Utils.jsonToIntArray(objectNode.get("eventsOfFocus"));
                     final int[] eventArray = Utils.jsonToIntArray(objectNode.get("events"));
 
-                    return new GrayLogRankDifferentiator(eventsOfFocusArray, eventArray);
+                    return new GrayLogRankSplitFinder(eventsOfFocusArray, eventArray);
                 }
         );
-        registerGroupDifferentiatorConstructor("LogRankDifferentiator",
+        registerSplitFinderConstructor("LogRankSplitFinder",
                 (objectNode) -> {
                     final int[] eventsOfFocusArray = Utils.jsonToIntArray(objectNode.get("eventsOfFocus"));
                     final int[] eventArray = Utils.jsonToIntArray(objectNode.get("events"));
 
-                    return new LogRankDifferentiator(eventsOfFocusArray, eventArray);
+                    return new LogRankSplitFinder(eventsOfFocusArray, eventArray);
                 }
         );
     }
@@ -153,7 +153,7 @@ public class Settings {
     private boolean checkNodePurity = false;
 
     private ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
-    private ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
+    private ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);
     private ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
 
     private List<CovariateSettings> covariateSettings = new ArrayList<>();
@@ -194,10 +194,10 @@ public class Settings {
     }
 
     @JsonIgnore
-    public GroupDifferentiator getGroupDifferentiator(){
-        final String type = groupDifferentiatorSettings.get("type").asText();
+    public SplitFinder getSplitFinder(){
+        final String type = splitFinderSettings.get("type").asText();
 
-        return getGroupDifferentiatorConstructor(type).apply(groupDifferentiatorSettings);
+        return getSplitFinderConstructor(type).apply(splitFinderSettings);
     }
 
     @JsonIgnore

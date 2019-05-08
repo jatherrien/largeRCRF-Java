@@ -21,14 +21,14 @@ import java.util.Iterator;
 
 /**
  * When choosing an optimal node to split on, we choose the split that maximizes the difference between the two groups.
- * The GroupDifferentiator has one method that cycles through an iterator of Splits (FYI; check if the iterator is an
+ * The SplitFinder has one method that cycles through an iterator of Splits (FYI; check if the iterator is an
  * instance of Covariate.SplitRuleUpdater; in which case you get access to the rows that change between splits)
  *
- *  If you want to implement a very trivial GroupDifferentiator that just takes two Lists as arguments, try extending
- *  SimpleGroupDifferentiator.
+ *  If you want to implement a very trivial SplitFinder that just takes two Lists as arguments, try extending
+ *  SimpleSplitFinder.
  */
-public interface GroupDifferentiator<Y> extends Serializable {
+public interface SplitFinder<Y> extends Serializable {
 
-    SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator);
+    SplitAndScore<Y, ?> findBestSplit(Iterator<Split<Y, ?>> splitIterator);
 
 }

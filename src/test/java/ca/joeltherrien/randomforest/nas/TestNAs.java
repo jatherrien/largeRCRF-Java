@@ -4,7 +4,7 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
-import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceGroupDifferentiator;
+import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ public class TestNAs {
                 .numberOfSplits(0)
                 .nodeSize(1)
                 .maxNodeDepth(1000)
-                .groupDifferentiator(new WeightedVarianceGroupDifferentiator())
+                .splitFinder(new WeightedVarianceSplitFinder())
                 .responseCombiner(new MeanResponseCombiner())
                 .build();
 

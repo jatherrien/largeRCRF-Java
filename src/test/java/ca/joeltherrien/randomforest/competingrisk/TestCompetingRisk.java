@@ -53,12 +53,12 @@ public class TestCompetingRisk {
      * @return
      */
     public Settings getSettings(){
-        final ObjectNode groupDifferentiatorSettings = new ObjectNode(JsonNodeFactory.instance);
-        groupDifferentiatorSettings.set("type", new TextNode("LogRankDifferentiator"));
-        groupDifferentiatorSettings.set("eventsOfFocus",
+        final ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);
+        splitFinderSettings.set("type", new TextNode("LogRankSplitFinder"));
+        splitFinderSettings.set("eventsOfFocus",
                 new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1)))
         );
-        groupDifferentiatorSettings.set("events",
+        splitFinderSettings.set("events",
                 new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
         );
 
@@ -93,7 +93,7 @@ public class TestCompetingRisk {
                 .trainingDataLocation("src/test/resources/wihs.csv")
                 .responseCombinerSettings(responseCombinerSettings)
                 .treeCombinerSettings(treeCombinerSettings)
-                .groupDifferentiatorSettings(groupDifferentiatorSettings)
+                .splitFinderSettings(splitFinderSettings)
                 .yVarSettings(yVarSettings)
                 .maxNodeDepth(100000)
                 // TODO fill in these settings
@@ -222,7 +222,7 @@ public class TestCompetingRisk {
     }
 
     @Test
-    public void testLogRankSingleGroupDifferentiatorTwoBooleans() throws IOException {
+    public void testLogRankSplitFinderTwoBooleans() throws IOException {
         final Settings settings = getSettings();
         settings.setCovariateSettings(Utils.easyList(
                 new BooleanCovariateSettings("idu"),
@@ -337,7 +337,7 @@ public class TestCompetingRisk {
     }
 
     @Test
-    public void testLogRankSingleGroupDifferentiatorAllCovariates() throws IOException {
+    public void testLogRankSplitFinderAllCovariates() throws IOException {
 
         final Settings settings = getSettings();
         settings.setNtree(300); // results are too variable at 100

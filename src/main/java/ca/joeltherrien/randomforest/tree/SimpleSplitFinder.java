@@ -22,10 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public abstract class SimpleGroupDifferentiator<Y> implements GroupDifferentiator<Y> {
+public abstract class SimpleSplitFinder<Y> implements SplitFinder<Y> {
 
     @Override
-    public SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator) {
+    public SplitAndScore<Y, ?> findBestSplit(Iterator<Split<Y, ?>> splitIterator) {
         Double bestScore = null;
         Split<Y, ?> bestSplit = null;
 

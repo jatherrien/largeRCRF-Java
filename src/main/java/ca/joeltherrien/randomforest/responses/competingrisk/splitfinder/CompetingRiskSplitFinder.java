@@ -14,13 +14,13 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
+package ca.joeltherrien.randomforest.responses.competingrisk.splitfinder;
 
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
-import ca.joeltherrien.randomforest.tree.GroupDifferentiator;
+import ca.joeltherrien.randomforest.tree.SplitFinder;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.tree.SplitAndScore;
 import lombok.AllArgsConstructor;
@@ -35,24 +35,24 @@ import java.util.stream.Collectors;
  * modifies the abstract method.
  *
  */
-public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskResponse> implements GroupDifferentiator<Y> {
+public abstract class CompetingRiskSplitFinder<Y extends CompetingRiskResponse> implements SplitFinder<Y> {
 
     abstract protected CompetingRiskSets<Y> createCompetingRiskSets(List<Y> leftHand, List<Y> rightHand);
 
     abstract protected Double getScore(final CompetingRiskSets<Y> competingRiskSets);
 
     @Override
-    public SplitAndScore<Y, ?> differentiate(Iterator<Split<Y, ?>> splitIterator) {
+    public SplitAndScore<Y, ?> findBestSplit(Iterator<Split<Y, ?>> splitIterator) {
 
         if(splitIterator instanceof Covariate.SplitRuleUpdater){
-            return differentiateWithSplitUpdater((Covariate.SplitRuleUpdater) splitIterator);
+            return findBestSplitWithSplitUpdater((Covariate.SplitRuleUpdater) splitIterator);
         }
         else{
-            return differentiateWithBasicIterator(splitIterator);
+            return findBestSplitWithBasicIterator(splitIterator);
         }
     }
 
-    private SplitAndScore<Y, ?> differentiateWithBasicIterator(Iterator<Split<Y, ?>> splitIterator){
+    private SplitAndScore<Y, ?> findBestSplitWithBasicIterator(Iterator<Split<Y, ?>> splitIterator){
         Double bestScore = null;
         Split<Y, ?> bestSplit = null;
 
@@ -83,7 +83,7 @@ public abstract class CompetingRiskGroupDifferentiator<Y extends CompetingRiskRe
         return new SplitAndScore<>(bestSplit, bestScore);
     }
 
-    private SplitAndScore<Y, ?> differentiateWithSplitUpdater(Covariate.SplitRuleUpdater<Y, ?> splitRuleUpdater) {
+    private SplitAndScore<Y, ?> findBestSplitWithSplitUpdater(Covariate.SplitRuleUpdater<Y, ?> splitRuleUpdater) {
 
         final List<Y> leftInitialSplit = splitRuleUpdater.currentSplit().getLeftHand()
                 .stream().map(Row::getResponse).collect(Collectors.toList());

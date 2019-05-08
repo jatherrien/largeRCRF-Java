@@ -21,7 +21,7 @@ import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.differentiator.LogRankDifferentiator;
+import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
@@ -39,7 +39,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TestLogRankDifferentiator {
+public class TestLogRankSplitFinder {
 
     private Iterator<Split<CompetingRiskResponse, ?>> turnIntoSplitIterator(List<Row<CompetingRiskResponse>> leftList,
                                                                                  List<Row<CompetingRiskResponse>> rightList){
@@ -70,14 +70,14 @@ public class TestLogRankDifferentiator {
 
     @Test
     public void testSplitRule() throws IOException {
-        final LogRankDifferentiator groupDifferentiator = new LogRankDifferentiator(new int[]{1,2}, new int[]{1,2});
+        final LogRankSplitFinder splitFinder = new LogRankSplitFinder(new int[]{1,2}, new int[]{1,2});
 
         final List<Row<CompetingRiskResponse>> data = loadData("src/test/resources/test_split_data.csv").getRows();
 
         final List<Row<CompetingRiskResponse>> group1Bad = data.subList(0, 196);
         final List<Row<CompetingRiskResponse>> group2Bad = data.subList(196, data.size());
 
-        final double scoreBad = groupDifferentiator.differentiate(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
+        final double scoreBad = splitFinder.findBestSplit(turnIntoSplitIterator(group1Bad, group2Bad)).getScore();
 
         // expected results calculated manually using survival::survdiff in R; see issue #10 in Gitea
         closeEnough(9.413002, scoreBad, 0.00001);

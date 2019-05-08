@@ -14,7 +14,7 @@
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ca.joeltherrien.randomforest.responses.competingrisk.differentiator;
+package ca.joeltherrien.randomforest.responses.competingrisk.splitfinder;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskSets;
@@ -27,12 +27,12 @@ import java.util.List;
  * See page 761 of Random survival forests for competing risks by Ishwaran et al.
  *
  */
-public class LogRankDifferentiator extends CompetingRiskGroupDifferentiator<CompetingRiskResponse> {
+public class LogRankSplitFinder extends CompetingRiskSplitFinder<CompetingRiskResponse> {
 
     private final int[] eventsOfFocus;
     private final int[] events;
 
-    public LogRankDifferentiator(int[] eventsOfFocus, int[] events){
+    public LogRankSplitFinder(int[] eventsOfFocus, int[] events){
         this.eventsOfFocus = eventsOfFocus;
         this.events = events;
 
