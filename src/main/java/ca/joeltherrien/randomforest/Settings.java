@@ -151,6 +151,7 @@ public class Settings {
     private int nodeSize = 5;
     private int maxNodeDepth = 1000000; // basically no maxNodeDepth
     private boolean checkNodePurity = false;
+    private Long randomSeed;
 
     private ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
     private ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);

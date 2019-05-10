@@ -88,7 +88,7 @@ public class TrainForest {
 
         final long startTime = System.currentTimeMillis();
 
-        //final Forest<Double> forest = forestTrainer.trainSerial();
+        //final Forest<Double> forest = forestTrainer.trainSerialInMemory();
         //final Forest<Double> forest = forestTrainer.trainParallelInMemory(3);
         forestTrainer.trainParallelOnDisk(3);
 

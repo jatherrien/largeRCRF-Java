@@ -23,6 +23,7 @@ import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.tree.Split;
+import ca.joeltherrien.randomforest.utils.Data;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import ca.joeltherrien.randomforest.utils.Utils;
@@ -87,13 +88,6 @@ public class TestLogRankSplitFinder {
 
     private void closeEnough(double expected, double actual, double margin){
         assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);
-    }
-
-    @lombok.Data
-    @AllArgsConstructor
-    public static class Data<Y> {
-        private List<Row<Y>> rows;
-        private List<Covariate> covariateList;
     }
 
 }

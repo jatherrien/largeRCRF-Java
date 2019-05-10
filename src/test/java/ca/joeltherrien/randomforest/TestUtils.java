@@ -20,6 +20,7 @@ import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -167,6 +168,18 @@ public class TestUtils {
         @Override
         public double getAsDouble() {
             return previous++;
+        }
+    }
+
+    public static void removeFolder(File file){
+        if(file.isFile()){
+            file.delete();
+        }
+        else{
+            for(final File inner : file.listFiles()){
+                removeFolder(inner);
+            }
+            file.delete();
         }
     }
 

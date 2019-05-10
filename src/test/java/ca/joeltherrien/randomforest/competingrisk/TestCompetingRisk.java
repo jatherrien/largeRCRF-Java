@@ -235,7 +235,7 @@ public class TestCompetingRisk {
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory();
 
         // prediction row
         //    time status ageatfda   idu black cd4nadir
@@ -328,7 +328,7 @@ public class TestCompetingRisk {
 
         final long startTime = System.currentTimeMillis();
         for(int i=0; i<50; i++){
-            forestTrainer.trainSerial();
+            forestTrainer.trainSerialInMemory();
         }
         final long endTime = System.currentTimeMillis();
 
@@ -346,7 +346,7 @@ public class TestCompetingRisk {
         final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
                 settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerial();
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory();
 
         // prediction row
         //    time status ageatfda   idu black cd4nadir

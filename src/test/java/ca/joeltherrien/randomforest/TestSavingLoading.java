@@ -116,7 +116,7 @@ public class TestSavingLoading {
 
         final File directory = new File(settings.getSaveTreeLocation());
         if(directory.exists()){
-            cleanup(directory);
+            TestUtils.removeFolder(directory);
         }
         assertFalse(directory.exists());
         directory.mkdir();
@@ -142,7 +142,7 @@ public class TestSavingLoading {
 
         assertEquals(NTREE, forest.getTrees().size());
 
-        cleanup(directory);
+        TestUtils.removeFolder(directory);
 
         assertFalse(directory.exists());
 
@@ -157,7 +157,7 @@ public class TestSavingLoading {
 
         final File directory = new File(settings.getSaveTreeLocation());
         if(directory.exists()){
-            cleanup(directory);
+            TestUtils.removeFolder(directory);
         }
         assertFalse(directory.exists());
         directory.mkdir();
@@ -183,24 +183,12 @@ public class TestSavingLoading {
 
         assertEquals(NTREE, forest.getTrees().size());
 
-        cleanup(directory);
+        TestUtils.removeFolder(directory);
 
         assertFalse(directory.exists());
 
     }
 
-    private void cleanup(File file){
-        if(file.isFile()){
-            file.delete();
-        }
-        else{
-            for(final File inner : file.listFiles()){
-                cleanup(inner);
-            }
-            file.delete();
-        }
 
-
-    }
 
 }

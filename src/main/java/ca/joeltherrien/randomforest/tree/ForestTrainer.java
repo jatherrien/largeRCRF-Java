@@ -28,12 +28,11 @@ import lombok.Builder;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -51,8 +50,9 @@ public class ForestTrainer<Y, TO, FO> {
     // number of trees to try
     private final int ntree;
 
-    private final boolean displayProgress;
+    private final boolean displayProgress; // whether to print to standard output our progress; not always desirable
     private final String saveTreeLocation;
+    private final long randomSeed;
 
     public ForestTrainer(final Settings settings, final List<Row<Y>> data, final List<Covariate> covariates){
         this.ntree = settings.getNtree();
@@ -63,19 +63,25 @@ public class ForestTrainer<Y, TO, FO> {
         this.covariates = covariates;
         this.treeResponseCombiner = settings.getTreeCombiner();
         this.treeTrainer = new TreeTrainer<>(settings, covariates);
+
+        if(settings.getRandomSeed() != null){
+            this.randomSeed = settings.getRandomSeed();
+        }
+        else{
+            this.randomSeed = System.nanoTime();
+        }
     }
 
-    public Forest<TO, FO> trainSerial(){
+    public Forest<TO, FO> trainSerialInMemory(){
 
         final List<Tree<TO>> trees = new ArrayList<>(ntree);
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
-        final Random random = new Random();
 
         for(int j=0; j<ntree; j++){
             if(displayProgress){
                 System.out.print("\rFinished tree " + j + "/" + ntree + " trees");
             }
-
+            final Random random = new Random(this.randomSeed + j);
             trees.add(trainTree(bootstrapper, random));
         }
 
@@ -96,22 +102,32 @@ public class ForestTrainer<Y, TO, FO> {
     public void trainSerialOnDisk(){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
+        if(!folder.exists()){
+            folder.mkdir();
+        }
+
         if(!folder.isDirectory()){
             throw new IllegalArgumentException("Tree directory must be a directory!");
         }
 
-
         final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
-
+        final List<String> treeFileNames = Arrays.stream(treeFiles).map(file -> file.getName()).collect(Collectors.toList());
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
         // Using an AtomicInteger is overkill for serial code, but this lets use reuse TreeSavedWorker
 
-        for(int j=treeCount.get(); j<ntree; j++){
+        for(int j=0; j<ntree; j++){
             if(displayProgress) {
                 System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
             }
 
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + UUID.randomUUID() + ".tree", treeCount);
+            final String treeFileName = "tree-" + (j+1) + ".tree";
+
+            if(treeFileNames.contains(treeFileName)){
+                continue;
+            }
+
+            final Random random = new Random(this.randomSeed + j);
+            final Runnable worker = new TreeSavedWorker(data, treeFileName, treeCount, random);
             worker.run();
 
         }
@@ -132,7 +148,8 @@ public class ForestTrainer<Y, TO, FO> {
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
         for(int j=0; j<ntree; j++){
-            final Runnable worker = new TreeInMemoryWorker(data, j, trees);
+            final Random random = new Random(this.randomSeed + j);
+            final Runnable worker = new TreeInMemoryWorker(data, j, trees, random);
             executorService.execute(worker);
         }
 
@@ -182,18 +199,28 @@ public class ForestTrainer<Y, TO, FO> {
     public void trainParallelOnDisk(int threads){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
+        if(!folder.exists()){
+            folder.mkdir();
+        }
+
         if(!folder.isDirectory()){
             throw new IllegalArgumentException("Tree directory must be a directory!");
         }
 
-
         final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
-
-        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
+        final List<String> treeFileNames = Arrays.stream(treeFiles).map(file -> file.getName()).collect(Collectors.toList());
         final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
 
-        for(int j=treeCount.get(); j<ntree; j++){
-            final Runnable worker = new TreeSavedWorker(data, "tree-" + UUID.randomUUID() + ".tree", treeCount);
+        final ExecutorService executorService = Executors.newFixedThreadPool(threads);
+
+        for(int j=0; j<ntree; j++){
+            final String treeFileName = "tree-" + (j+1) + ".tree";
+            if(treeFileNames.contains(treeFileName)){
+                continue;
+            }
+
+            final Random random = new Random(this.randomSeed + j);
+            final Runnable worker = new TreeSavedWorker(data, treeFileName, treeCount, random);
             executorService.execute(worker);
         }
 
@@ -240,18 +267,18 @@ public class ForestTrainer<Y, TO, FO> {
         private final Bootstrapper<Row<Y>> bootstrapper;
         private final int treeIndex;
         private final List<Tree<TO>> treeList;
+        private final Random random;
 
-        TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Tree<TO>> treeList) {
+        TreeInMemoryWorker(final List<Row<Y>> data, final int treeIndex, final List<Tree<TO>> treeList, final Random random) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.treeIndex = treeIndex;
             this.treeList = treeList;
+            this.random = random;
         }
 
         @Override
         public void run() {
-
-            // ThreadLocalRandom should make sure we don't duplicate seeds
-            final Tree<TO> tree = trainTree(bootstrapper, ThreadLocalRandom.current());
+            final Tree<TO> tree = trainTree(bootstrapper, random);
 
             // should be okay as the list structure isn't changing
             treeList.set(treeIndex, tree);
@@ -265,18 +292,18 @@ public class ForestTrainer<Y, TO, FO> {
         private final Bootstrapper<Row<Y>> bootstrapper;
         private final String filename;
         private final AtomicInteger treeCount;
+        private final Random random;
 
-        public TreeSavedWorker(final List<Row<Y>> data, final String filename, final AtomicInteger treeCount) {
+        public TreeSavedWorker(final List<Row<Y>> data, final String filename, final AtomicInteger treeCount, final Random random) {
             this.bootstrapper = new Bootstrapper<>(data);
             this.filename = filename;
             this.treeCount = treeCount;
+            this.random = random;
         }
 
         @Override
         public void run() {
-
-            // ThreadLocalRandom should make sure we don't duplicate seeds
-            final Tree<TO> tree = trainTree(bootstrapper, ThreadLocalRandom.current());
+            final Tree<TO> tree = trainTree(bootstrapper, random);
 
             try {
                 DataUtils.saveObject(tree, saveTreeLocation + "/" + filename);

@@ -82,7 +82,7 @@ public class Main {
                 if(settings.getNumberOfThreads() > 1){
                     forestTrainer.trainParallelInMemory(settings.getNumberOfThreads());
                 } else{
-                    forestTrainer.trainSerial();
+                    forestTrainer.trainSerialInMemory();
                 }
             }
         }
