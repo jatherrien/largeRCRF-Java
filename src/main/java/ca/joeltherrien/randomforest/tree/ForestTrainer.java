@@ -153,15 +153,15 @@ public class ForestTrainer<Y, TO, FO> {
             executorService.execute(worker);
         }
 
+        executorService.shutdown();
+
         int prevNumberTreesSet = -1;
-        while(true){
+        boolean running = true;
+        while(running){
             try {
-                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) break;
+                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) running = false;
             } catch (InterruptedException e) {
-                System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
-                System.err.println("Please send a bug report about it to joelt@sfu.ca");
-                e.printStackTrace();
-                // do nothing; this shouldn't be an issue
+                // do nothing and just continue; this won't happen and if it did we'd just update the counter quicker
             }
 
             int numberTreesSet = 0;
@@ -176,10 +176,6 @@ public class ForestTrainer<Y, TO, FO> {
                 // In some environments where standard output is streamed to a file this method below causes frequent writes to output
                 System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
                 prevNumberTreesSet = numberTreesSet;
-            }
-
-            if(numberTreesSet == ntree){
-                executorService.shutdown();
             }
 
         }
@@ -224,15 +220,15 @@ public class ForestTrainer<Y, TO, FO> {
             executorService.execute(worker);
         }
 
+        executorService.shutdown();
+
         int prevNumberTreesSet = -1;
-        while(true){
+        boolean running = true;
+        while(running){
             try {
-                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) break;
+                if (executorService.awaitTermination(1, TimeUnit.SECONDS)) running = false;
             } catch (InterruptedException e) {
-                System.err.println("There was an InterruptedException while waiting for the forest to finish training; this is unusual but on its own shouldn't be a problem.");
-                System.err.println("Please send a bug report about it to joelt@sfu.ca");
-                e.printStackTrace();
-                // do nothing; this shouldn't be an issue
+                // do nothing and just continue; this won't happen and if it did we'd just update the counter quicker
             }
             int numberTreesSet = treeCount.get();
 
@@ -242,10 +238,6 @@ public class ForestTrainer<Y, TO, FO> {
                 System.out.print("\rFinished " + numberTreesSet + "/" + ntree + " trees");
                 prevNumberTreesSet = numberTreesSet;
 
-            }
-
-            if(numberTreesSet == ntree){
-                executorService.shutdown();
             }
 
         }
