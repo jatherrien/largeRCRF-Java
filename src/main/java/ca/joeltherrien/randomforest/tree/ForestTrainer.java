@@ -21,16 +21,11 @@ import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.utils.DataUtils;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +43,9 @@ public class ForestTrainer<Y, TO, FO> {
     private final List<Row<Y>> data;
 
     // number of trees to try
-    private final int ntree;
+    @Getter
+    @Setter
+    private int ntree;
 
     private final boolean displayProgress; // whether to print to standard output our progress; not always desirable
     private final String saveTreeLocation;
@@ -72,12 +69,21 @@ public class ForestTrainer<Y, TO, FO> {
         }
     }
 
-    public Forest<TO, FO> trainSerialInMemory(){
+    /**
+     * Train a forest in memory using a single core
+     *
+     * @param initialForest An Optional possibly containing a pre-trained forest,
+     *                      in which case its trees are combined with the new one.
+     * @return A trained forest.
+     */
+    public Forest<TO, FO> trainSerialInMemory(Optional<Forest<TO, FO>> initialForest){
 
         final List<Tree<TO>> trees = new ArrayList<>(ntree);
+        initialForest.ifPresent(forest -> trees.addAll(forest.getTrees()));
+
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
 
-        for(int j=0; j<ntree; j++){
+        for(int j=trees.size(); j<ntree; j++){
             if(displayProgress){
                 System.out.print("\rFinished tree " + j + "/" + ntree + " trees");
             }
@@ -99,7 +105,15 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
-    public void trainSerialOnDisk(){
+    /**
+     * Train a forest on the disk using a single core.
+     *
+     * @param initialForest An Optional possibly containing a pre-trained forest,
+     *                      in which case its trees are combined with the new one.
+     *                      There cannot be existing trees if the initial forest is
+     *                      specified.
+     */
+    public void trainSerialOnDisk(Optional<Forest<TO, FO>> initialForest){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
         if(!folder.exists()){
@@ -112,21 +126,42 @@ public class ForestTrainer<Y, TO, FO> {
 
         final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
         final List<String> treeFileNames = Arrays.stream(treeFiles).map(file -> file.getName()).collect(Collectors.toList());
-        final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
-        // Using an AtomicInteger is overkill for serial code, but this lets use reuse TreeSavedWorker
 
-        for(int j=0; j<ntree; j++){
+        if(initialForest.isPresent() & treeFiles.length > 0){
+            throw new IllegalArgumentException("An initial forest is present but trees are also present; not clear how to integrate initial forest into new forest");
+        }
+
+        final AtomicInteger treeCount; // tracks how many trees are finished
+        // Using an AtomicInteger is overkill for serial code, but this lets us reuse TreeSavedWorker
+        if(initialForest.isPresent()){
+            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
+
+            for(int j=0; j<initialTrees.size(); j++){
+                final String filename = "tree-" + (j+1) + ".tree";
+                final Tree<TO> tree = initialTrees.get(j);
+
+                saveTree(tree, filename);
+
+            }
+
+            treeCount = new AtomicInteger(initialTrees.size());
+        } else{
+            treeCount = new AtomicInteger(treeFiles.length);
+        }
+
+
+        while(treeCount.get() < ntree){
             if(displayProgress) {
                 System.out.print("\rFinished " + treeCount.get() + "/" + ntree + " trees");
             }
 
-            final String treeFileName = "tree-" + (j+1) + ".tree";
+            final String treeFileName = "tree-" + (treeCount.get() + 1) + ".tree";
 
             if(treeFileNames.contains(treeFileName)){
                 continue;
             }
 
-            final Random random = new Random(this.randomSeed + j);
+            final Random random = new Random(this.randomSeed + treeCount.get());
             final Runnable worker = new TreeSavedWorker(data, treeFileName, treeCount, random);
             worker.run();
 
@@ -139,15 +174,34 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
-    public Forest<TO, FO> trainParallelInMemory(int threads){
+    /**
+     * Train a forest in memory using the specified number of threads.
+     *
+     * @param initialForest An Optional possibly containing a pre-trained forest,
+     *                      in which case its trees are combined with the new one.
+     * @param threads The number of trees to train at once.
+     */
+    public Forest<TO, FO> trainParallelInMemory(Optional<Forest<TO, FO>> initialForest, int threads){
 
-        // create a list that is prespecified in size (I can call the .set method at any index < ntree without
+        // create a list that is pre-specified in size (I can call the .set method at any index < ntree without
         // the earlier indexes being filled.
         final List<Tree<TO>> trees = Stream.<Tree<TO>>generate(() -> null).limit(ntree).collect(Collectors.toList());
 
+        final int startingCount;
+        if(initialForest.isPresent()){
+            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
+            for(int j=0; j<initialTrees.size(); j++) {
+                trees.set(j, initialTrees.get(j));
+            }
+            startingCount = initialTrees.size();
+        }
+        else{
+            startingCount = 0;
+        }
+
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
-        for(int j=0; j<ntree; j++){
+        for(int j=startingCount; j<ntree; j++){
             final Random random = new Random(this.randomSeed + j);
             final Runnable worker = new TreeInMemoryWorker(data, j, trees, random);
             executorService.execute(worker);
@@ -191,8 +245,16 @@ public class ForestTrainer<Y, TO, FO> {
 
     }
 
-
-    public void trainParallelOnDisk(int threads){
+    /**
+     * Train a forest on the disk using a specified number of threads.
+     *
+     * @param initialForest An Optional possibly containing a pre-trained forest,
+     *                      in which case its trees are combined with the new one.
+     *                      There cannot be existing trees if the initial forest is
+     *                      specified.
+     * @param threads The number of trees to train at once.
+     */
+    public void trainParallelOnDisk(Optional<Forest<TO, FO>> initialForest, int threads){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
         if(!folder.exists()){
@@ -205,11 +267,31 @@ public class ForestTrainer<Y, TO, FO> {
 
         final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
         final List<String> treeFileNames = Arrays.stream(treeFiles).map(file -> file.getName()).collect(Collectors.toList());
-        final AtomicInteger treeCount = new AtomicInteger(treeFiles.length); // tracks how many trees are finished
+
+        if(initialForest.isPresent() & treeFiles.length > 0){
+            throw new IllegalArgumentException("An initial forest is present but trees are also present; not clear how to integrate initial forest into new forest");
+        }
+
+        final AtomicInteger treeCount; // tracks how many trees are finished
+        if(initialForest.isPresent()){
+            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
+
+            for(int j=0; j<initialTrees.size(); j++){
+                final String filename = "tree-" + (j+1) + ".tree";
+                final Tree<TO> tree = initialTrees.get(j);
+
+                saveTree(tree, filename);
+
+            }
+
+            treeCount = new AtomicInteger(initialTrees.size());
+        } else{
+            treeCount = new AtomicInteger(treeFiles.length);
+        }
 
         final ExecutorService executorService = Executors.newFixedThreadPool(threads);
 
-        for(int j=0; j<ntree; j++){
+        for(int j=treeCount.get(); j<ntree; j++){
             final String treeFileName = "tree-" + (j+1) + ".tree";
             if(treeFileNames.contains(treeFileName)){
                 continue;
@@ -251,6 +333,17 @@ public class ForestTrainer<Y, TO, FO> {
     private Tree<TO> trainTree(final Bootstrapper<Row<Y>> bootstrapper, Random random){
         final List<Row<Y>> bootstrappedData = bootstrapper.bootstrap(random);
         return treeTrainer.growTree(bootstrappedData, random);
+    }
+
+    private void saveTree(Tree<TO> tree, String filename){
+        try {
+            DataUtils.saveObject(tree, saveTreeLocation + "/" + filename);
+        } catch (IOException e) {
+            System.err.println("IOException while saving " + filename);
+            e.printStackTrace();
+            System.err.println("Quitting program");
+            System.exit(1);
+        }
     }
 
 
@@ -297,14 +390,7 @@ public class ForestTrainer<Y, TO, FO> {
         public void run() {
             final Tree<TO> tree = trainTree(bootstrapper, random);
 
-            try {
-                DataUtils.saveObject(tree, saveTreeLocation + "/" + filename);
-            } catch (IOException e) {
-                System.err.println("IOException while saving " + filename);
-                e.printStackTrace();
-                System.err.println("Quitting program");
-                System.exit(1);
-            }
+            saveTree(tree, filename);
 
             treeCount.incrementAndGet();
 

@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 public class TestSavingLoading {
 
@@ -123,7 +124,7 @@ public class TestSavingLoading {
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
-        forestTrainer.trainSerialOnDisk();
+        forestTrainer.trainSerialOnDisk(Optional.empty());
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());
@@ -164,7 +165,7 @@ public class TestSavingLoading {
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
-        forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
+        forestTrainer.trainParallelOnDisk(Optional.empty(), settings.getNumberOfThreads());
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());

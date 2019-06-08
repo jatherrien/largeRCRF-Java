@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 import static ca.joeltherrien.randomforest.TestUtils.assertCumulativeFunction;
@@ -235,7 +236,7 @@ public class TestCompetingRisk {
 
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
 
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory();
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory(Optional.empty());
 
         // prediction row
         //    time status ageatfda   idu black cd4nadir
@@ -328,7 +329,7 @@ public class TestCompetingRisk {
 
         final long startTime = System.currentTimeMillis();
         for(int i=0; i<50; i++){
-            forestTrainer.trainSerialInMemory();
+            forestTrainer.trainSerialInMemory(Optional.empty());
         }
         final long endTime = System.currentTimeMillis();
 
@@ -346,7 +347,7 @@ public class TestCompetingRisk {
         final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
                 settings.getTrainingDataLocation());
         final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory();
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory(Optional.empty());
 
         // prediction row
         //    time status ageatfda   idu black cd4nadir

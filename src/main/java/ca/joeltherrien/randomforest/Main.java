@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public class Main {
@@ -73,16 +74,16 @@ public class Main {
 
             if(settings.isSaveProgress()){
                 if(settings.getNumberOfThreads() > 1){
-                    forestTrainer.trainParallelOnDisk(settings.getNumberOfThreads());
+                    forestTrainer.trainParallelOnDisk(Optional.empty(), settings.getNumberOfThreads());
                 } else{
-                    forestTrainer.trainSerialOnDisk();
+                    forestTrainer.trainSerialOnDisk(Optional.empty());
                 }
             }
             else{
                 if(settings.getNumberOfThreads() > 1){
-                    forestTrainer.trainParallelInMemory(settings.getNumberOfThreads());
+                    forestTrainer.trainParallelInMemory(Optional.empty(), settings.getNumberOfThreads());
                 } else{
-                    forestTrainer.trainSerialInMemory();
+                    forestTrainer.trainSerialInMemory(Optional.empty());
                 }
             }
         }

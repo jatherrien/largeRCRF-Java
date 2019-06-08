@@ -90,7 +90,7 @@ public class TrainForest {
 
         //final Forest<Double> forest = forestTrainer.trainSerialInMemory();
         //final Forest<Double> forest = forestTrainer.trainParallelInMemory(3);
-        forestTrainer.trainParallelOnDisk(3);
+        forestTrainer.trainParallelOnDisk(Optional.empty(), 3);
 
         final long endTime  = System.currentTimeMillis();
 

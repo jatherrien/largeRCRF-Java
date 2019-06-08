@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public class TestDeterministicForests {
@@ -144,7 +145,7 @@ public class TestDeterministicForests {
                 .build();
 
         // By training the referenceForest through one method we also verify that all the methods produce the same forests for a given seed.
-        final Forest<Double, Double> referenceForest = forestTrainer.trainSerialInMemory();
+        final Forest<Double, Double> referenceForest = forestTrainer.trainSerialInMemory(Optional.empty());
 
         verifySerialInMemoryTraining(referenceForest, forestTrainer, testData);
         verifyParallelInMemoryTraining(referenceForest, forestTrainer, testData);
@@ -206,20 +207,20 @@ public class TestDeterministicForests {
                 .build();
 
         // By training the referenceForest through one method we also verify that all the methods produce the same forests for a given seed.
-        final Forest<Double, Double> referenceForest = forestTrainer10Trees.trainSerialInMemory();
+        final Forest<Double, Double> referenceForest = forestTrainer10Trees.trainSerialInMemory(Optional.empty());
 
         final File saveTreeFile = new File(saveTreeLocation);
 
 
-        forestTrainer5Trees.trainSerialOnDisk();
-        forestTrainer10Trees.trainSerialOnDisk();
+        forestTrainer5Trees.trainSerialOnDisk(Optional.empty());
+        forestTrainer10Trees.trainSerialOnDisk(Optional.empty());
         final Forest<Double, Double> forestSerial = DataUtils.loadForest(saveTreeFile, new MeanResponseCombiner());
         TestUtils.removeFolder(saveTreeFile);
         verifyTwoForestsEqual(testData, referenceForest, forestSerial);
 
 
-        forestTrainer5Trees.trainParallelOnDisk(4);
-        forestTrainer10Trees.trainParallelOnDisk(4);
+        forestTrainer5Trees.trainParallelOnDisk(Optional.empty(), 4);
+        forestTrainer10Trees.trainParallelOnDisk(Optional.empty(), 4);
         final Forest<Double, Double> forestParallel = DataUtils.loadForest(saveTreeFile, new MeanResponseCombiner());
         TestUtils.removeFolder(saveTreeFile);
         verifyTwoForestsEqual(testData, referenceForest, forestParallel);
@@ -232,7 +233,7 @@ public class TestDeterministicForests {
             List<Row<Double>> testData){
 
         for(int k=0; k<3; k++){
-            final Forest<Double, Double> replicantForest = forestTrainer.trainSerialInMemory();
+            final Forest<Double, Double> replicantForest = forestTrainer.trainSerialInMemory(Optional.empty());
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
         }
     }
@@ -243,7 +244,7 @@ public class TestDeterministicForests {
             List<Row<Double>> testData){
 
         for(int k=0; k<3; k++){
-            final Forest<Double, Double> replicantForest = forestTrainer.trainParallelInMemory(4);
+            final Forest<Double, Double> replicantForest = forestTrainer.trainParallelInMemory(Optional.empty(), 4);
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
         }
     }
@@ -257,7 +258,7 @@ public class TestDeterministicForests {
         final File saveTreeFile = new File(saveTreeLocation);
 
         for(int k=0; k<3; k++){
-            forestTrainer.trainSerialOnDisk();
+            forestTrainer.trainSerialOnDisk(Optional.empty());
             final Forest<Double, Double> replicantForest = DataUtils.loadForest(saveTreeFile, responseCombiner);
             TestUtils.removeFolder(saveTreeFile);
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
@@ -272,7 +273,7 @@ public class TestDeterministicForests {
         final File saveTreeFile = new File(saveTreeLocation);
 
         for(int k=0; k<3; k++){
-            forestTrainer.trainParallelOnDisk(4);
+            forestTrainer.trainParallelOnDisk(Optional.empty(), 4);
             final Forest<Double, Double> replicantForest = DataUtils.loadForest(saveTreeFile, responseCombiner);
             TestUtils.removeFolder(saveTreeFile);
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
