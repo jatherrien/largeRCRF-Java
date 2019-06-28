@@ -18,11 +18,6 @@ package ca.joeltherrien.randomforest;
 
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
-import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
-import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
-import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
-import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
 import ca.joeltherrien.randomforest.tree.Forest;
@@ -31,12 +26,10 @@ import ca.joeltherrien.randomforest.tree.Tree;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.Utils;
-import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
