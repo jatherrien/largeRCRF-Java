@@ -17,20 +17,16 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Settings;
+import ca.joeltherrien.randomforest.TestUtils;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
 import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.utils.Data;
-import ca.joeltherrien.randomforest.utils.DataUtils;
+import ca.joeltherrien.randomforest.utils.ResponseLoader;
 import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import ca.joeltherrien.randomforest.utils.Utils;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -48,23 +44,12 @@ public class TestLogRankSplitFinder {
     }
 
     public static Data<CompetingRiskResponse> loadData(String filename) throws IOException {
-        final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
-        yVarSettings.set("type", new TextNode("CompetingRiskResponse"));
-        yVarSettings.set("delta", new TextNode("delta"));
-        yVarSettings.set("u", new TextNode("u"));
 
-        final Settings settings = Settings.builder()
-                .trainingDataLocation(filename)
-                .covariateSettings(
-                        Utils.easyList(new NumericCovariateSettings("x2"))
-                )
-                .yVarSettings(yVarSettings)
-                .build();
+        final List<Covariate> covariates = Utils.easyList(
+                new NumericCovariate("x2", 0)
+        );
 
-        final List<Covariate> covariates = settings.getCovariates();
-
-        final DataUtils.ResponseLoader loader = settings.getResponseLoader();
-        final List<Row<CompetingRiskResponse>> rows = DataUtils.loadData(covariates, loader, settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> rows = TestUtils.loadData(covariates, new ResponseLoader.CompetingRisksResponseLoader("delta", "u"), filename);
 
         return new Data<>(rows, covariates);
     }

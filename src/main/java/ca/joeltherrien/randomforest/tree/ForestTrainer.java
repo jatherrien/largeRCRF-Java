@@ -18,7 +18,6 @@ package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Bootstrapper;
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import lombok.*;
@@ -50,24 +49,6 @@ public class ForestTrainer<Y, TO, FO> {
     private final boolean displayProgress; // whether to print to standard output our progress; not always desirable
     private final String saveTreeLocation;
     private final long randomSeed;
-
-    public ForestTrainer(final Settings settings, final List<Row<Y>> data, final List<Covariate> covariates){
-        this.ntree = settings.getNtree();
-        this.data = data;
-        this.displayProgress = true;
-        this.saveTreeLocation = settings.getSaveTreeLocation();
-
-        this.covariates = covariates;
-        this.treeResponseCombiner = settings.getTreeCombiner();
-        this.treeTrainer = new TreeTrainer<>(settings, covariates);
-
-        if(settings.getRandomSeed() != null){
-            this.randomSeed = settings.getRandomSeed();
-        }
-        else{
-            this.randomSeed = System.nanoTime();
-        }
-    }
 
     /**
      * Train a forest in memory using a single core

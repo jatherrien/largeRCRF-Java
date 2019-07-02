@@ -16,22 +16,69 @@
 
 package ca.joeltherrien.randomforest;
 
+import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.utils.ResponseLoader;
 import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.function.DoubleSupplier;
 import java.util.stream.DoubleStream;
+import java.util.zip.GZIPInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestUtils {
+
+    /*
+        This code is copied from the runnable part of largeRCRF-Java; it's not included in the non-test code of the library
+        because we want to avoid packaging dependencies into the library that the R code won't use.
+     */
+    public static <Y> List<Row<Y>> loadData(final List<Covariate> covariates, final ResponseLoader<Y> responseLoader, String filename) throws IOException {
+
+        final List<Row<Y>> dataset = new ArrayList<>();
+
+        final Reader input;
+        if(filename.endsWith(".gz")){
+            final FileInputStream inputStream = new FileInputStream(filename);
+            final GZIPInputStream gzipInputStream = new GZIPInputStream(inputStream);
+
+            input = new InputStreamReader(gzipInputStream);
+        }
+        else{
+            input = new FileReader(filename);
+        }
+
+
+        final CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(input);
+
+
+        int id = 1;
+        for(final CSVRecord record : parser){
+            final Covariate.Value[] valueArray = new Covariate.Value[covariates.size()];
+
+            for(final Covariate<?> covariate : covariates){
+                valueArray[covariate.getIndex()] = covariate.createValue(record.get(covariate.getName()));
+            }
+
+            final Y y = responseLoader.parse(record);
+
+            dataset.add(new Row<>(valueArray, id++, y));
+
+        }
+
+        return dataset;
+
+    }
 
     public static void closeEnough(double expected, double actual, double margin){
         assertTrue(Math.abs(expected - actual) < margin, "Expected " + expected + " but saw " + actual);

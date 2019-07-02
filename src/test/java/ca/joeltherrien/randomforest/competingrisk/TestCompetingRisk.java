@@ -17,22 +17,24 @@
 package ca.joeltherrien.randomforest.competingrisk;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Settings;
+import ca.joeltherrien.randomforest.TestUtils;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
-import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
+import ca.joeltherrien.randomforest.covariates.bool.BooleanCovariate;
+import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskErrorRateCalculator;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
 import ca.joeltherrien.randomforest.tree.Node;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
+import ca.joeltherrien.randomforest.utils.ResponseLoader;
 import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
-import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -47,66 +49,50 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCompetingRisk {
 
+    private static final String DEFAULT_FILEPATH = "src/test/resources/wihs.csv";
 
-    /**
-     * By default uses single log-rank test.
-     *
-     * @return
-     */
-    public Settings getSettings(){
-        final ObjectNode splitFinderSettings = new ObjectNode(JsonNodeFactory.instance);
-        splitFinderSettings.set("type", new TextNode("LogRankSplitFinder"));
-        splitFinderSettings.set("eventsOfFocus",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1)))
+    public List<Covariate> getCovariates(){
+        return Utils.easyList(
+                new NumericCovariate("ageatfda", 0),
+                new BooleanCovariate("idu", 1),
+                new BooleanCovariate("black", 2),
+                new NumericCovariate("cd4nadir", 3)
         );
-        splitFinderSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
+    }
 
-        final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
-        responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
-        responseCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
-        // not setting times
+    public ForestTrainer.ForestTrainerBuilder<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> getForestBuilder(
+            List<Covariate> covariates,
+            List<Row<CompetingRiskResponse>> data,
+            TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer) {
 
+        return ForestTrainer.<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions>builder()
+                .treeResponseCombiner(new CompetingRiskFunctionCombiner(new int[]{1,2}, null))
+                .ntree(100)
+                .saveTreeLocation("trees/")
+                .displayProgress(false)
+                .covariates(covariates)
+                .data(data)
+                .treeTrainer(treeTrainer);
 
-        final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
-        treeCombinerSettings.set("type", new TextNode("CompetingRiskFunctionCombiner"));
-        treeCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
-        // not setting times
+    }
 
-        final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
-        yVarSettings.set("type", new TextNode("CompetingRiskResponse"));
-        yVarSettings.set("u", new TextNode("time"));
-        yVarSettings.set("delta", new TextNode("status"));
+    public List<Row<CompetingRiskResponse>> getData(List<Covariate> covariates, String filepath) throws IOException {
+        return TestUtils.loadData(
+                covariates, new ResponseLoader.CompetingRisksResponseLoader("status", "time"),
+                filepath);
+    }
 
-        return Settings.builder()
-                .covariateSettings(Utils.easyList(
-                        new NumericCovariateSettings("ageatfda"),
-                        new BooleanCovariateSettings("idu"),
-                        new BooleanCovariateSettings("black"),
-                        new NumericCovariateSettings("cd4nadir")
-                        )
-                )
-                .trainingDataLocation("src/test/resources/wihs.csv")
-                .responseCombinerSettings(responseCombinerSettings)
-                .treeCombinerSettings(treeCombinerSettings)
-                .splitFinderSettings(splitFinderSettings)
-                .yVarSettings(yVarSettings)
+    public TreeTrainer.TreeTrainerBuilder<CompetingRiskResponse, CompetingRiskFunctions> getTreeTrainerBuilder(List<Covariate> covariates){
+        return TreeTrainer.<CompetingRiskResponse, CompetingRiskFunctions>builder()
+                .covariates(covariates)
+                .splitFinder(new LogRankSplitFinder(new int[]{1}, new int[]{1,2}))
+                .responseCombiner(new CompetingRiskResponseCombiner(new int[]{1,2}))
                 .maxNodeDepth(100000)
-                // TODO fill in these settings
                 .mtry(2)
                 .nodeSize(6)
-                .ntree(100)
-                .numberOfSplits(5)
-                .numberOfThreads(3)
-                .saveProgress(true)
-                .saveTreeLocation("trees/")
-                .build();
+                .numberOfSplits(5);
     }
+
 
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
@@ -120,18 +106,17 @@ public class TestCompetingRisk {
 
     @Test
     public void testSingleTree() throws IOException {
-        final Settings settings = getSettings();
-        settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped.csv");
-        settings.setCovariateSettings(Utils.easyList(
-                new BooleanCovariateSettings("idu"),
-                new BooleanCovariateSettings("black")
-                )); // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
 
-        final List<Covariate> covariates = settings.getCovariates();
+        // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
+        final List<Covariate> covariates = Utils.easyList(
+                new BooleanCovariate("idu", 0),
+                new BooleanCovariate("black", 1)
+        );
 
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, "src/test/resources/wihs.bootstrapped.csv");
 
-        final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
+        final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = getTreeTrainerBuilder(covariates).build();
+
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
 
         final CovariateRow newRow = getPredictionRow(covariates);
@@ -175,16 +160,15 @@ public class TestCompetingRisk {
      */
     @Test
     public void testSingleTree2() throws IOException {
-        final Settings settings = getSettings();
-        settings.setMtry(4);
-        settings.setNumberOfSplits(0);
-        settings.setTrainingDataLocation("src/test/resources/wihs.bootstrapped2.csv");
 
-        final List<Covariate> covariates = settings.getCovariates();
+        final List<Covariate> covariates = getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, "src/test/resources/wihs.bootstrapped2.csv");
 
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = getTreeTrainerBuilder(covariates)
+                .mtry(4)
+                .numberOfSplits(0)
+                .build();
 
-        final TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer = new TreeTrainer<>(settings, covariates);
         final Node<CompetingRiskFunctions> node = treeTrainer.growTree(dataset, new Random());
 
         final CovariateRow newRow = getPredictionRow(covariates);
@@ -224,17 +208,17 @@ public class TestCompetingRisk {
 
     @Test
     public void testLogRankSplitFinderTwoBooleans() throws IOException {
-        final Settings settings = getSettings();
-        settings.setCovariateSettings(Utils.easyList(
-                new BooleanCovariateSettings("idu"),
-                new BooleanCovariateSettings("black")
-        ));
+        // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
+        final List<Covariate> covariates = Utils.easyList(
+                new BooleanCovariate("idu", 0),
+                new BooleanCovariate("black", 1)
+        );
 
-        final List<Covariate> covariates = settings.getCovariates();
 
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
 
-        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer =
+                getForestBuilder(covariates, dataset, getTreeTrainerBuilder(covariates).build()).build();
 
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory(Optional.empty());
 
@@ -276,11 +260,9 @@ public class TestCompetingRisk {
 
     @Test
     public void verifyDataset() throws IOException {
-        final Settings settings = getSettings();
+        final List<Covariate> covariates = getCovariates();
 
-        final List<Covariate> covariates = settings.getCovariates();
-
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
 
         // Let's count the events and make sure the data was correctly read.
         int countCensored = 0;
@@ -309,44 +291,18 @@ public class TestCompetingRisk {
         assertEquals(359, countEventTwo);
     }
 
-    /**
-     * Used to time how long the algorithm takes
-     *
-     * @param args Not used.
-     * @throws IOException
-     */
-    public static void main(String[] args) throws IOException {
-        // timing
-        final TestCompetingRisk tcr = new TestCompetingRisk();
-
-        final Settings settings = tcr.getSettings();
-        settings.setNtree(300); // results are too variable at 100
-
-        final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
-                settings.getTrainingDataLocation());
-        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
-
-        final long startTime = System.currentTimeMillis();
-        for(int i=0; i<50; i++){
-            forestTrainer.trainSerialInMemory(Optional.empty());
-        }
-        final long endTime = System.currentTimeMillis();
-
-        final double diffTime = endTime - startTime;
-        System.out.println(diffTime / 1000.0 / 50.0);
-    }
 
     @Test
     public void testLogRankSplitFinderAllCovariates() throws IOException {
+        final List<Covariate> covariates = getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
 
-        final Settings settings = getSettings();
-        settings.setNtree(300); // results are too variable at 100
 
-        final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(),
-                settings.getTrainingDataLocation());
-        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer =
+                getForestBuilder(covariates, dataset, getTreeTrainerBuilder(covariates).build())
+                .ntree(300) // results are too variable at 100
+                .build();
+
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = forestTrainer.trainSerialInMemory(Optional.empty());
 
         // prediction row

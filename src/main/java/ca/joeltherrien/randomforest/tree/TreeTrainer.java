@@ -17,7 +17,6 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.Settings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -49,18 +48,6 @@ public class TreeTrainer<Y, O> {
     private final boolean checkNodePurity;
 
     private final List<Covariate> covariates;
-
-    public TreeTrainer(final Settings settings, final List<Covariate> covariates){
-        this.numberOfSplits = settings.getNumberOfSplits();
-        this.nodeSize = settings.getNodeSize();
-        this.maxNodeDepth = settings.getMaxNodeDepth();
-        this.mtry = settings.getMtry();
-        this.checkNodePurity = settings.isCheckNodePurity();
-
-        this.responseCombiner = settings.getResponseCombiner();
-        this.splitFinder = settings.getSplitFinder();
-        this.covariates = covariates;
-    }
 
     public Tree<O> growTree(List<Row<Y>> data, Random random){
         final Node<O> rootNode = growNode(data, 0, random);

@@ -16,89 +16,77 @@
 
 package ca.joeltherrien.randomforest;
 
-import ca.joeltherrien.randomforest.covariates.settings.BooleanCovariateSettings;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.covariates.settings.NumericCovariateSettings;
-import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
+import ca.joeltherrien.randomforest.covariates.bool.BooleanCovariate;
+import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
+import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
+import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.DataUtils;
+import ca.joeltherrien.randomforest.utils.ResponseLoader;
 import ca.joeltherrien.randomforest.utils.Utils;
-import com.fasterxml.jackson.databind.node.*;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class TestSavingLoading {
 
-    private final int NTREE = 10;
+    private static final int NTREE = 10;
+    private static final String DEFAULT_FILEPATH = "src/test/resources/wihs.csv";
+    private static final String SAVE_TREE_LOCATION = "src/test/resources/trees/";
 
-    /**
-     * By default uses single log-rank test.
-     *
-     * @return
-     */
-    public Settings getSettings(){
-        final ObjectNode splitRuleSettings = new ObjectNode(JsonNodeFactory.instance);
-        splitRuleSettings.set("type", new TextNode("LogRankSplitFinder"));
-        splitRuleSettings.set("eventsOfFocus",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1)))
+    public List<Covariate> getCovariates(){
+        return Utils.easyList(
+                new NumericCovariate("ageatfda", 0),
+                new BooleanCovariate("idu", 1),
+                new BooleanCovariate("black", 2),
+                new NumericCovariate("cd4nadir", 3)
         );
-        splitRuleSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
+    }
 
-        final ObjectNode responseCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
-        responseCombinerSettings.set("type", new TextNode("CompetingRiskResponseCombiner"));
-        responseCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
-        // not setting times
+    public ForestTrainer.ForestTrainerBuilder<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> getForestBuilder(
+            List<Covariate> covariates,
+            List<Row<CompetingRiskResponse>> data,
+            TreeTrainer<CompetingRiskResponse, CompetingRiskFunctions> treeTrainer) {
 
+        return ForestTrainer.<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions>builder()
+                .treeResponseCombiner(new CompetingRiskFunctionCombiner(new int[]{1,2}, null))
+                .ntree(NTREE)
+                .saveTreeLocation("src/test/resources/trees/")
+                .displayProgress(false)
+                .covariates(covariates)
+                .data(data)
+                .treeTrainer(treeTrainer);
 
-        final ObjectNode treeCombinerSettings = new ObjectNode(JsonNodeFactory.instance);
-        treeCombinerSettings.set("type", new TextNode("CompetingRiskFunctionCombiner"));
-        treeCombinerSettings.set("events",
-                new ArrayNode(JsonNodeFactory.instance, Utils.easyList(new IntNode(1), new IntNode(2)))
-        );
-        // not setting times
+    }
 
-        final ObjectNode yVarSettings = new ObjectNode(JsonNodeFactory.instance);
-        yVarSettings.set("type", new TextNode("CompetingRiskResponse"));
-        yVarSettings.set("u", new TextNode("time"));
-        yVarSettings.set("delta", new TextNode("status"));
+    public List<Row<CompetingRiskResponse>> getData(List<Covariate> covariates, String filepath) throws IOException {
+        return TestUtils.loadData(
+                covariates, new ResponseLoader.CompetingRisksResponseLoader("status", "time"),
+                filepath);
+    }
 
-        return Settings.builder()
-                .covariateSettings(Utils.easyList(
-                        new NumericCovariateSettings("ageatfda"),
-                        new BooleanCovariateSettings("idu"),
-                        new BooleanCovariateSettings("black"),
-                        new NumericCovariateSettings("cd4nadir")
-                        )
-                )
-                .trainingDataLocation("src/test/resources/wihs.csv")
-                .validationDataLocation("src/test/resources/wihs.csv")
-                .responseCombinerSettings(responseCombinerSettings)
-                .treeCombinerSettings(treeCombinerSettings)
-                .splitFinderSettings(splitRuleSettings)
-                .yVarSettings(yVarSettings)
+    public TreeTrainer.TreeTrainerBuilder<CompetingRiskResponse, CompetingRiskFunctions> getTreeTrainerBuilder(List<Covariate> covariates){
+        return TreeTrainer.<CompetingRiskResponse, CompetingRiskFunctions>builder()
+                .covariates(covariates)
+                .splitFinder(new LogRankSplitFinder(new int[]{1}, new int[]{1,2}))
+                .responseCombiner(new CompetingRiskResponseCombiner(new int[]{1,2}))
                 .maxNodeDepth(100000)
-                // TODO fill in these settings
                 .mtry(2)
                 .nodeSize(6)
-                .ntree(NTREE)
-                .numberOfSplits(5)
-                .numberOfThreads(3)
-                .saveProgress(true)
-                .saveTreeLocation("src/test/resources/trees/")
-                .build();
+                .numberOfSplits(5);
     }
+
 
     public CovariateRow getPredictionRow(List<Covariate> covariates){
         return CovariateRow.createSimple(Utils.easyMap(
@@ -111,26 +99,25 @@ public class TestSavingLoading {
 
     @Test
     public void testSavingLoadingSerial() throws IOException, ClassNotFoundException {
-        final Settings settings = getSettings();
-        final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Covariate> covariates = getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
 
-        final File directory = new File(settings.getSaveTreeLocation());
+
+        final File directory = new File(SAVE_TREE_LOCATION);
         if(directory.exists()){
             TestUtils.removeFolder(directory);
         }
         assertFalse(directory.exists());
         directory.mkdir();
 
-        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer =
+                getForestBuilder(covariates, dataset, getTreeTrainerBuilder(covariates).build()).build();
 
         forestTrainer.trainSerialOnDisk(Optional.empty());
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());
         assertEquals(NTREE, directory.listFiles().length);
-
-
 
         final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataUtils.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
 
@@ -152,20 +139,20 @@ public class TestSavingLoading {
 
     @Test
     public void testSavingLoadingParallel() throws IOException, ClassNotFoundException {
-        final Settings settings = getSettings();
-        final List<Covariate> covariates = settings.getCovariates();
-        final List<Row<CompetingRiskResponse>> dataset = DataUtils.loadData(covariates, settings.getResponseLoader(), settings.getTrainingDataLocation());
+        final List<Covariate> covariates = getCovariates();
+        final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
 
-        final File directory = new File(settings.getSaveTreeLocation());
+        final File directory = new File(SAVE_TREE_LOCATION);
         if(directory.exists()){
             TestUtils.removeFolder(directory);
         }
         assertFalse(directory.exists());
         directory.mkdir();
 
-        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer = new ForestTrainer<>(settings, dataset, covariates);
+        final ForestTrainer<CompetingRiskResponse, CompetingRiskFunctions, CompetingRiskFunctions> forestTrainer =
+                getForestBuilder(covariates, dataset, getTreeTrainerBuilder(covariates).build()).build();
 
-        forestTrainer.trainParallelOnDisk(Optional.empty(), settings.getNumberOfThreads());
+        forestTrainer.trainParallelOnDisk(Optional.empty(), 2);
 
         assertTrue(directory.exists());
         assertTrue(directory.isDirectory());
