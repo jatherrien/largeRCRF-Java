@@ -2,7 +2,10 @@
 .settings
 .project
 target/
+library/target/
+executable/target/
 *.iml
 .idea
-template.yaml
-dependency-reduced-pom.xml
+library/dependency-reduced-pom.xml
+executable/dependency-reduced-pom.xml
+executable/template.yaml
