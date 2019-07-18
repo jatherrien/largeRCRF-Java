@@ -16,8 +16,15 @@
 
 package ca.joeltherrien.randomforest.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.DoubleBinaryOperator;
+import java.util.function.DoubleUnaryOperator;
+import java.util.function.ToDoubleBiFunction;
+import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 /**
  * Represents a function represented by discrete points. We assume that the function is a stepwise right-continuous
@@ -29,9 +36,9 @@ public final class RightContinuousStepFunction extends StepFunction {
     private final double[] y;
 
     /**
-     * Represents the value that should be returned by evaluate if there are points prior to the time the function is being evaluated at.
+     * Represents the value that should be returned by evaluate if there are no points prior to the time the function is being evaluated at.
      *
-     * Map be null.
+     * May not be null.
      */
     private final double defaultY;
 
@@ -186,5 +193,76 @@ public final class RightContinuousStepFunction extends StepFunction {
 
     }
 
+    public RightContinuousStepFunction unaryOperation(DoubleUnaryOperator operator){
+        final double newDefaultY = operator.applyAsDouble(this.defaultY);
+        final double[] newY = Arrays.stream(this.getY()).map(operator).toArray();
+
+        return new RightContinuousStepFunction(this.getX(), newY, newDefaultY);
+    }
+
+
+    public static RightContinuousStepFunction biOperation(RightContinuousStepFunction funLeft,
+                                                            RightContinuousStepFunction funRight,
+                                                            DoubleBinaryOperator operator){
+
+        final double newDefaultY = operator.applyAsDouble(funLeft.defaultY, funRight.defaultY);
+        final double[] leftX = funLeft.x;
+        final double[] rightX = funRight.x;
+
+        final List<Point> combinedPoints = new ArrayList<>(leftX.length + rightX.length);
+
+        // These indexes represent the times that have *already* been processed.
+        // They start at -1 because we already processed the defaultY values.
+        int indexLeft = -1;
+        int indexRight = -1;
+
+        // This while-loop will keep going until one of the functions reaches the ends of its points
+        while(indexLeft < leftX.length-1 && indexRight < rightX.length-1){
+            final double time;
+            if(leftX[indexLeft+1] < rightX[indexRight+1]){
+                indexLeft += 1;
+
+                time = leftX[indexLeft];
+                combinedPoints.add(new Point(time, operator.applyAsDouble(funLeft.evaluateByIndex(indexLeft), funRight.evaluateByIndex(indexRight))));
+            }
+            else if(leftX[indexLeft+1] > rightX[indexRight+1]){
+                indexRight += 1;
+
+                time = rightX[indexRight];
+                combinedPoints.add(new Point(time, operator.applyAsDouble(funLeft.evaluateByIndex(indexLeft), funRight.evaluateByIndex(indexRight))));
+            }
+            else{ // equal times
+                indexLeft += 1;
+                indexRight += 1;
+
+                time = leftX[indexLeft];
+                combinedPoints.add(new Point(time, operator.applyAsDouble(funLeft.evaluateByIndex(indexLeft), funRight.evaluateByIndex(indexRight))));
+            }
+        }
+
+        // At this point, at least one of function left or function right has reached the end of its points
+
+        // This while-loop occurring implies that functionRight can not move forward anymore
+        while(indexLeft < leftX.length-1){
+            indexLeft += 1;
+
+            final double time = leftX[indexLeft];
+            combinedPoints.add(new Point(time, operator.applyAsDouble(funLeft.evaluateByIndex(indexLeft), funRight.evaluateByIndex(indexRight))));
+
+        }
+
+        // This while-loop occurring implies that functionLeft can not move forward anymore
+        while(indexRight < rightX.length-1){
+            indexRight += 1;
+
+            final double time = rightX[indexRight];
+            combinedPoints.add(new Point(time, operator.applyAsDouble(funLeft.evaluateByIndex(indexLeft), funRight.evaluateByIndex(indexRight))));
+
+        }
+
+
+        return RightContinuousStepFunction.constructFromPoints(combinedPoints, newDefaultY);
+
+    }
 
 }
