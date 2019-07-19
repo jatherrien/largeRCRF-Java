@@ -19,6 +19,9 @@ package ca.joeltherrien.randomforest.utils;
 import ca.joeltherrien.randomforest.TestUtils;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class RightContinuousStepFunctionIntegrationTest {
 
     private RightContinuousStepFunction createTestFunction(){
@@ -72,6 +75,65 @@ public class RightContinuousStepFunctionIntegrationTest {
                 function.integrate(2.5, 6)
                 , 0.00000001);
 
+
+    }
+
+    @Test
+    public void testInvertedFromTo(){
+        final RightContinuousStepFunction function = createTestFunction();
+
+        final double area1 = function.integrate(0, 3.0);
+        final double area2 = function.integrate(3.0, 0.0);
+
+        assertEquals(area1, -area2, 0.0000001);
+
+    }
+
+    @Test
+    public void testIntegratingUpToNan(){
+        // Idea here - you have a function that is valid up to point x where it becomes NaN
+        // You should be able to integrate *up to* point x and not get an NaN
+
+        final RightContinuousStepFunction function1 = new RightContinuousStepFunction(
+                new double[]{1.0, 2.0, 3.0, 4.0},
+                new double[]{1.0, 1.0, 1.0, Double.NaN},
+                0.0);
+
+
+        final double area1 = function1.integrate(0.0, 4.0);
+        assertEquals(3.0, area1, 0.000000001);
+
+        final double nanArea1 = function1.integrate(0.0, 4.0001);
+        assertTrue(Double.isNaN(nanArea1));
+
+
+        // This tests integrating over the defaultY up to the NaN point
+        final RightContinuousStepFunction function2 = new RightContinuousStepFunction(
+                new double[]{1.0, 2.0, 3.0, 4.0},
+                new double[]{Double.NaN, 1.0, 1.0, Double.NaN},
+                1.0);
+
+
+        final double area2 = function2.integrate(0.0, 1.0);
+        assertEquals(1.0, area2, 0.000000001);
+
+        final double nanArea2 = function2.integrate(0.0, 4.0);
+        assertTrue(Double.isNaN(nanArea2));
+
+
+        // This tests integrating between two NaN points. Note that of course for RightContinuousValues carry the previous
+        // value until the next x point, so this is just making sure the code works if the x-value we pass over is NaN
+        final RightContinuousStepFunction function3 = new RightContinuousStepFunction(
+                new double[]{1.0, 2.0, 3.0, 4.0},
+                new double[]{Double.NaN, 1.0, 1.0, Double.NaN},
+                0.0);
+
+
+        final double area3 = function3.integrate(2.0, 4.0);
+        assertEquals(2.0, area3, 0.000000001);
+
+        final double nanArea3 = function3.integrate(0.0, 4.0001);
+        assertTrue(Double.isNaN(nanArea3));
 
     }
 

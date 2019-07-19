@@ -134,7 +134,7 @@ public final class RightContinuousStepFunction extends StepFunction {
         }
 
         if(to < from){
-            return integrate(to, from);
+            return -integrate(to, from);
         }
 
         double summation = 0.0;
@@ -177,7 +177,7 @@ public final class RightContinuousStepFunction extends StepFunction {
             final double currentTime = xPoints[i];
             final double currentHeight = evaluateByIndex(i);
 
-            if(i == xPoints.length-1 || xPoints[i+1] > to){
+            if(i == xPoints.length-1 || xPoints[i+1] >= to){
                 summation += currentHeight * (to - currentTime);
                 return summation;
             }
