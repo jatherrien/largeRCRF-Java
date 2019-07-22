@@ -20,7 +20,7 @@ import java.util.*;
 
 public final class Utils {
 
-    public static StepFunction estimateOneMinusECDF(final double[] times){
+    public static RightContinuousStepFunction estimateOneMinusECDF(final double[] times){
         Arrays.sort(times);
 
         final Map<Double, Integer> timeCounterMap = new HashMap<>();

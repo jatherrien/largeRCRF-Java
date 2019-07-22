@@ -16,9 +16,11 @@
 
 package ca.joeltherrien.randomforest.responses.competingrisk;
 
+import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
 import ca.joeltherrien.randomforest.utils.StepFunction;
 
 import java.util.*;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class CompetingRiskUtils {
@@ -114,6 +116,44 @@ public class CompetingRiskUtils {
 
         return numerator / denominator;
 
+    }
+
+    /**
+     * Calculate the Integrated Brier Score error on a list of responses and predictions.
+     *
+     * @param responses A List of responses
+     * @param predictions The corresponding List of predictions.
+     * @param censoringDistribution The censoring distribution.
+     * @param eventOfFocus The event we are calculating the error for.
+     * @param integrationUpperBound The upper bound to integrate to.
+     * @param isParallel Whether we should use parallel streams or not (provided because of bugs on a particular system).
+     * @return
+     */
+    public static double[] calculateIBSError(final List<CompetingRiskResponse> responses,
+                                                     List<CompetingRiskFunctions> predictions,
+                                                     Optional<RightContinuousStepFunction> censoringDistribution,
+                                                     int eventOfFocus,
+                                                     double integrationUpperBound,
+                                                     boolean isParallel){
+
+        if(responses.size() != predictions.size()){
+            throw new IllegalArgumentException("Length of responses and predictions must be equal.");
+        }
+
+        final IBSCalculator calculator = new IBSCalculator(censoringDistribution);
+
+        IntStream stream = IntStream.range(0, responses.size());
+
+        if(isParallel){
+            stream = stream.parallel();
+        }
+
+        return stream.mapToDouble(i -> {
+            CompetingRiskResponse response = responses.get(i);
+            RightContinuousStepFunction cif = predictions.get(i).getCumulativeIncidenceFunction(eventOfFocus);
+
+            return calculator.calculateError(response, cif, eventOfFocus, integrationUpperBound);
+        }).toArray();
     }
 
 
