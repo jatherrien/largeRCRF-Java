@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.ToDoubleBiFunction;
-import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 
 /**
  * Represents a function represented by discrete points. We assume that the function is a stepwise right-continuous
