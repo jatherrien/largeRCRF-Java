@@ -188,4 +188,14 @@ public final class RUtils {
         return responses;
     }
 
+    public static List<Object> produceSublist(List<Object> initialList, int[] indices){
+        final List<Object> newList = new ArrayList<>(indices.length);
+
+        for(int i : indices){
+            newList.add(initialList.get(i));
+        }
+
+        return newList;
+    }
+
 }
