@@ -21,12 +21,11 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public class CovariateRow implements Serializable {
+public class CovariateRow implements Serializable, Cloneable {
 
     private final Covariate.Value[] valueArray;
 
@@ -46,6 +45,14 @@ public class CovariateRow implements Serializable {
         return "CovariateRow " + this.id;
     }
 
+    @Override
+    public CovariateRow clone() {
+        // shallow clone, which is fine. I want a new array, but the values don't need to be copied
+        final Covariate.Value[] copyValueArray = this.valueArray.clone();
+
+        return new CovariateRow(copyValueArray, this.id);
+    }
+
     public static CovariateRow createSimple(Map<String, String> simpleMap, List<Covariate> covariateList, int id){
         final Covariate.Value[] valueArray = new Covariate.Value[covariateList.size()];
         final Map<String, Covariate> covariateMap = new HashMap<>();
@@ -62,6 +69,29 @@ public class CovariateRow implements Serializable {
             });
 
         return new CovariateRow(valueArray, id);
+    }
+
+    /**
+     * Used for variable importance; takes a List of CovariateRows and permute one of the Covariates.
+     *
+     * @param covariateRows The List of CovariateRows to scramble. Note that the originals won't be modified.
+     * @param covariateToScramble The Covariate to scramble on.
+     * @param random The source of randomness to use. If not present, one will be created.
+     * @return A List of CovariateRows where the specified covariate was scrambled. These are different objects from the ones provided.
+     */
+    public static List<CovariateRow> scrambleCovariateValues(List<? extends CovariateRow> covariateRows, Covariate covariateToScramble, Optional<Random> random){
+        final List<CovariateRow> permutedCovariateRowList = new ArrayList<>(covariateRows);
+        Collections.shuffle(permutedCovariateRowList, random.orElse(new Random())); // without replacement
+
+        final List<CovariateRow> clonedRowList = covariateRows.stream().map(CovariateRow::clone).collect(Collectors.toList());
+
+        final int covariateToScrambleIndex = covariateToScramble.getIndex();
+        for(int i=0; i < covariateRows.size(); i++){
+            clonedRowList.get(i).valueArray[covariateToScrambleIndex] = permutedCovariateRowList.get(i).valueArray[covariateToScrambleIndex];
+        }
+
+        return clonedRowList;
+
     }
 
 }

@@ -26,7 +26,7 @@ public class NumericSplitRule implements SplitRule<Double> {
     private final int parentCovariateIndex;
     private final double threshold;
 
-    NumericSplitRule(NumericCovariate parent, final double threshold){
+    public NumericSplitRule(NumericCovariate parent, final double threshold){
         this.parentCovariateIndex = parent.getIndex();
         this.threshold = threshold;
     }

@@ -32,9 +32,6 @@ public class Row<Y> extends CovariateRow {
 	    this.response = response;
     }
 
-
-
-
 	public Y getResponse() {
 		return this.response;
 	}
