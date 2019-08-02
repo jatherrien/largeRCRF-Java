@@ -29,6 +29,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompetingRiskFunctionCombiner implements ResponseCombiner<CompetingRiskFunctions, CompetingRiskFunctions> {
 
+    private static final long serialVersionUID = 1L;
+
     private final int[] events;
     private final double[] times; // We may restrict ourselves to specific times.
 

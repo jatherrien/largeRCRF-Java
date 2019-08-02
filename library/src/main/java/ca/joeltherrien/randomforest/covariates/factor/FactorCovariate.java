@@ -26,6 +26,8 @@ import java.util.*;
 
 public final class FactorCovariate implements Covariate<String> {
 
+    private static final long serialVersionUID = 1L;
+
     @Getter
     private final String name;
 
@@ -121,6 +123,8 @@ public final class FactorCovariate implements Covariate<String> {
 
     @EqualsAndHashCode
     public final class FactorValue implements Covariate.Value<String>{
+
+        private static final long serialVersionUID = 1L;
 
         private final String value;
 

@@ -23,6 +23,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 public class NumericSplitRule implements SplitRule<Double> {
 
+    private static final long serialVersionUID = 1L;
+
     private final int parentCovariateIndex;
     private final double threshold;
 

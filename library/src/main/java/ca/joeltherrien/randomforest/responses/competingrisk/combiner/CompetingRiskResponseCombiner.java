@@ -35,6 +35,8 @@ import java.util.List;
  */
 public class CompetingRiskResponseCombiner implements ResponseCombiner<CompetingRiskResponse, CompetingRiskFunctions> {
 
+    private static final long serialVersionUID = 1L;
+
     private final int[] events;
 
     public CompetingRiskResponseCombiner(final int[] events){

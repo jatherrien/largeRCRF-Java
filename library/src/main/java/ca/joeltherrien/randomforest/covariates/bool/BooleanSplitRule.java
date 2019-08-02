@@ -21,6 +21,8 @@ import ca.joeltherrien.randomforest.covariates.SplitRule;
 
 public class BooleanSplitRule implements SplitRule<Boolean> {
 
+    private static final long serialVersionUID = 1L;
+
     private final int parentCovariateIndex;
 
     public BooleanSplitRule(BooleanCovariate parent){

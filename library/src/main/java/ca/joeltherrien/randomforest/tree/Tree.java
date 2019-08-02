@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Tree<Y> implements Node<Y> {
+    private static final long serialVersionUID = 1L;
 
     @Getter
     private final Node<Y> rootNode;

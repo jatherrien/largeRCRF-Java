@@ -30,6 +30,8 @@ import java.util.function.DoubleUnaryOperator;
  */
 public final class RightContinuousStepFunction extends StepFunction {
 
+    private static final long serialVersionUID = 1L;
+
     private final double[] y;
 
     /**

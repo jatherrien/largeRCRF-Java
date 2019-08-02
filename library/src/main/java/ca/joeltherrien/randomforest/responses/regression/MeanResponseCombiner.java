@@ -25,6 +25,7 @@ import java.util.List;
  *
  */
 public class MeanResponseCombiner implements ResponseCombiner<Double, Double> {
+    private static final long serialVersionUID = 1L;
 
     @Override
     public Double combine(List<Double> responses) {

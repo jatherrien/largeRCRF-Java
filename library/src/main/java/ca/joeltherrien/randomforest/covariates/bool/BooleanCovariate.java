@@ -28,6 +28,8 @@ import java.util.Random;
 
 public final class BooleanCovariate implements Covariate<Boolean> {
 
+    private static final long serialVersionUID = 1L;
+
     @Getter
     private final String name;
 
@@ -83,6 +85,8 @@ public final class BooleanCovariate implements Covariate<Boolean> {
     }
 
     public class BooleanValue implements Value<Boolean>{
+
+        private static final long serialVersionUID = 1L;
 
         private final Boolean value;
 

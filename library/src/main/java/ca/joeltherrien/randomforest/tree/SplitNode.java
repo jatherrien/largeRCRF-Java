@@ -29,6 +29,7 @@ import java.util.List;
 @ToString
 @Getter
 public class SplitNode<Y> implements Node<Y> {
+    private static final long serialVersionUID = 1L;
 
     private final Node<Y> leftHand;
     private final Node<Y> rightHand;

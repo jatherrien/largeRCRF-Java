@@ -26,6 +26,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public final class CompetingRiskResponseWithCensorTime extends CompetingRiskResponse {
+
+    private static final long serialVersionUID = 1L;
+
     private final double c;
 
     public CompetingRiskResponseWithCensorTime(int delta, double u, double c) {

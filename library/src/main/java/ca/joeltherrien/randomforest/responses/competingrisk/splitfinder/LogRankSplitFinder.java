@@ -28,6 +28,7 @@ import java.util.List;
  *
  */
 public class LogRankSplitFinder extends CompetingRiskSplitFinder<CompetingRiskResponse> {
+    private static final long serialVersionUID = 1L;
 
     private final int[] eventsOfFocus;
     private final int[] events;

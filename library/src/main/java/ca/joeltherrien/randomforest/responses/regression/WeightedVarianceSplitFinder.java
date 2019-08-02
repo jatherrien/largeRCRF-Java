@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class WeightedVarianceSplitFinder implements SplitFinder<Double> {
+    private static final long serialVersionUID = 1L;
 
     private Double getScore(Set leftHand, Set rightHand) {
 

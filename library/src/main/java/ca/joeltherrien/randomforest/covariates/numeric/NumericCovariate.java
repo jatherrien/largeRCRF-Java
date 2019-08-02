@@ -37,6 +37,8 @@ import java.util.stream.Stream;
 @ToString
 public final class NumericCovariate implements Covariate<Double> {
 
+    private static final long serialVersionUID = 1L;
+
     @Getter
     private final String name;
 
@@ -121,6 +123,8 @@ public final class NumericCovariate implements Covariate<Double> {
 
     @EqualsAndHashCode
     public class NumericValue implements Covariate.Value<Double>{
+
+        private static final long serialVersionUID = 1L;
 
         private final Double value; // may be null
 

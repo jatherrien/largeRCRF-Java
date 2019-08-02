@@ -26,6 +26,8 @@ import java.util.List;
 @Builder
 public class CompetingRiskFunctions implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final List<RightContinuousStepFunction> causeSpecificHazards;
     private final List<RightContinuousStepFunction> cumulativeIncidenceCurves;
 

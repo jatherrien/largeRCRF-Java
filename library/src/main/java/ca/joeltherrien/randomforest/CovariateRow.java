@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CovariateRow implements Serializable, Cloneable {
 
+    private static final long serialVersionUID = 1L;
+
     private final Covariate.Value[] valueArray;
 
     @Getter

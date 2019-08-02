@@ -23,6 +23,8 @@ import java.io.Serializable;
 @Data
 public class CompetingRiskResponse implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private final int delta;
     private final double u;
 

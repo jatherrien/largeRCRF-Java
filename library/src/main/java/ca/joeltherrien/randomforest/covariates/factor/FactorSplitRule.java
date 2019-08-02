@@ -25,6 +25,8 @@ import java.util.Set;
 @EqualsAndHashCode
 public final class FactorSplitRule implements SplitRule<String> {
 
+    private static final long serialVersionUID = 1L;
+
     private final int parentCovariateIndex;
     private final Set<String> leftSideValues;
 

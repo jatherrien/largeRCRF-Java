@@ -26,6 +26,8 @@ import java.io.Serializable;
  */
 @Data
 public class Point implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private final double time;
     private final double y;
 }

@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @ToString
 public class TerminalNode<Y> implements Node<Y> {
+    private static final long serialVersionUID = 1L;
 
     private final Y responseValue;
 
