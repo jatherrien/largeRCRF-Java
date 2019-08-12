@@ -136,6 +136,11 @@ public final class RightContinuousStepFunction extends StepFunction {
             return -integrate(to, from);
         }
 
+        // Edge case - no points; just defaultY
+        if(this.x.length == 0){
+            return (to - from) * this.defaultY;
+        }
+
         double summation = 0.0;
         final double[] xPoints = getX();
         final int startingIndex;

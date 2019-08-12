@@ -3,7 +3,7 @@ package ca.joeltherrien.randomforest.tree.vimp;
 import ca.joeltherrien.randomforest.CovariateRow;
 import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.tree.Forest;
+import ca.joeltherrien.randomforest.tree.Tree;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,52 +14,104 @@ import java.util.stream.Collectors;
 public class VariableImportanceCalculator<Y, P> {
 
     private final ErrorCalculator<Y, P> errorCalculator;
-    private final Forest<Y, P> forest;
+    private final List<Tree<P>> trees;
     private final List<Row<Y>> observations;
-    private final List<Y> observedResponses;
 
     private final boolean isTrainingSet; // If true, then we use out-of-bag predictions
-    private final double baselineError;
+    private final double[] baselineErrors;
 
     public VariableImportanceCalculator(
             ErrorCalculator<Y, P> errorCalculator,
-            Forest<Y, P> forest,
+            List<Tree<P>> trees,
             List<Row<Y>> observations,
             boolean isTrainingSet
             ){
         this.errorCalculator = errorCalculator;
-        this.forest = forest;
+        this.trees = trees;
         this.observations = observations;
         this.isTrainingSet = isTrainingSet;
 
-        this.observedResponses = observations.stream()
-                .map(row -> row.getResponse()).collect(Collectors.toList());
 
-        final List<P> baselinePredictions = makePredictions(observations);
-        this.baselineError = errorCalculator.averageError(observedResponses, baselinePredictions);
+        try {
 
-    }
+            this.baselineErrors = new double[trees.size()];
+            for (int i = 0; i < baselineErrors.length; i++) {
+                final Tree<P> tree = trees.get(i);
+                final List<Row<Y>> oobSubset = getAppropriateSubset(observations, tree); // may not actually be OOB depending on isTrainingSet
+                final List<Y> responses = oobSubset.stream().map(Row::getResponse).collect(Collectors.toList());
 
-    public double calculateVariableImportance(Covariate covariate, Optional<Random> random){
-        final List<CovariateRow> scrambledValues = CovariateRow.scrambleCovariateValues(this.observations, covariate, random);
-        final List<P> alternatePredictions = makePredictions(scrambledValues);
-        final double newError = errorCalculator.averageError(this.observedResponses, alternatePredictions);
+                this.baselineErrors[i] = errorCalculator.averageError(responses, makePredictions(oobSubset, tree));
+            }
 
-        return newError - this.baselineError;
-    }
-
-    public double[] calculateVariableImportance(List<Covariate> covariates, Optional<Random> random){
-        return covariates.stream()
-                .mapToDouble(covariate -> calculateVariableImportance(covariate, random))
-                .toArray();
-    }
-
-    private List<P> makePredictions(List<? extends CovariateRow> rowList){
-        if(isTrainingSet){
-            return forest.evaluateOOB(rowList);
-        } else{
-            return forest.evaluate(rowList);
+        } catch(Exception e){
+            e.printStackTrace();
+            throw e;
         }
+
     }
+
+    /**
+     * Returns an array of importance values for every Tree for the given Covariate.
+     *
+     * @param covariate The Covariate to scramble.
+     * @param random
+     * @return
+     */
+    public double[] calculateVariableImportanceRaw(Covariate covariate, Optional<Random> random){
+
+        final double[] vimp = new double[trees.size()];
+        for(int i = 0; i < vimp.length; i++){
+            final Tree<P> tree = trees.get(i);
+            final List<Row<Y>> oobSubset = getAppropriateSubset(observations, tree); // may not actually be OOB depending on isTrainingSet
+            final List<Y> responses = oobSubset.stream().map(Row::getResponse).collect(Collectors.toList());
+            final List<CovariateRow> scrambledValues = CovariateRow.scrambleCovariateValues(oobSubset, covariate, random);
+
+            final double error = errorCalculator.averageError(responses, makePredictions(scrambledValues, tree));
+
+            vimp[i] = error - this.baselineErrors[i];
+        }
+
+        return vimp;
+    }
+
+    public double calculateVariableImportanceZScore(Covariate covariate, Optional<Random> random){
+        final double[] vimpArray = calculateVariableImportanceRaw(covariate, random);
+
+        double mean = 0.0;
+        double variance = 0.0;
+        final double numTrees = vimpArray.length;
+
+        for(double vimp : vimpArray){
+            mean += vimp / numTrees;
+        }
+        for(double vimp : vimpArray){
+            variance += (vimp - mean)*(vimp - mean) / (numTrees - 1.0);
+        }
+
+        final double standardError = Math.sqrt(variance / numTrees);
+
+        return mean / standardError;
+    }
+
+
+
+    // Assume rowList has already been filtered for OOB
+    private List<P> makePredictions(List<? extends CovariateRow> rowList, Tree<P> tree){
+        return rowList.stream()
+                .map(tree::evaluate)
+                .collect(Collectors.toList());
+    }
+
+    private List<Row<Y>> getAppropriateSubset(List<Row<Y>> initialList, Tree<P> tree){
+        if(!isTrainingSet){
+            return initialList; // no need to make any subsets
+        }
+
+        return initialList.stream()
+                .filter(row -> !tree.idInBootstrapSample(row.getId()))
+                .collect(Collectors.toList());
+
+    }
+
 
 }

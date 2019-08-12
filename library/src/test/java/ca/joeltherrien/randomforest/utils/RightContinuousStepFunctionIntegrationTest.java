@@ -138,4 +138,18 @@ public class RightContinuousStepFunctionIntegrationTest {
     }
 
 
+    @Test
+    public void testIntegratingEmptyFunction(){
+        // A function might have no points, but we'll still need to integrate it.
+
+        final RightContinuousStepFunction function = new RightContinuousStepFunction(
+                new double[]{}, new double[]{}, 1.0
+        );
+
+        final double area = function.integrate(1.0 ,3.0);
+        assertEquals(2.0, area, 0.000001);
+
+    }
+
+
 }
