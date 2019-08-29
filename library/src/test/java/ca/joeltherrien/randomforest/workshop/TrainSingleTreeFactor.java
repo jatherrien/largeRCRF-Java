@@ -41,9 +41,9 @@ public class TrainSingleTreeFactor {
         final int n = 10000;
         final List<Row<Double>> trainingSet = new ArrayList<>(n);
 
-        final Covariate<Double> x1Covariate = new NumericCovariate("x1", 0);
-        final Covariate<Double> x2Covariate = new NumericCovariate("x2", 1);
-        final FactorCovariate x3Covariate = new FactorCovariate("x3", 2, Utils.easyList("cat", "dog", "mouse"));
+        final Covariate<Double> x1Covariate = new NumericCovariate("x1", 0, false);
+        final Covariate<Double> x2Covariate = new NumericCovariate("x2", 1, false);
+        final FactorCovariate x3Covariate = new FactorCovariate("x3", 2, Utils.easyList("cat", "dog", "mouse"), false);
 
         final List<Covariate.Value<Double>> x1List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)

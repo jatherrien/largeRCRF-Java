@@ -47,10 +47,10 @@ public class TestSavingLoading {
 
     public List<Covariate> getCovariates(){
         return Utils.easyList(
-                new NumericCovariate("ageatfda", 0),
-                new BooleanCovariate("idu", 1),
-                new BooleanCovariate("black", 2),
-                new NumericCovariate("cd4nadir", 3)
+                new NumericCovariate("ageatfda", 0, false),
+                new BooleanCovariate("idu", 1, false),
+                new BooleanCovariate("black", 2, false),
+                new NumericCovariate("cd4nadir", 3, false)
         );
     }
 

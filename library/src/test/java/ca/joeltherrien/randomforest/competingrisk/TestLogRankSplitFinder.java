@@ -46,7 +46,7 @@ public class TestLogRankSplitFinder {
     public static Data<CompetingRiskResponse> loadData(String filename) throws IOException {
 
         final List<Covariate> covariates = Utils.easyList(
-                new NumericCovariate("x2", 0)
+                new NumericCovariate("x2", 0, false)
         );
 
         final List<Row<CompetingRiskResponse>> rows = TestUtils.loadData(covariates, new ResponseLoader.CompetingRisksResponseLoader("delta", "u"), filename);

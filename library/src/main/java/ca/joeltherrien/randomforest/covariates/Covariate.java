@@ -49,6 +49,8 @@ public interface Covariate<V> extends Serializable, Comparable<Covariate> {
         return getIndex() - other.getIndex();
     }
 
+    boolean haveNASplitPenalty();
+
     interface Value<V> extends Serializable{
 
         Covariate<V> getParent();

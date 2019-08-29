@@ -44,7 +44,7 @@ public class TestProvidingInitialForest {
     private List<Row<Double>> data;
 
     public TestProvidingInitialForest(){
-        covariateList = Collections.singletonList(new NumericCovariate("x", 0));
+        covariateList = Collections.singletonList(new NumericCovariate("x", 0, false));
 
         data = Utils.easyList(
                 Row.createSimple(Utils.easyMap("x", "1.0"), covariateList, 1, 1.0),
@@ -198,7 +198,7 @@ public class TestProvidingInitialForest {
         it's not clear if the forest being provided is the same one that trees were saved from.
      */
     @Test
-    public void verifyExceptions(){
+    public void testExceptions(){
         final String filePath = "src/test/resources/trees/";
         final File directory = new File(filePath);
         if(directory.exists()){

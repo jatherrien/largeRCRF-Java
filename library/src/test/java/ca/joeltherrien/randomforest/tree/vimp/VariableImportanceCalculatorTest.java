@@ -39,10 +39,10 @@ public class VariableImportanceCalculatorTest {
 
      */
     public VariableImportanceCalculatorTest(){
-        final BooleanCovariate booleanCovariate = new BooleanCovariate("x", 0);
-        final NumericCovariate numericCovariate = new NumericCovariate("y", 1);
+        final BooleanCovariate booleanCovariate = new BooleanCovariate("x", 0, false);
+        final NumericCovariate numericCovariate = new NumericCovariate("y", 1, false);
         final FactorCovariate factorCovariate = new FactorCovariate("z", 2,
-                Utils.easyList("red", "blue", "green"));
+                Utils.easyList("red", "blue", "green"), false);
 
         this.covariates = Utils.easyList(booleanCovariate, numericCovariate, factorCovariate);
 

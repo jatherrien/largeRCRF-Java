@@ -49,9 +49,9 @@ public class TestPersistence {
 
         final Settings settingsOriginal =  Settings.builder()
                 .covariateSettings(Utils.easyList(
-                        new NumericCovariateSettings("x1"),
-                        new BooleanCovariateSettings("x2"),
-                        new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"))
+                        new NumericCovariateSettings("x1", true),
+                        new BooleanCovariateSettings("x2", false),
+                        new FactorCovariateSettings("x3", Utils.easyList("cat", "mouse", "dog"), true)
                         )
                 )
                 .trainingDataLocation("training_data.csv")

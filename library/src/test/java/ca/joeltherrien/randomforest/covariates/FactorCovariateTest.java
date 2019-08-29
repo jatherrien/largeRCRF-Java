@@ -17,12 +17,15 @@
 package ca.joeltherrien.randomforest.covariates;
 
 
+import ca.joeltherrien.randomforest.Row;
 import ca.joeltherrien.randomforest.covariates.factor.FactorCovariate;
+import ca.joeltherrien.randomforest.tree.Split;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -31,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FactorCovariateTest {
 
     @Test
-    void verifyEqualLevels() {
+    public void testEqualLevels() {
         final FactorCovariate petCovariate = createTestCovariate();
 
         final FactorCovariate.FactorValue dog1 = petCovariate.createValue("DOG");
@@ -53,7 +56,7 @@ public class FactorCovariateTest {
     }
 
     @Test
-    void verifyBadLevelException(){
+    public void testBadLevelException(){
         final FactorCovariate petCovariate = createTestCovariate();
         final Executable badCode = () -> petCovariate.createValue("vulcan");
 
@@ -61,25 +64,169 @@ public class FactorCovariateTest {
     }
 
     @Test
-    void testAllSubsets(){
+    public void testAllSubsets(){
+        final int n = 2*3; // ensure that n is a multiple of 3 for the test
         final FactorCovariate petCovariate = createTestCovariate();
+        final List<Row<Double>> data = generateSampleData(petCovariate, n);
 
-        final List<SplitRule<String>> splitRules = new ArrayList<>();
+        final List<Split<Double, String>> splits = new ArrayList<>();
 
-        petCovariate.generateSplitRuleUpdater(null, 100, new Random())
-                .forEachRemaining(split -> splitRules.add(split.getSplitRule()));
+        petCovariate.generateSplitRuleUpdater(data, 100, new Random())
+                .forEachRemaining(split -> splits.add(split));
 
-        assertEquals(splitRules.size(), 3);
+        assertEquals(splits.size(), 3);
 
-        // TODO verify the contents of the split rules
+        // These are the 3 possibilities
+        boolean dog_catmouse = false;
+        boolean cat_dogmouse = false;
+        boolean mouse_dogcat = false;
 
+        for(Split<Double, String> split : splits){
+            List<Row<Double>> smallerHand;
+            List<Row<Double>> largerHand;
+
+            if(split.getLeftHand().size() < split.getRightHand().size()){
+                smallerHand = split.getLeftHand();
+                largerHand = split.getRightHand();
+            } else{
+                smallerHand = split.getRightHand();
+                largerHand = split.getLeftHand();
+            }
+
+            // There should be exactly one distinct value in the smaller list
+            assertEquals(n/3, smallerHand.size());
+            assertEquals(1,
+                    smallerHand.stream()
+                            .map(row -> row.getCovariateValue(petCovariate).getValue())
+                            .distinct()
+                            .count()
+            );
+
+            // There should be exactly two distinct values in the smaller list
+            assertEquals(2*n/3, largerHand.size());
+            assertEquals(2,
+                    largerHand.stream()
+                            .map(row -> row.getCovariateValue(petCovariate).getValue())
+                            .distinct()
+                            .count()
+            );
+
+            switch(smallerHand.get(0).getCovariateValue(petCovariate).getValue()){
+                case "DOG":
+                    dog_catmouse = true;
+                case "CAT":
+                    cat_dogmouse = true;
+                case "MOUSE":
+                    mouse_dogcat = true;
+            }
+
+        }
+
+        assertTrue(dog_catmouse);
+        assertTrue(cat_dogmouse);
+        assertTrue(mouse_dogcat);
+
+    }
+
+    /*
+     * There was a bug where if number==0 in generateSplitRuleUpdater, then the result was empty.
+     */
+    @Test
+    public void testNumber0Subsets(){
+        final int n = 2*3; // ensure that n is a multiple of 3 for the test
+        final FactorCovariate petCovariate = createTestCovariate();
+        final List<Row<Double>> data = generateSampleData(petCovariate, n);
+
+        final List<Split<Double, String>> splits = new ArrayList<>();
+
+        petCovariate.generateSplitRuleUpdater(data, 0, new Random())
+                .forEachRemaining(split -> splits.add(split));
+
+        assertEquals(splits.size(), 3);
+
+        // These are the 3 possibilities
+        boolean dog_catmouse = false;
+        boolean cat_dogmouse = false;
+        boolean mouse_dogcat = false;
+
+        for(Split<Double, String> split : splits){
+            List<Row<Double>> smallerHand;
+            List<Row<Double>> largerHand;
+
+            if(split.getLeftHand().size() < split.getRightHand().size()){
+                smallerHand = split.getLeftHand();
+                largerHand = split.getRightHand();
+            } else{
+                smallerHand = split.getRightHand();
+                largerHand = split.getLeftHand();
+            }
+
+            // There should be exactly one distinct value in the smaller list
+            assertEquals(n/3, smallerHand.size());
+            assertEquals(1,
+                    smallerHand.stream()
+                    .map(row -> row.getCovariateValue(petCovariate).getValue())
+                    .distinct()
+                    .count()
+            );
+
+            // There should be exactly two distinct values in the smaller list
+            assertEquals(2*n/3, largerHand.size());
+            assertEquals(2,
+                    largerHand.stream()
+                            .map(row -> row.getCovariateValue(petCovariate).getValue())
+                            .distinct()
+                            .count()
+            );
+
+            switch(smallerHand.get(0).getCovariateValue(petCovariate).getValue()){
+                case "DOG":
+                    dog_catmouse = true;
+                case "CAT":
+                    cat_dogmouse = true;
+                case "MOUSE":
+                    mouse_dogcat = true;
+            }
+
+        }
+
+        assertTrue(dog_catmouse);
+        assertTrue(cat_dogmouse);
+        assertTrue(mouse_dogcat);
+
+    }
+
+    @Test
+    public void testSpitRuleUpdaterWithNAs(){
+        // When some NAs were present calling generateSplitRuleUpdater caused an exception.
+
+        final FactorCovariate covariate = createTestCovariate();
+        final List<Row<Double>> sampleData = generateSampleData(covariate, 10);
+        sampleData.add(Row.createSimple(Utils.easyMap("pet", "NA"), Collections.singletonList(covariate), 11, 5.0));
+
+        covariate.generateSplitRuleUpdater(sampleData, 0, new Random());
+
+        // Test passes if no exception has occurred.
     }
 
 
     private FactorCovariate createTestCovariate(){
         final List<String> levels = Utils.easyList("DOG", "CAT", "MOUSE");
 
-        return new FactorCovariate("pet", 0, levels);
+        return new FactorCovariate("pet", 0, levels, false);
+    }
+
+    private List<Row<Double>> generateSampleData(Covariate covariate, int n){
+        final List<Covariate> covariateList = Collections.singletonList(covariate);
+        final List<Row<Double>> dataList = new ArrayList<>(n);
+
+        final String[] levels = new String[]{"DOG", "CAT", "MOUSE"};
+
+        for(int i=0; i<n; i++){
+            dataList.add(Row.createSimple(Utils.easyMap("pet", levels[i % 3]), covariateList, 1, 1.0));
+        }
+
+        return dataList;
     }
 
 

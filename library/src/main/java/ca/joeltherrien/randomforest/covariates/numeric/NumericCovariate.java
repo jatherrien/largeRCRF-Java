@@ -47,6 +47,13 @@ public final class NumericCovariate implements Covariate<Double> {
 
     private boolean hasNAs = false;
 
+    private final boolean haveNASplitPenalty;
+    @Override
+    public boolean haveNASplitPenalty(){
+        // penalty would add worthless computational time if there are no NAs
+        return hasNAs && haveNASplitPenalty;
+    }
+
     @Override
     public <Y> NumericSplitRuleUpdater<Y> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
         Stream<Row<Y>> stream = data.stream();

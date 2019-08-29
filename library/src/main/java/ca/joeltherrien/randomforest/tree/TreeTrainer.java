@@ -17,7 +17,9 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.Row;
+import ca.joeltherrien.randomforest.VisibleForTesting;
 import ca.joeltherrien.randomforest.covariates.Covariate;
+import ca.joeltherrien.randomforest.utils.SingletonIterator;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,31 +74,12 @@ public class TreeTrainer<Y, O> {
 
             }
 
-
             // Now that we have the best split; we need to handle any NAs that were dropped off
             final double probabilityLeftHand = (double) bestSplit.leftHand.size() /
                     (double) (bestSplit.leftHand.size() + bestSplit.rightHand.size());
 
             // Assign missing values to the split if necessary
-            if(covariates.get(bestSplit.getSplitRule().getParentCovariateIndex()).hasNAs()){
-                bestSplit = bestSplit.modifiableClone(); // the lists in bestSplit are otherwise usually unmodifiable lists
-
-                for(Row<Y> row : data) {
-                    final int covariateIndex = bestSplit.getSplitRule().getParentCovariateIndex();
-
-                    if(row.getValueByIndex(covariateIndex).isNA()) {
-                        final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
-
-                        if(randomDecision){
-                            bestSplit.getLeftHand().add(row);
-                        }
-                        else{
-                            bestSplit.getRightHand().add(row);
-                        }
-
-                    }
-                }
-            }
+            bestSplit = randomlyAssignNAs(data, bestSplit, random);
 
             final Node<O> leftNode;
             final Node<O> rightNode;
@@ -144,7 +127,8 @@ public class TreeTrainer<Y, O> {
         return splitCovariates;
     }
 
-    private Split<Y, ?> findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry, Random random){
+    @VisibleForTesting
+    public Split<Y, ?> findBestSplitRule(List<Row<Y>> data, List<Covariate> covariatesToTry, Random random){
 
         SplitAndScore<Y, ?> bestSplitAndScore = null;
         final SplitFinder noGenericSplitFinder = splitFinder; // cause Java generics are sometimes too frustrating
@@ -157,10 +141,32 @@ public class TreeTrainer<Y, O> {
                 continue;
             }
 
-            final SplitAndScore<Y, ?> candidateSplitAndScore = noGenericSplitFinder.findBestSplit(iterator);
+            SplitAndScore<Y, ?> candidateSplitAndScore = noGenericSplitFinder.findBestSplit(iterator);
 
-            if(candidateSplitAndScore != null && (bestSplitAndScore == null ||
-                    candidateSplitAndScore.getScore() > bestSplitAndScore.getScore())) {
+
+            if(candidateSplitAndScore == null){
+                continue;
+            }
+
+            // This score was based on splitting only non-NA values. However, there might be a similar covariate we are also considering
+            // that is just as good at splitting but has less NAs; we should thus penalize the split score for variables with NAs
+            // We do this by randomly assigning the NAs and then recalculating the split score on the best split we already have.
+            //
+            // We only have to penalize the score though if we know it's possible that this might be the best split. If it's not,
+            // then we can skip the computations.
+            final boolean mayBeGoodSplit = bestSplitAndScore == null ||
+                    candidateSplitAndScore.getScore() > bestSplitAndScore.getScore();
+            if(mayBeGoodSplit && covariate.haveNASplitPenalty()){
+                Split<Y, ?> candiateSplitWithNAs = randomlyAssignNAs(data, candidateSplitAndScore.getSplit(), random);
+                final Iterator<Split<Y, ?>> newSplitWithRandomNAs = new SingletonIterator<>(candiateSplitWithNAs);
+                final double newScore = splitFinder.findBestSplit(newSplitWithRandomNAs).getScore();
+
+                // There's a chance that NAs might add noise to *improve* the score; but we want to ensure we penalize it.
+                // Thus we only change the score if its worse.
+                candidateSplitAndScore.setScore(Math.min(newScore, candidateSplitAndScore.getScore()));
+            }
+
+            if(bestSplitAndScore == null || candidateSplitAndScore.getScore() > bestSplitAndScore.getScore()) {
                 bestSplitAndScore = candidateSplitAndScore;
             }
 
@@ -171,6 +177,38 @@ public class TreeTrainer<Y, O> {
         }
 
         return bestSplitAndScore.getSplit();
+
+    }
+
+    private <V> Split<Y, V> randomlyAssignNAs(List<Row<Y>> data, Split<Y, V> existingSplit, Random random){
+
+        // Now that we have the best split; we need to handle any NAs that were dropped off
+        final double probabilityLeftHand = (double) existingSplit.leftHand.size() /
+                (double) (existingSplit.leftHand.size() + existingSplit.rightHand.size());
+
+
+        final int covariateIndex = existingSplit.getSplitRule().getParentCovariateIndex();
+
+        // Assign missing values to the split if necessary
+        if(covariates.get(existingSplit.getSplitRule().getParentCovariateIndex()).hasNAs()){
+            existingSplit = existingSplit.modifiableClone(); // the lists in bestSplit are otherwise usually unmodifiable lists
+
+            for(Row<Y> row : data) {
+                if(row.getValueByIndex(covariateIndex).isNA()) {
+                    final boolean randomDecision = random.nextDouble() <= probabilityLeftHand;
+
+                    if(randomDecision){
+                        existingSplit.getLeftHand().add(row);
+                    }
+                    else{
+                        existingSplit.getRightHand().add(row);
+                    }
+
+                }
+            }
+        }
+
+        return existingSplit;
 
     }
 

@@ -43,7 +43,7 @@ public class TrainForest {
 
         final List<Covariate> covariateList = new ArrayList<>(p);
         for(int j =0; j < p; j++){
-            final NumericCovariate covariate = new NumericCovariate("x"+j, j);
+            final NumericCovariate covariate = new NumericCovariate("x"+j, j, false);
             covariateList.add(covariate);
         }
 

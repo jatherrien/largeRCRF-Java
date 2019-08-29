@@ -70,7 +70,7 @@ public class NumericCovariateTest {
 
     @Test
     public void testNumericCovariateDeterministic(){
-        final NumericCovariate covariate = new NumericCovariate("x", 0);
+        final NumericCovariate covariate = new NumericCovariate("x", 0, false);
 
         final List<Row<Double>> dataset = createTestDataset(covariate);
 
@@ -158,7 +158,7 @@ public class NumericCovariateTest {
 
     @Test
     public void testNumericSplitRuleUpdaterWithIndexes(){
-        final NumericCovariate covariate = new NumericCovariate("x", 0);
+        final NumericCovariate covariate = new NumericCovariate("x", 0, false);
 
         final List<Row<Double>> dataset = createTestDataset(covariate);
 
@@ -223,7 +223,7 @@ public class NumericCovariateTest {
      */
     @Test
     public void testNumericSplitRuleUpdaterWithIndexesAllMissingData(){
-        final NumericCovariate covariate = new NumericCovariate("x", 0);
+        final NumericCovariate covariate = new NumericCovariate("x", 0, false);
         final List<Row<Double>> dataset = createTestDatasetMissingValues(covariate);
         final NumericSplitRuleUpdater<Double> updater = covariate.generateSplitRuleUpdater(dataset, 5, new Random());
 

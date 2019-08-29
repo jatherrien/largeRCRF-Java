@@ -24,12 +24,12 @@ import lombok.NoArgsConstructor;
 @Data
 public final class BooleanCovariateSettings extends CovariateSettings<Boolean> {
 
-    public BooleanCovariateSettings(String name){
-        super(name);
+    public BooleanCovariateSettings(String name, boolean naSplitPenalty){
+        super(name, naSplitPenalty);
     }
 
     @Override
     public BooleanCovariate build(int index) {
-        return new BooleanCovariate(name, index);
+        return new BooleanCovariate(name, index, naSplitPenalty);
     }
 }

@@ -55,9 +55,9 @@ public class TestLoadingCSV {
         final Settings settings = Settings.builder()
                 .trainingDataLocation(filename)
                 .covariateSettings(
-                        Utils.easyList(new NumericCovariateSettings("x1"),
-                                new FactorCovariateSettings("x2", Utils.easyList("dog", "cat", "mouse")),
-                                new BooleanCovariateSettings("x3"))
+                        Utils.easyList(new NumericCovariateSettings("x1", true),
+                                new FactorCovariateSettings("x2", Utils.easyList("dog", "cat", "mouse"), false),
+                                new BooleanCovariateSettings("x3", true))
                 )
                 .yVarSettings(yVarSettings)
                 .build();
@@ -71,14 +71,14 @@ public class TestLoadingCSV {
     }
 
     @Test
-    public void verifyLoadingNormal(final List<Covariate> covariates) throws IOException {
+    public void testLoadingNormal(final List<Covariate> covariates) throws IOException {
         final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv");
 
         assertData(data, covariates);
     }
 
     @Test
-    public void verifyLoadingGz(final List<Covariate> covariates) throws IOException {
+    public void testLoadingGz(final List<Covariate> covariates) throws IOException {
         final List<Row<Double>> data = loadData("src/test/resources/testCSV.csv.gz");
 
         assertData(data, covariates);

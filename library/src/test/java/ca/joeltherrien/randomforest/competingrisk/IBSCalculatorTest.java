@@ -52,7 +52,7 @@ public class IBSCalculatorTest {
      */
 
     @Test
-    public void resultsWithoutCensoringDistribution(){
+    public void testResultsWithoutCensoringDistribution(){
         final IBSCalculator calculator = new IBSCalculator();
 
         final double errorDifferentEvent = calculator.calculateError(
@@ -74,7 +74,7 @@ public class IBSCalculatorTest {
     }
 
     @Test
-    public void resultsWithCensoringDistribution(){
+    public void testResultsWithCensoringDistribution(){
         final RightContinuousStepFunction censorSurvivalFunction = RightContinuousStepFunction.constructFromPoints(
                 Utils.easyList(
                         new Point(0.0, 0.75),

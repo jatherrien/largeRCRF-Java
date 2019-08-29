@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class FactorCovariate implements Covariate<String> {
 
@@ -40,8 +41,15 @@ public final class FactorCovariate implements Covariate<String> {
 
     private boolean hasNAs;
 
+    private final boolean haveNASplitPenalty;
+    @Override
+    public boolean haveNASplitPenalty(){
+        // penalty would add worthless computational time if there are no NAs
+        return hasNAs && haveNASplitPenalty;
+    }
 
-    public FactorCovariate(final String name, final int index, List<String> levels){
+
+    public FactorCovariate(final String name, final int index, List<String> levels, final boolean haveNASplitPenalty){
         this.name = name;
         this.index = index;
         this.factorLevels = new HashMap<>();
@@ -63,12 +71,22 @@ public final class FactorCovariate implements Covariate<String> {
         this.numberOfPossiblePairings = numberOfPossiblePairingsTemp-1;
 
         this.naValue = new FactorValue(null);
+
+        this.haveNASplitPenalty = haveNASplitPenalty;
     }
 
 
 
     @Override
     public <Y> Iterator<Split<Y, String>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
+        if(hasNAs()){
+            data = data.stream().filter(row -> !row.getCovariateValue(this).isNA()).collect(Collectors.toList());
+        }
+
+        if(number == 0){ // nsplit = 0 => try every possibility, although we limit it to the number of observations.
+            number = data.size();
+        }
+
         final Set<Split<Y, String>> splits = new HashSet<>();
 
         // This is to ensure we don't get stuck in an infinite loop for small factors

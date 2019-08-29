@@ -17,15 +17,13 @@
 package ca.joeltherrien.randomforest.tree;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 
 @AllArgsConstructor
+@Data
 public class SplitAndScore<Y, V> {
 
-    @Getter
-    private final Split<Y, V> split;
-
-    @Getter
-    private final Double score;
+    private Split<Y, V> split;
+    private Double score;
 
 }

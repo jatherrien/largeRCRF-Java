@@ -45,20 +45,20 @@ public class TestDeterministicForests {
 
         int index = 0;
         for(int j=0; j<5; j++){
-            final NumericCovariate numericCovariate = new NumericCovariate("numeric"+j, index);
+            final NumericCovariate numericCovariate = new NumericCovariate("numeric"+j, index, false);
             covariateList.add(numericCovariate);
             index++;
         }
 
         for(int j=0; j<5; j++){
-            final BooleanCovariate booleanCovariate = new BooleanCovariate("boolean"+j, index);
+            final BooleanCovariate booleanCovariate = new BooleanCovariate("boolean"+j, index, false);
             covariateList.add(booleanCovariate);
             index++;
         }
 
         final List<String> levels = Utils.easyList("cat", "dog", "mouse");
         for(int j=0; j<5; j++){
-            final FactorCovariate factorCovariate = new FactorCovariate("factor"+j, index, levels);
+            final FactorCovariate factorCovariate = new FactorCovariate("factor"+j, index, levels, false);
             covariateList.add(factorCovariate);
             index++;
         }

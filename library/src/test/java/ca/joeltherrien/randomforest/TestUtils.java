@@ -156,7 +156,7 @@ public class TestUtils {
     }
 
     @Test
-    public void reduceListToSize(){
+    public void testReduceListToSize(){
         final List<Integer> testList = Utils.easyList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         final Random random = new Random();
         for(int i=0; i<100; i++) { // want to test many times to ensure it doesn't work just due to randomness

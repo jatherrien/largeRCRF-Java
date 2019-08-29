@@ -40,9 +40,11 @@ import lombok.NoArgsConstructor;
 public abstract class CovariateSettings<V> {
 
     String name;
+    boolean naSplitPenalty;
 
-    CovariateSettings(String name){
+    CovariateSettings(String name, boolean naSplitPenalty){
         this.name = name;
+        this.naSplitPenalty = naSplitPenalty;
     }
 
     public abstract Covariate<V> build(int index);

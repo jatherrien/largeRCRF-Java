@@ -25,6 +25,7 @@ import lombok.Getter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public final class BooleanCovariate implements Covariate<Boolean> {
 
@@ -40,14 +41,26 @@ public final class BooleanCovariate implements Covariate<Boolean> {
 
     private final BooleanSplitRule splitRule; // there's only one possible rule for BooleanCovariates.
 
-    public BooleanCovariate(String name, int index){
+    private final boolean haveNASplitPenalty;
+    @Override
+    public boolean haveNASplitPenalty(){
+        // penalty would add worthless computational time if there are no NAs
+        return hasNAs && haveNASplitPenalty;
+    }
+
+    public BooleanCovariate(String name, int index, boolean haveNASplitPenalty){
         this.name = name;
         this.index = index;
-        splitRule = new BooleanSplitRule(this);
+        this.splitRule = new BooleanSplitRule(this);
+        this.haveNASplitPenalty = haveNASplitPenalty;
     }
 
     @Override
     public <Y> Iterator<Split<Y, Boolean>> generateSplitRuleUpdater(List<Row<Y>> data, int number, Random random) {
+        if(hasNAs){
+            data = data.stream().filter(row -> !row.getValueByIndex(index).isNA()).collect(Collectors.toList());
+        }
+
         return new SingletonIterator<>(this.splitRule.applyRule(data));
     }
 

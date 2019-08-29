@@ -39,8 +39,8 @@ public class TrainSingleTree {
         final int n = 1000;
         final List<Row<Double>> trainingSet = new ArrayList<>(n);
 
-        final Covariate<Double> x1Covariate = new NumericCovariate("x1", 0);
-        final Covariate<Double> x2Covariate = new NumericCovariate("x2", 1);
+        final Covariate<Double> x1Covariate = new NumericCovariate("x1", 0, false);
+        final Covariate<Double> x2Covariate = new NumericCovariate("x2", 1, false);
 
         final List<Covariate.Value<Double>> x1List = DoubleStream
                 .generate(() -> random.nextDouble()*10.0)

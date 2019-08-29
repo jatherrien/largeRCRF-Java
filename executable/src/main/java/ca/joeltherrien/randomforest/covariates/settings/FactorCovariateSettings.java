@@ -29,13 +29,13 @@ public final class FactorCovariateSettings extends CovariateSettings<String> {
 
     private List<String> levels;
 
-    public FactorCovariateSettings(String name, List<String> levels){
-        super(name);
+    public FactorCovariateSettings(String name, List<String> levels, boolean naSplitPenalty){
+        super(name, naSplitPenalty);
         this.levels = new ArrayList<>(levels); // Jackson struggles with List.of(...)
     }
 
     @Override
     public FactorCovariate build(int index) {
-        return new FactorCovariate(name, index, levels);
+        return new FactorCovariate(name, index, levels, naSplitPenalty);
     }
 }

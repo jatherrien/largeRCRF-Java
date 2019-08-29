@@ -24,12 +24,12 @@ import lombok.NoArgsConstructor;
 @Data
 public final class NumericCovariateSettings extends CovariateSettings<Double> {
 
-    public NumericCovariateSettings(String name){
-        super(name);
+    public NumericCovariateSettings(String name, boolean naSplitPenalty){
+        super(name, naSplitPenalty);
     }
 
     @Override
     public NumericCovariate build(int index) {
-        return new NumericCovariate(name, index);
+        return new NumericCovariate(name, index, naSplitPenalty);
     }
 }

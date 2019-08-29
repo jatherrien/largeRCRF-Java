@@ -53,10 +53,10 @@ public class TestCompetingRisk {
 
     public List<Covariate> getCovariates(){
         return Utils.easyList(
-                new NumericCovariate("ageatfda", 0),
-                new BooleanCovariate("idu", 1),
-                new BooleanCovariate("black", 2),
-                new NumericCovariate("cd4nadir", 3)
+                new NumericCovariate("ageatfda", 0, false),
+                new BooleanCovariate("idu", 1, false),
+                new BooleanCovariate("black", 2, false),
+                new NumericCovariate("cd4nadir", 3, false)
         );
     }
 
@@ -109,8 +109,8 @@ public class TestCompetingRisk {
 
         // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
         final List<Covariate> covariates = Utils.easyList(
-                new BooleanCovariate("idu", 0),
-                new BooleanCovariate("black", 1)
+                new BooleanCovariate("idu", 0, false),
+                new BooleanCovariate("black", 1, false)
         );
 
         final List<Row<CompetingRiskResponse>> dataset = getData(covariates, "src/test/resources/wihs.bootstrapped.csv");
@@ -210,8 +210,8 @@ public class TestCompetingRisk {
     public void testLogRankSplitFinderTwoBooleans() throws IOException {
         // by only using BooleanCovariates (only one split rule) we can guarantee identical results with randomForestSRC on one tree.
         final List<Covariate> covariates = Utils.easyList(
-                new BooleanCovariate("idu", 0),
-                new BooleanCovariate("black", 1)
+                new BooleanCovariate("idu", 0, false),
+                new BooleanCovariate("black", 1, false)
         );
 
 
@@ -259,7 +259,7 @@ public class TestCompetingRisk {
     }
 
     @Test
-    public void verifyDataset() throws IOException {
+    public void testDataset() throws IOException {
         final List<Covariate> covariates = getCovariates();
 
         final List<Row<CompetingRiskResponse>> dataset = getData(covariates, DEFAULT_FILEPATH);
