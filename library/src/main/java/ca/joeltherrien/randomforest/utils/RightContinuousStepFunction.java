@@ -16,6 +16,8 @@
 
 package ca.joeltherrien.randomforest.utils;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,6 +41,7 @@ public final class RightContinuousStepFunction extends StepFunction {
      *
      * May not be null.
      */
+    @Getter
     private final double defaultY;
 
     public RightContinuousStepFunction(double[] x, double[] y, double defaultY) {

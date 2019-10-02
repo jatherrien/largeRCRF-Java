@@ -20,8 +20,8 @@ import ca.joeltherrien.randomforest.covariates.Covariate;
 import ca.joeltherrien.randomforest.covariates.numeric.NumericCovariate;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
-import ca.joeltherrien.randomforest.tree.Forest;
 import ca.joeltherrien.randomforest.tree.ForestTrainer;
+import ca.joeltherrien.randomforest.tree.OnlineForest;
 import ca.joeltherrien.randomforest.tree.Tree;
 import ca.joeltherrien.randomforest.tree.TreeTrainer;
 import ca.joeltherrien.randomforest.utils.DataUtils;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProvidingInitialForest {
 
-    private Forest<Double, Double> initialForest;
+    private OnlineForest<Double, Double> initialForest;
     private List<Covariate> covariateList;
     private List<Row<Double>> data;
 
@@ -107,8 +107,8 @@ public class TestProvidingInitialForest {
     public void testSerialInMemory(){
         final ForestTrainer<Double, Double, Double> forestTrainer = getForestTrainer(null, 20);
 
-        final Forest<Double, Double> newForest = forestTrainer.trainSerialInMemory(Optional.of(initialForest));
-        assertEquals(20, newForest.getTrees().size());
+        final OnlineForest<Double, Double> newForest = forestTrainer.trainSerialInMemory(Optional.of(initialForest));
+        assertEquals(20, newForest.getNumberOfTrees());
 
         for(Tree<Double> initialTree : initialForest.getTrees()){
             assertTrue(newForest.getTrees().contains(initialTree));
@@ -124,8 +124,8 @@ public class TestProvidingInitialForest {
     public void testParallelInMemory(){
         final ForestTrainer<Double, Double, Double> forestTrainer = getForestTrainer(null, 20);
 
-        final Forest<Double, Double> newForest = forestTrainer.trainParallelInMemory(Optional.of(initialForest), 2);
-        assertEquals(20, newForest.getTrees().size());
+        final OnlineForest<Double, Double> newForest = forestTrainer.trainParallelInMemory(Optional.of(initialForest), 2);
+        assertEquals(20, newForest.getNumberOfTrees());
 
         for(Tree<Double> initialTree : initialForest.getTrees()){
             assertTrue(newForest.getTrees().contains(initialTree));
@@ -149,11 +149,11 @@ public class TestProvidingInitialForest {
         forestTrainer.trainParallelOnDisk(Optional.of(initialForest), 2);
 
         assertEquals(20, directory.listFiles().length);
-        final Forest<Double, Double> newForest = DataUtils.loadForest(directory, new MeanResponseCombiner());
+        final OnlineForest<Double, Double> newForest = DataUtils.loadOnlineForest(directory, new MeanResponseCombiner());
 
 
 
-        assertEquals(20, newForest.getTrees().size());
+        assertEquals(20, newForest.getNumberOfTrees());
 
         final List<String> newForestTreesAsStrings = newForest.getTrees().stream()
                 .map(tree -> tree.toString()).collect(Collectors.toList());
@@ -179,9 +179,9 @@ public class TestProvidingInitialForest {
 
         assertEquals(20, directory.listFiles().length);
 
-        final Forest<Double, Double> newForest = DataUtils.loadForest(directory, new MeanResponseCombiner());
+        final OnlineForest<Double, Double> newForest = DataUtils.loadOnlineForest(directory, new MeanResponseCombiner());
 
-        assertEquals(20, newForest.getTrees().size());
+        assertEquals(20, newForest.getNumberOfTrees());
 
         final List<String> newForestTreesAsStrings = newForest.getTrees().stream()
                 .map(tree -> tree.toString()).collect(Collectors.toList());

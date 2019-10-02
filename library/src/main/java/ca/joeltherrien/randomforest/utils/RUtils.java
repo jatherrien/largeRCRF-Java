@@ -25,6 +25,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskRespons
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -196,6 +197,14 @@ public final class RUtils {
         }
 
         return newList;
+    }
+
+    public static File[] getTreeFileArray(String folderPath, int endingId){
+        return (File[]) IntStream.rangeClosed(1, endingId).sequential()
+                .mapToObj(i -> folderPath + "/tree-" + i + ".tree")
+                .map(File::new)
+                .toArray();
+
     }
 
 }

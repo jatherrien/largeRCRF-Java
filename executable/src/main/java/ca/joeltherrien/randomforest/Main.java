@@ -122,7 +122,7 @@ public class Main {
             Utils.reduceListToSize(dataset, n, new Random());
 
             final File folder = new File(settings.getSaveTreeLocation());
-            final Forest<?, CompetingRiskFunctions> forest = DataUtils.loadForest(folder, responseCombiner);
+            final Forest<?, CompetingRiskFunctions> forest = DataUtils.loadOnlineForest(folder, responseCombiner);
 
             final boolean useBootstrapPredictions = settings.getTrainingDataLocation().equals(settings.getValidationDataLocation());
 

@@ -57,10 +57,10 @@ public class ForestTrainer<Y, TO, FO> {
      *                      in which case its trees are combined with the new one.
      * @return A trained forest.
      */
-    public Forest<TO, FO> trainSerialInMemory(Optional<Forest<TO, FO>> initialForest){
+    public OnlineForest<TO, FO> trainSerialInMemory(Optional<Forest<TO, FO>> initialForest){
 
         final List<Tree<TO>> trees = new ArrayList<>(ntree);
-        initialForest.ifPresent(forest -> trees.addAll(forest.getTrees()));
+        initialForest.ifPresent(forest -> forest.getTrees().forEach(trees::add));
 
         final Bootstrapper<Row<Y>> bootstrapper = new Bootstrapper<>(data);
 
@@ -77,11 +77,9 @@ public class ForestTrainer<Y, TO, FO> {
             System.out.println("Finished");
         }
 
-
-        return Forest.<TO, FO>builder()
+        return OnlineForest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
                 .trees(trees)
-                .covariateList(covariates)
                 .build();
 
     }
@@ -94,7 +92,7 @@ public class ForestTrainer<Y, TO, FO> {
      *                      There cannot be existing trees if the initial forest is
      *                      specified.
      */
-    public void trainSerialOnDisk(Optional<Forest<TO, FO>> initialForest){
+    public OfflineForest<TO, FO> trainSerialOnDisk(Optional<Forest<TO, FO>> initialForest){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
         if(!folder.exists()){
@@ -115,17 +113,14 @@ public class ForestTrainer<Y, TO, FO> {
         final AtomicInteger treeCount; // tracks how many trees are finished
         // Using an AtomicInteger is overkill for serial code, but this lets us reuse TreeSavedWorker
         if(initialForest.isPresent()){
-            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
-
-            for(int j=0; j<initialTrees.size(); j++){
+            int j=0;
+            for(final Tree<TO> tree : initialForest.get().getTrees()){
                 final String filename = "tree-" + (j+1) + ".tree";
-                final Tree<TO> tree = initialTrees.get(j);
-
                 saveTree(tree, filename);
-
+                j++;
             }
 
-            treeCount = new AtomicInteger(initialTrees.size());
+            treeCount = new AtomicInteger(j);
         } else{
             treeCount = new AtomicInteger(treeFiles.length);
         }
@@ -153,6 +148,8 @@ public class ForestTrainer<Y, TO, FO> {
             System.out.println("Finished");
         }
 
+        return new OfflineForest<>(folder, treeResponseCombiner);
+
     }
 
     /**
@@ -162,7 +159,7 @@ public class ForestTrainer<Y, TO, FO> {
      *                      in which case its trees are combined with the new one.
      * @param threads The number of trees to train at once.
      */
-    public Forest<TO, FO> trainParallelInMemory(Optional<Forest<TO, FO>> initialForest, int threads){
+    public OnlineForest<TO, FO> trainParallelInMemory(Optional<Forest<TO, FO>> initialForest, int threads){
 
         // create a list that is pre-specified in size (I can call the .set method at any index < ntree without
         // the earlier indexes being filled.
@@ -170,11 +167,12 @@ public class ForestTrainer<Y, TO, FO> {
 
         final int startingCount;
         if(initialForest.isPresent()){
-            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
-            for(int j=0; j<initialTrees.size(); j++) {
-                trees.set(j, initialTrees.get(j));
+            int j = 0;
+            for(final Tree<TO> tree : initialForest.get().getTrees()){
+                trees.set(j, tree);
+                j++;
             }
-            startingCount = initialTrees.size();
+            startingCount = initialForest.get().getNumberOfTrees();
         }
         else{
             startingCount = 0;
@@ -219,7 +217,7 @@ public class ForestTrainer<Y, TO, FO> {
             System.out.println("\nFinished");
         }
 
-        return Forest.<TO, FO>builder()
+        return OnlineForest.<TO, FO>builder()
                 .treeResponseCombiner(treeResponseCombiner)
                 .trees(trees)
                 .build();
@@ -235,7 +233,7 @@ public class ForestTrainer<Y, TO, FO> {
      *                      specified.
      * @param threads The number of trees to train at once.
      */
-    public void trainParallelOnDisk(Optional<Forest<TO, FO>> initialForest, int threads){
+    public OfflineForest<TO, FO> trainParallelOnDisk(Optional<Forest<TO, FO>> initialForest, int threads){
         // First we need to see how many trees there currently are
         final File folder = new File(saveTreeLocation);
         if(!folder.exists()){
@@ -255,17 +253,14 @@ public class ForestTrainer<Y, TO, FO> {
 
         final AtomicInteger treeCount; // tracks how many trees are finished
         if(initialForest.isPresent()){
-            final List<Tree<TO>> initialTrees = initialForest.get().getTrees();
-
-            for(int j=0; j<initialTrees.size(); j++){
+            int j=0;
+            for(final Tree<TO> tree : initialForest.get().getTrees()){
                 final String filename = "tree-" + (j+1) + ".tree";
-                final Tree<TO> tree = initialTrees.get(j);
-
                 saveTree(tree, filename);
-
+                j++;
             }
 
-            treeCount = new AtomicInteger(initialTrees.size());
+            treeCount = new AtomicInteger(j);
         } else{
             treeCount = new AtomicInteger(treeFiles.length);
         }
@@ -308,6 +303,8 @@ public class ForestTrainer<Y, TO, FO> {
         if(displayProgress){
             System.out.println("\nFinished");
         }
+
+        return new OfflineForest<>(folder, treeResponseCombiner);
 
     }
 

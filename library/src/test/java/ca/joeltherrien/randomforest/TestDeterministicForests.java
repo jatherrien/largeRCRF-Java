@@ -214,14 +214,14 @@ public class TestDeterministicForests {
 
         forestTrainer5Trees.trainSerialOnDisk(Optional.empty());
         forestTrainer10Trees.trainSerialOnDisk(Optional.empty());
-        final Forest<Double, Double> forestSerial = DataUtils.loadForest(saveTreeFile, new MeanResponseCombiner());
+        final Forest<Double, Double> forestSerial = DataUtils.loadOnlineForest(saveTreeFile, new MeanResponseCombiner());
         TestUtils.removeFolder(saveTreeFile);
         verifyTwoForestsEqual(testData, referenceForest, forestSerial);
 
 
         forestTrainer5Trees.trainParallelOnDisk(Optional.empty(), 4);
         forestTrainer10Trees.trainParallelOnDisk(Optional.empty(), 4);
-        final Forest<Double, Double> forestParallel = DataUtils.loadForest(saveTreeFile, new MeanResponseCombiner());
+        final Forest<Double, Double> forestParallel = DataUtils.loadOnlineForest(saveTreeFile, new MeanResponseCombiner());
         TestUtils.removeFolder(saveTreeFile);
         verifyTwoForestsEqual(testData, referenceForest, forestParallel);
 
@@ -259,7 +259,7 @@ public class TestDeterministicForests {
 
         for(int k=0; k<3; k++){
             forestTrainer.trainSerialOnDisk(Optional.empty());
-            final Forest<Double, Double> replicantForest = DataUtils.loadForest(saveTreeFile, responseCombiner);
+            final Forest<Double, Double> replicantForest = DataUtils.loadOnlineForest(saveTreeFile, responseCombiner);
             TestUtils.removeFolder(saveTreeFile);
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
         }
@@ -274,7 +274,7 @@ public class TestDeterministicForests {
 
         for(int k=0; k<3; k++){
             forestTrainer.trainParallelOnDisk(Optional.empty(), 4);
-            final Forest<Double, Double> replicantForest = DataUtils.loadForest(saveTreeFile, responseCombiner);
+            final Forest<Double, Double> replicantForest = DataUtils.loadOnlineForest(saveTreeFile, responseCombiner);
             TestUtils.removeFolder(saveTreeFile);
             verifyTwoForestsEqual(testData, referenceForest, replicantForest);
         }

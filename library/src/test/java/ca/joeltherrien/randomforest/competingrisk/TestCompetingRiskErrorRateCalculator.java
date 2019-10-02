@@ -16,10 +16,11 @@
 
 package ca.joeltherrien.randomforest.competingrisk;
 
-import ca.joeltherrien.randomforest.Row;
-import ca.joeltherrien.randomforest.covariates.Covariate;
-import ca.joeltherrien.randomforest.responses.competingrisk.*;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskResponse;
+import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskUtils;
 import ca.joeltherrien.randomforest.tree.Forest;
+import ca.joeltherrien.randomforest.tree.OnlineForest;
 import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
 import ca.joeltherrien.randomforest.utils.StepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
@@ -30,8 +31,6 @@ import java.util.List;
 
 import static ca.joeltherrien.randomforest.TestUtils.closeEnough;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class TestCompetingRiskErrorRateCalculator {
 
@@ -48,7 +47,7 @@ public class TestCompetingRiskErrorRateCalculator {
 
         final int event = 1;
 
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> fakeForest = Forest.<CompetingRiskFunctions, CompetingRiskFunctions>builder().build();
+        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> fakeForest = OnlineForest.<CompetingRiskFunctions, CompetingRiskFunctions>builder().build();
 
         final double naiveConcordance = CompetingRiskUtils.calculateConcordance(responseList, mortalityArray, event);
 

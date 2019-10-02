@@ -16,9 +16,7 @@
 
 package ca.joeltherrien.randomforest.utils;
 
-import ca.joeltherrien.randomforest.tree.Forest;
-import ca.joeltherrien.randomforest.tree.ResponseCombiner;
-import ca.joeltherrien.randomforest.tree.Tree;
+import ca.joeltherrien.randomforest.tree.*;
 
 import java.io.*;
 import java.util.*;
@@ -27,7 +25,7 @@ import java.util.zip.GZIPOutputStream;
 
 public class DataUtils {
 
-    public static <O, FO> Forest<O, FO> loadForest(File folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
+    public static <O, FO> OnlineForest<O, FO> loadOnlineForest(File folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
         if(!folder.isDirectory()){
             throw new IllegalArgumentException("Tree directory must be a directory!");
         }
@@ -48,16 +46,16 @@ public class DataUtils {
 
         }
 
-        return Forest.<O, FO>builder()
+        return OnlineForest.<O, FO>builder()
                 .trees(treeList)
                 .treeResponseCombiner(treeResponseCombiner)
                 .build();
 
     }
 
-    public static <O, FO> Forest<O, FO> loadForest(String folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
+    public static <O, FO> OnlineForest<O, FO> loadOnlineForest(String folder, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
         final File directory = new File(folder);
-        return loadForest(directory, treeResponseCombiner);
+        return loadOnlineForest(directory, treeResponseCombiner);
     }
 
     public static void saveObject(Serializable object, String filename) throws IOException {

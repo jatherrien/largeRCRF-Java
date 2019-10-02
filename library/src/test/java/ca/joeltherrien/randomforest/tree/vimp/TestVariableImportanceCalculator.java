@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class VariableImportanceCalculatorTest {
+public class TestVariableImportanceCalculator {
 
     /*
         Since the logic for VariableImportanceCalculator is generic, it will be much easier to test under a regression
@@ -28,7 +28,7 @@ public class VariableImportanceCalculatorTest {
      */
 
     // We'l have a very simple Forest of two trees
-    private final Forest<Double, Double> forest;
+    private final OnlineForest<Double, Double> forest;
 
 
     private final List<Covariate> covariates;
@@ -38,7 +38,7 @@ public class VariableImportanceCalculatorTest {
         Long setup process; forest is manually constructed so that we can be exactly sure on our variable importance.
 
      */
-    public VariableImportanceCalculatorTest(){
+    public TestVariableImportanceCalculator(){
         final BooleanCovariate booleanCovariate = new BooleanCovariate("x", 0, false);
         final NumericCovariate numericCovariate = new NumericCovariate("y", 1, false);
         final FactorCovariate factorCovariate = new FactorCovariate("z", 2,
@@ -67,10 +67,9 @@ public class VariableImportanceCalculatorTest {
         final Tree<Double> tree1 = makeTree(covariates, 0.0, new int[]{1,2,3,4});
         final Tree<Double> tree2 = makeTree(covariates, 2.0, new int[]{5,6,7,8});
 
-        this.forest = Forest.<Double, Double>builder()
+        this.forest = OnlineForest.<Double, Double>builder()
                 .trees(Utils.easyList(tree1, tree2))
                 .treeResponseCombiner(new MeanResponseCombiner())
-                .covariateList(this.covariates)
                 .build();
 
         // formula; boolean high adds 100; high numeric adds 10

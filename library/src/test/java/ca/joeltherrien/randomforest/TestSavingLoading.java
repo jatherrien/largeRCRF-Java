@@ -24,11 +24,10 @@ import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskRespons
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskFunctionCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.combiner.CompetingRiskResponseCombiner;
 import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
-import ca.joeltherrien.randomforest.tree.Forest;
-import ca.joeltherrien.randomforest.tree.ForestTrainer;
-import ca.joeltherrien.randomforest.tree.TreeTrainer;
+import ca.joeltherrien.randomforest.tree.*;
 import ca.joeltherrien.randomforest.utils.DataUtils;
 import ca.joeltherrien.randomforest.utils.ResponseLoader;
+import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
 import ca.joeltherrien.randomforest.utils.Utils;
 import org.junit.jupiter.api.Test;
 
@@ -119,16 +118,21 @@ public class TestSavingLoading {
         assertTrue(directory.isDirectory());
         assertEquals(NTREE, directory.listFiles().length);
 
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataUtils.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
+        final CompetingRiskFunctionCombiner treeResponseCombiner = new CompetingRiskFunctionCombiner(new int[]{1,2}, null);
+        final OnlineForest<CompetingRiskFunctions, CompetingRiskFunctions> onlineForest = DataUtils.loadOnlineForest(directory, treeResponseCombiner);
+        final OfflineForest<CompetingRiskFunctions, CompetingRiskFunctions> offlineForest = new OfflineForest<>(directory, treeResponseCombiner);
 
         final CovariateRow predictionRow = getPredictionRow(covariates);
 
-        final CompetingRiskFunctions functions = forest.evaluate(predictionRow);
-        assertNotNull(functions);
-        assertTrue(functions.getCumulativeIncidenceFunction(1).getX().length > 2);
+        final CompetingRiskFunctions functionsOnline = onlineForest.evaluate(predictionRow);
+        assertNotNull(functionsOnline);
+        assertTrue(functionsOnline.getCumulativeIncidenceFunction(1).getX().length > 2);
+
+        final CompetingRiskFunctions functionsOffline = offlineForest.evaluate(predictionRow);
+        assertTrue(competingFunctionsEqual(functionsOffline, functionsOnline));
 
 
-        assertEquals(NTREE, forest.getTrees().size());
+        assertEquals(NTREE, onlineForest.getTrees().size());
 
         TestUtils.removeFolder(directory);
 
@@ -159,17 +163,22 @@ public class TestSavingLoading {
         assertEquals(NTREE, directory.listFiles().length);
 
 
-
-        final Forest<CompetingRiskFunctions, CompetingRiskFunctions> forest = DataUtils.loadForest(directory, new CompetingRiskFunctionCombiner(new int[]{1,2}, null));
+        final CompetingRiskFunctionCombiner treeResponseCombiner = new CompetingRiskFunctionCombiner(new int[]{1,2}, null);
+        final OnlineForest<CompetingRiskFunctions, CompetingRiskFunctions> onlineForest = DataUtils.loadOnlineForest(directory, treeResponseCombiner);
+        final OfflineForest<CompetingRiskFunctions, CompetingRiskFunctions> offlineForest = new OfflineForest<>(directory, treeResponseCombiner);
 
         final CovariateRow predictionRow = getPredictionRow(covariates);
 
-        final CompetingRiskFunctions functions = forest.evaluate(predictionRow);
-        assertNotNull(functions);
-        assertTrue(functions.getCumulativeIncidenceFunction(1).getX().length > 2);
+        final CompetingRiskFunctions functionsOnline = onlineForest.evaluate(predictionRow);
+        assertNotNull(functionsOnline);
+        assertTrue(functionsOnline.getCumulativeIncidenceFunction(1).getX().length > 2);
 
 
-        assertEquals(NTREE, forest.getTrees().size());
+        final CompetingRiskFunctions functionsOffline = offlineForest.evaluate(predictionRow);
+        assertTrue(competingFunctionsEqual(functionsOffline, functionsOnline));
+
+
+        assertEquals(NTREE, onlineForest.getTrees().size());
 
         TestUtils.removeFolder(directory);
 
@@ -177,6 +186,64 @@ public class TestSavingLoading {
 
     }
 
+    /*
+        We don't implement equals() methods on the below mentioned classes because then we'd need to implement an
+        appropriate hashCode() method that's consistent with the equals(), and we only need plain equals() for
+        these tests.
+     */
+
+    private boolean competingFunctionsEqual(CompetingRiskFunctions f1 ,CompetingRiskFunctions f2){
+        if(!functionsEqual(f1.getSurvivalCurve(), f2.getSurvivalCurve())){
+            return false;
+        }
+
+        for(int i=1; i<=2; i++){
+            if(!functionsEqual(f1.getCauseSpecificHazardFunction(i), f2.getCauseSpecificHazardFunction(i))){
+                return false;
+            }
+            if(!functionsEqual(f1.getCumulativeIncidenceFunction(i), f2.getCumulativeIncidenceFunction(i))){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean functionsEqual(RightContinuousStepFunction f1, RightContinuousStepFunction f2){
+
+        final double[] f1X = f1.getX();
+        final double[] f2X = f2.getX();
+
+        final double[] f1Y = f1.getY();
+        final double[] f2Y = f2.getY();
+
+        // first compare array lengths
+        if(f1X.length != f2X.length){
+            return false;
+        }
+        if(f1Y.length != f2Y.length){
+            return false;
+        }
+
+        // TODO - better comparisons of doubles. I don't really care too much though as this equals method is only being used in tests
+        final double delta = 0.000001;
+
+        if(Math.abs(f1.getDefaultY() - f2.getDefaultY()) > delta){
+            return false;
+        }
+
+        for(int i=0; i < f1X.length; i++){
+            if(Math.abs(f1X[i] - f2X[i]) > delta){
+                return false;
+            }
+            if(Math.abs(f1Y[i] - f2Y[i]) > delta){
+                return false;
+            }
+        }
+
+        return true;
+
+    }
 
 
 }

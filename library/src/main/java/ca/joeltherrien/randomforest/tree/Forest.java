@@ -17,31 +17,18 @@
 package ca.joeltherrien.randomforest.tree;
 
 import ca.joeltherrien.randomforest.CovariateRow;
-import ca.joeltherrien.randomforest.covariates.Covariate;
-import lombok.Builder;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-@Builder
-public class Forest<O, FO> { // O = output of trees, FO = forest output. In practice O == FO, even in competing risk & survival settings
+public abstract class Forest<O, FO> {
 
-    private final List<Tree<O>> trees;
-    private final ResponseCombiner<O, FO> treeResponseCombiner;
-    private final List<Covariate> covariateList;
-
-    public FO evaluate(CovariateRow row){
-
-        return treeResponseCombiner.combine(
-                trees.stream()
-                .map(node -> node.evaluate(row))
-                .collect(Collectors.toList())
-        );
-
-    }
+    public abstract FO evaluate(CovariateRow row);
+    public abstract FO evaluateOOB(CovariateRow row);
+    public abstract Iterable<Tree<O>> getTrees();
+    public abstract int getNumberOfTrees();
 
     /**
      * Used primarily in the R package interface to avoid R loops; and for easier parallelization.
@@ -93,21 +80,6 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
                 .collect(Collectors.toList());
     }
 
-    public FO evaluateOOB(CovariateRow row){
-
-        return treeResponseCombiner.combine(
-          trees.stream()
-          .filter(tree -> !tree.idInBootstrapSample(row.getId()))
-          .map(node -> node.evaluate(row))
-          .collect(Collectors.toList())
-        );
-
-    }
-
-    public List<Tree<O>> getTrees(){
-        return Collections.unmodifiableList(trees);
-    }
-
     public Map<Integer, Integer> findSplitsByCovariate(){
         final Map<Integer, Integer> countMap = new TreeMap<>();
 
@@ -157,5 +129,6 @@ public class Forest<O, FO> { // O = output of trees, FO = forest output. In prac
 
         return countTerminalNodes;
     }
+
 
 }
