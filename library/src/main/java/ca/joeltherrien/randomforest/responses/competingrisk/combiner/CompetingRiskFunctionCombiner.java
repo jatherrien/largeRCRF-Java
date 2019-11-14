@@ -17,17 +17,15 @@
 package ca.joeltherrien.randomforest.responses.competingrisk.combiner;
 
 import ca.joeltherrien.randomforest.responses.competingrisk.CompetingRiskFunctions;
-import ca.joeltherrien.randomforest.tree.ResponseCombiner;
-import ca.joeltherrien.randomforest.utils.RightContinuousStepFunction;
-import ca.joeltherrien.randomforest.utils.Utils;
+import ca.joeltherrien.randomforest.tree.ForestResponseCombiner;
+import ca.joeltherrien.randomforest.tree.IntermediateCombinedResponse;
 import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
-public class CompetingRiskFunctionCombiner implements ResponseCombiner<CompetingRiskFunctions, CompetingRiskFunctions> {
+public class CompetingRiskFunctionCombiner implements ForestResponseCombiner<CompetingRiskFunctions, CompetingRiskFunctions> {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,72 +55,22 @@ public class CompetingRiskFunctionCombiner implements ResponseCombiner<Competing
                     ).sorted().distinct().toArray();
         }
 
-        final double n = responses.size();
+        final IntermediateCompetingRisksFunctionsTimesKnown intermediateResult = new IntermediateCompetingRisksFunctionsTimesKnown(responses.size(), this.events, timesToUse);
 
-        final double[] survivalY = new double[timesToUse.length];
-        final double[][] csCHFY = new double[events.length][timesToUse.length];
-        final double[][] cifY = new double[events.length][timesToUse.length];
-
-        /*
-            We're going to try to efficiently put our predictions together -
-                Assumptions - for each event on a response, the hazard and CIF functions share the same x points
-
-            Plan - go through the time on each response and make use of that so that when we search for a time index
-            to evaluate the function at, we don't need to re-search the earlier times.
-
-         */
-
-
-        for(final CompetingRiskFunctions currentFunctions : responses){
-            final double[] survivalXPoints = currentFunctions.getSurvivalCurve().getX();
-            final double[][] eventSpecificXPoints = new double[events.length][];
-
-            for(final int event : events){
-                eventSpecificXPoints[event-1] = currentFunctions.getCumulativeIncidenceFunction(event)
-                        .getX();
-            }
-
-            int previousSurvivalIndex = 0;
-            final int[] previousEventSpecificIndex = new int[events.length]; // relying on 0 being default value
-
-            for(int i=0; i<timesToUse.length; i++){
-                final double time = timesToUse[i];
-
-                // Survival curve
-                final int survivalTimeIndex = Utils.binarySearchLessThan(previousSurvivalIndex, survivalXPoints.length, survivalXPoints, time);
-                survivalY[i] = survivalY[i] + currentFunctions.getSurvivalCurve().evaluateByIndex(survivalTimeIndex) / n;
-                previousSurvivalIndex = Math.max(survivalTimeIndex, 0); // if our current time is less than the smallest time in xPoints then binarySearchLessThan returned a -1.
-                // -1's not an issue for evaluateByIndex, but it is an issue for the next time binarySearchLessThan is called.
-
-                // CHFs and CIFs
-                for(final int event : events){
-                    final double[] xPoints = eventSpecificXPoints[event-1];
-                    final int eventTimeIndex = Utils.binarySearchLessThan(previousEventSpecificIndex[event-1], xPoints.length,
-                            xPoints, time);
-                    csCHFY[event-1][i] = csCHFY[event-1][i] + currentFunctions.getCauseSpecificHazardFunction(event)
-                            .evaluateByIndex(eventTimeIndex) / n;
-                    cifY[event-1][i] = cifY[event-1][i] + currentFunctions.getCumulativeIncidenceFunction(event)
-                            .evaluateByIndex(eventTimeIndex) / n;
-
-                    previousEventSpecificIndex[event-1] = Math.max(eventTimeIndex, 0);
-                }
-            }
-
+        for(CompetingRiskFunctions input : responses){
+            intermediateResult.processNewInput(input);
         }
 
-        final RightContinuousStepFunction survivalFunction = new RightContinuousStepFunction(timesToUse, survivalY, 1.0);
-        final List<RightContinuousStepFunction> causeSpecificCumulativeHazardFunctionList = new ArrayList<>(events.length);
-        final List<RightContinuousStepFunction> cumulativeIncidenceFunctionList = new ArrayList<>(events.length);
+        return intermediateResult.transformToOutput();
+    }
 
-        for(final int event : events){
-            causeSpecificCumulativeHazardFunctionList.add(event-1, new RightContinuousStepFunction(timesToUse, csCHFY[event-1], 0));
-            cumulativeIncidenceFunctionList.add(event-1, new RightContinuousStepFunction(timesToUse, cifY[event-1], 0));
+    @Override
+    public IntermediateCombinedResponse<CompetingRiskFunctions, CompetingRiskFunctions> startIntermediateCombinedResponse(int countInputs) {
+        if(this.times != null){
+            return new IntermediateCompetingRisksFunctionsTimesKnown(countInputs, this.events, this.times);
         }
 
-        return CompetingRiskFunctions.builder()
-                .causeSpecificHazards(causeSpecificCumulativeHazardFunctionList)
-                .cumulativeIncidenceCurves(cumulativeIncidenceFunctionList)
-                .survivalCurve(survivalFunction)
-                .build();
+        // TODO - implement
+        throw new RuntimeException("startIntermediateCombinedResponse when times is unknown is not yet implemented");
     }
 }

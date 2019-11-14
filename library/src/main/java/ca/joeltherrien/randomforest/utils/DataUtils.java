@@ -31,6 +31,11 @@ public class DataUtils {
         }
 
         final File[] treeFiles = folder.listFiles((file, s) -> s.endsWith(".tree"));
+
+        return loadOnlineForest(treeFiles, treeResponseCombiner);
+    }
+
+    public static <O, FO> OnlineForest<O, FO> loadOnlineForest(File[] treeFiles, ResponseCombiner<O, FO> treeResponseCombiner) throws IOException, ClassNotFoundException {
         final List<File> treeFileList = Arrays.asList(treeFiles);
 
         Collections.sort(treeFileList, Comparator.comparing(File::getName));

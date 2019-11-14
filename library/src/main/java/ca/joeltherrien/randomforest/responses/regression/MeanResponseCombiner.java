@@ -16,7 +16,8 @@
 
 package ca.joeltherrien.randomforest.responses.regression;
 
-import ca.joeltherrien.randomforest.tree.ResponseCombiner;
+import ca.joeltherrien.randomforest.tree.ForestResponseCombiner;
+import ca.joeltherrien.randomforest.tree.IntermediateCombinedResponse;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ import java.util.List;
  * Returns the Mean value of a group of Doubles.
  *
  */
-public class MeanResponseCombiner implements ResponseCombiner<Double, Double> {
+public class MeanResponseCombiner implements ForestResponseCombiner<Double, Double> {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -35,5 +36,39 @@ public class MeanResponseCombiner implements ResponseCombiner<Double, Double> {
 
     }
 
+    @Override
+    public IntermediateCombinedResponse<Double, Double> startIntermediateCombinedResponse(int countInputs) {
+        return new MeanIntermediateCombinedResponse(countInputs);
+    }
+
+    public static class MeanIntermediateCombinedResponse implements IntermediateCombinedResponse<Double, Double>{
+
+        private double expectedN;
+        private int actualN;
+        private double currentMean;
+
+        public MeanIntermediateCombinedResponse(int n){
+            this.expectedN = n;
+            this.actualN = 0;
+            this.currentMean = 0.0;
+        }
+
+        @Override
+        public void processNewInput(Double input) {
+            this.currentMean = this.currentMean + input / expectedN;
+            this.actualN ++;
+        }
+
+        @Override
+        public Double transformToOutput() {
+            // rescale if necessary
+            this.currentMean = this.currentMean * (this.expectedN / (double) actualN);
+            this.expectedN = actualN;
+
+            return currentMean;
+        }
+
+
+    }
 
 }

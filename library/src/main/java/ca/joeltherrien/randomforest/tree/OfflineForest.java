@@ -22,7 +22,6 @@ import lombok.AllArgsConstructor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +31,9 @@ import java.util.stream.IntStream;
 public class OfflineForest<O, FO> extends Forest<O, FO> {
 
     private final File[] treeFiles;
-    private final ResponseCombiner<O, FO> treeResponseCombiner;
+    private final ForestResponseCombiner<O, FO> treeResponseCombiner;
 
-    public OfflineForest(File treeDirectoryPath, ResponseCombiner<O, FO> treeResponseCombiner){
+    public OfflineForest(File treeDirectoryPath, ForestResponseCombiner<O, FO> treeResponseCombiner){
         this.treeResponseCombiner = treeResponseCombiner;
 
         if(!treeDirectoryPath.isDirectory()){
@@ -42,7 +41,6 @@ public class OfflineForest<O, FO> extends Forest<O, FO> {
         }
 
         this.treeFiles = treeDirectoryPath.listFiles((file, s) -> s.endsWith(".tree"));
-
     }
 
     @Override
@@ -72,116 +70,108 @@ public class OfflineForest<O, FO> extends Forest<O, FO> {
 
     @Override
     public List<FO> evaluate(List<? extends CovariateRow> rowList){
-        final O[][] predictions = (O[][])new Object[rowList.size()][treeFiles.length];
-        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
+        final List<IntermediateCombinedResponse<O, FO>> intermediatePredictions =
+                IntStream.range(0, rowList.size())
+                .mapToObj(i -> treeResponseCombiner.startIntermediateCombinedResponse(treeFiles.length))
+                .collect(Collectors.toList());
 
+        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
         for(int treeId = 0; treeId < treeFiles.length; treeId++){
             final Tree<O> currentTree = treeIterator.next();
 
-            final int tempTreeId = treeId; // Java workaround
             IntStream.range(0, rowList.size()).parallel().forEach(
                     rowId -> {
                         final CovariateRow row = rowList.get(rowId);
                         final O prediction = currentTree.evaluate(row);
-                        predictions[rowId][tempTreeId] = prediction;
+                        intermediatePredictions.get(rowId).processNewInput(prediction);
                     }
             );
         }
 
-        return Arrays.stream(predictions).parallel()
-                .map(predArray -> treeResponseCombiner.combine(Arrays.asList(predArray)))
+        return intermediatePredictions.stream().parallel()
+                .map(intPred -> intPred.transformToOutput())
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<FO> evaluateSerial(List<? extends CovariateRow> rowList){
-        final O[][] predictions = (O[][])new Object[rowList.size()][treeFiles.length];
-        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
+        final List<IntermediateCombinedResponse<O, FO>> intermediatePredictions =
+                IntStream.range(0, rowList.size())
+                        .mapToObj(i -> treeResponseCombiner.startIntermediateCombinedResponse(treeFiles.length))
+                        .collect(Collectors.toList());
 
+        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
         for(int treeId = 0; treeId < treeFiles.length; treeId++){
             final Tree<O> currentTree = treeIterator.next();
 
-            final int tempTreeId = treeId; // Java workaround
             IntStream.range(0, rowList.size()).sequential().forEach(
                     rowId -> {
                         final CovariateRow row = rowList.get(rowId);
                         final O prediction = currentTree.evaluate(row);
-                        predictions[rowId][tempTreeId] = prediction;
+                        intermediatePredictions.get(rowId).processNewInput(prediction);
                     }
             );
         }
 
-        return Arrays.stream(predictions).sequential()
-                .map(predArray -> treeResponseCombiner.combine(Arrays.asList(predArray)))
+        return intermediatePredictions.stream().sequential()
+                .map(intPred -> intPred.transformToOutput())
                 .collect(Collectors.toList());
     }
 
 
     @Override
     public List<FO> evaluateOOB(List<? extends CovariateRow> rowList){
-        final O[][] predictions = (O[][])new Object[rowList.size()][treeFiles.length];
-        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
+        final List<IntermediateCombinedResponse<O, FO>> intermediatePredictions =
+                IntStream.range(0, rowList.size())
+                        .mapToObj(i -> treeResponseCombiner.startIntermediateCombinedResponse(treeFiles.length))
+                        .collect(Collectors.toList());
 
+        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
         for(int treeId = 0; treeId < treeFiles.length; treeId++){
             final Tree<O> currentTree = treeIterator.next();
 
-            final int tempTreeId = treeId; // Java workaround
             IntStream.range(0, rowList.size()).parallel().forEach(
                     rowId -> {
                         final CovariateRow row = rowList.get(rowId);
                         if(!currentTree.idInBootstrapSample(row.getId())){
                             final O prediction = currentTree.evaluate(row);
-                            predictions[rowId][tempTreeId] = prediction;
-                        } else{
-                            predictions[rowId][tempTreeId] = null;
+                            intermediatePredictions.get(rowId).processNewInput(prediction);
                         }
-
+                        // else do nothing; when we get the final output it will get scaled for the smaller N
                     }
             );
         }
 
-        return Arrays.stream(predictions).parallel()
-                .map(predArray -> {
-                    final List<O> predList = Arrays.stream(predArray).parallel()
-                            .filter(pred -> pred != null).collect(Collectors.toList());
-
-                    return treeResponseCombiner.combine(predList);
-
-                })
+        return intermediatePredictions.stream().parallel()
+                .map(intPred -> intPred.transformToOutput())
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<FO> evaluateSerialOOB(List<? extends CovariateRow> rowList){
-        final O[][] predictions = (O[][])new Object[rowList.size()][treeFiles.length];
-        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
+        final List<IntermediateCombinedResponse<O, FO>> intermediatePredictions =
+                IntStream.range(0, rowList.size())
+                        .mapToObj(i -> treeResponseCombiner.startIntermediateCombinedResponse(treeFiles.length))
+                        .collect(Collectors.toList());
 
+        final Iterator<Tree<O>> treeIterator = getTrees().iterator();
         for(int treeId = 0; treeId < treeFiles.length; treeId++){
             final Tree<O> currentTree = treeIterator.next();
 
-            final int tempTreeId = treeId; // Java workaround
             IntStream.range(0, rowList.size()).sequential().forEach(
                     rowId -> {
                         final CovariateRow row = rowList.get(rowId);
                         if(!currentTree.idInBootstrapSample(row.getId())){
                             final O prediction = currentTree.evaluate(row);
-                            predictions[rowId][tempTreeId] = prediction;
-                        } else{
-                            predictions[rowId][tempTreeId] = null;
+                            intermediatePredictions.get(rowId).processNewInput(prediction);
                         }
-
+                        // else do nothing; when we get the final output it will get scaled for the smaller N
                     }
             );
         }
 
-        return Arrays.stream(predictions).sequential()
-                .map(predArray -> {
-                    final List<O> predList = Arrays.stream(predArray).sequential()
-                            .filter(pred -> pred != null).collect(Collectors.toList());
-
-                    return treeResponseCombiner.combine(predList);
-
-                })
+        return intermediatePredictions.stream().sequential()
+                .map(intPred -> intPred.transformToOutput())
                 .collect(Collectors.toList());
     }
 
@@ -193,6 +183,16 @@ public class OfflineForest<O, FO> extends Forest<O, FO> {
     @Override
     public int getNumberOfTrees() {
         return treeFiles.length;
+    }
+
+    public OnlineForest<O, FO> createOnlineCopy(){
+        final List<Tree<O>> allTrees = new ArrayList<>(getNumberOfTrees());
+        getTrees().forEach(allTrees::add);
+
+        return OnlineForest.<O, FO>builder()
+                .trees(allTrees)
+                .treeResponseCombiner(treeResponseCombiner)
+                .build();
     }
 }
 

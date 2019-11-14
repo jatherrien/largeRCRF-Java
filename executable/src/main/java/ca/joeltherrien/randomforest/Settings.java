@@ -28,6 +28,7 @@ import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.GrayLogR
 import ca.joeltherrien.randomforest.responses.competingrisk.splitfinder.LogRankSplitFinder;
 import ca.joeltherrien.randomforest.responses.regression.MeanResponseCombiner;
 import ca.joeltherrien.randomforest.responses.regression.WeightedVarianceSplitFinder;
+import ca.joeltherrien.randomforest.tree.ForestResponseCombiner;
 import ca.joeltherrien.randomforest.tree.ResponseCombiner;
 import ca.joeltherrien.randomforest.tree.SplitFinder;
 import ca.joeltherrien.randomforest.utils.JsonUtils;
@@ -110,6 +111,8 @@ public class Settings {
 
 
     private static Map<String, Function<ObjectNode, ResponseCombiner>> RESPONSE_COMBINER_MAP = new HashMap<>();
+    private static Map<String, Function<ObjectNode, ForestResponseCombiner>> FOREST_RESPONSE_COMBINER_MAP = new HashMap<>();
+
     public static Function<ObjectNode, ResponseCombiner> getResponseCombinerConstructor(final String name){
         return RESPONSE_COMBINER_MAP.get(name.toLowerCase());
     }
@@ -117,9 +120,19 @@ public class Settings {
         RESPONSE_COMBINER_MAP.put(name.toLowerCase(), responseCombinerConstructor);
     }
 
+    public static Function<ObjectNode, ForestResponseCombiner> getForestResponseCombinerConstructor(final String name){
+        return FOREST_RESPONSE_COMBINER_MAP.get(name.toLowerCase());
+    }
+    public static void registerForestResponseCombinerConstructor(final String name, final Function<ObjectNode, ForestResponseCombiner> responseCombinerConstructor){
+        FOREST_RESPONSE_COMBINER_MAP.put(name.toLowerCase(), responseCombinerConstructor);
+    }
+
     static{
 
         registerResponseCombinerConstructor("MeanResponseCombiner",
+                (node) -> new MeanResponseCombiner()
+        );
+        registerForestResponseCombinerConstructor("MeanResponseCombiner",
                 (node) -> new MeanResponseCombiner()
         );
         registerResponseCombinerConstructor("CompetingRiskResponseCombiner",
@@ -131,7 +144,7 @@ public class Settings {
                 }
         );
 
-        registerResponseCombinerConstructor("CompetingRiskFunctionCombiner",
+        registerForestResponseCombinerConstructor("CompetingRiskFunctionCombiner",
                 (node) -> {
                     final int[] events = JsonUtils.jsonToIntArray(node.get("events"));
 
@@ -144,8 +157,6 @@ public class Settings {
 
                 }
         );
-
-
     }
 
     private int numberOfSplits = 5;
@@ -217,10 +228,10 @@ public class Settings {
     }
 
     @JsonIgnore
-    public ResponseCombiner getTreeCombiner(){
+    public ForestResponseCombiner getTreeCombiner(){
         final String type = treeCombinerSettings.get("type").asText();
 
-        return getResponseCombinerConstructor(type).apply(treeCombinerSettings);
+        return getForestResponseCombinerConstructor(type).apply(treeCombinerSettings);
     }
 
     @JsonIgnore

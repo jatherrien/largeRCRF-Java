@@ -38,7 +38,7 @@ public class ForestTrainer<Y, TO, FO> {
 
     private final TreeTrainer<Y, TO> treeTrainer;
     private final List<Covariate> covariates;
-    private final ResponseCombiner<TO, FO> treeResponseCombiner;
+    private final ForestResponseCombiner<TO, FO> treeResponseCombiner;
     private final List<Row<Y>> data;
 
     // number of trees to try
