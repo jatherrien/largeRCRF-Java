@@ -6,7 +6,7 @@ Most users interested in training random competing risks forests should use the 
 
 ## License
 
-You're free to use / modify / redistribute thep project, as long as you follow the terms of the GPL-3 license. 
+You're free to use / modify / redistribute the project, as long as you follow the terms of the GPL-3 license. 
 
 ## Extending
 
